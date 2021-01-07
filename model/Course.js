@@ -7,21 +7,27 @@ const Schema = mongoose.Schema;
 */
 const courseSchema = new Schema({
   title: { type: String, required: true },
-  term: { type: String, required: true, enum: ["Fall", "Spring", "Summer"] },
-  year: {
+  term: {
     type: String,
     required: true,
-    enum: ["Freshmen", "Sophomore", "Junior", "Senior"],
+    enum: ["fall", "spring", "summer", "intersession"],
   },
   number: String,
   department: String,
-  tags: String,
+  tags: [{ type: String }],
   area: String,
   credits: { type: Number, required: true },
-  wi: { type: Boolean, required: true },
+  wi: { type: Boolean, default: false },
+  taken: { type: Boolean, default: false },
   ratings: Array,
-  distribution: { type: Schema.Types.ObjectId, ref: "Distribution" },
+  distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
+  user_id: { type: Schema.Types.ObjectId, ref: "User" },
 });
+
+//custom static model functions
+courseSchema.statics.findByTerm = function (user_id, term) {
+  return this.find({ user_id, term });
+};
 
 const Course = mongoose.model("Course", courseSchema);
 
