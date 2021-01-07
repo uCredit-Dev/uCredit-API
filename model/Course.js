@@ -20,8 +20,10 @@ const courseSchema = new Schema({
   wi: { type: Boolean, default: false },
   taken: { type: Boolean, default: false },
   ratings: Array,
-  distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
-  user_id: { type: Schema.Types.ObjectId, ref: "User" },
+  distribution_ids: [
+    { type: Schema.Types.ObjectId, ref: "Distribution", required: true },
+  ],
+  user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
 });
 
 //custom static model functions
