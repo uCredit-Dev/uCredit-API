@@ -19,6 +19,16 @@ router.get("/api/addSamples", (req, res) => {
   addSampleCourses(courses).catch((err) => errorHandler(res, 500, err));
 });
 
+//return all courses of the user
+router.get("/api/courses/:user_id", (req, res) => {
+  const user_id = req.params.user_id;
+  courses
+    .findByUserId(user_id)
+    .exec()
+    .then((courses) => returnData(courses, res))
+    .catch((err) => errorHandler(res, 500, err));
+});
+
 //if distribution_id is not found data field would be an empty array
 router.get("/api/courses/distribution/:distribution_id", (req, res) => {
   const d_id = req.params.distribution_id;
@@ -39,7 +49,7 @@ router.get("/api/courses/:course_id", (req, res) => {
 });
 
 //get courses by term. provide user id, year, and term
-router.get("/api/courses", (req, res) => {
+router.get("/api/courses/term", (req, res) => {
   const user_id = req.query.user_id;
   const year = req.query.year;
   const term = req.query.term;

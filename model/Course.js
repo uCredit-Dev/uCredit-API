@@ -31,6 +31,10 @@ courseSchema.statics.findByDistributionId = function (d_id) {
   return this.find({ distribution_ids: d_id });
 };
 
+courseSchema.statics.findByUserId = function (user_id) {
+  return this.find({ user_id });
+};
+
 const Course = mongoose.model("Course", courseSchema);
 
 module.exports = Course;
