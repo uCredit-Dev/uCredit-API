@@ -1,7 +1,7 @@
 const samples = [
   {
     user_id: "csStudent",
-    distribution_ids: ["csCore"],
+    distribution_ids: ["6001b745e5fd0d8124251e51"],
     title: "Gateway Computing: Java",
     number: "500.112",
     term: "fall",
@@ -9,7 +9,7 @@ const samples = [
   },
   {
     user_id: "csStudent",
-    distribution_ids: ["csH/S"],
+    distribution_ids: ["6001b745e5fd0d8124251e50"],
     title: "expos",
     number: "201.220",
     term: "spring",
@@ -18,15 +18,15 @@ const samples = [
   },
   {
     user_id: "mathStudent",
-    distribution_ids: ["mathCore"],
+    distribution_ids: ["6001b745e5fd0d8124251e53"],
     title: "Cryptography",
     number: "301.227",
-    term: "Summer",
+    term: "summer",
     credits: 3,
   },
   {
     user_id: "mathStudent",
-    distribution_ids: ["mathBS"],
+    distribution_ids: ["6001b745e5fd0d8124251e54"],
     title: "physics",
     number: "301.280",
     term: "fall",
@@ -34,7 +34,7 @@ const samples = [
   },
   {
     user_id: "bioStudent",
-    distribution_ids: ["bioMath"],
+    distribution_ids: ["6001b745e5fd0d8124251e54"],
     title: "Linear Algebra",
     number: "501.421",
     term: "spring",
@@ -42,11 +42,14 @@ const samples = [
   },
 ];
 
-async function addSampleCourses(courses) {
-  //course collection is empty
-  if (courses.countDocuments({}) === 0) {
-    courses.insertMany(samples);
-  }
+function addSampleCourses(courses) {
+  courses.countDocuments({}, function (err, count) {
+    if (err) {
+      console.log(err);
+    } else {
+      if (count === 0) courses.insertMany(samples);
+    }
+  });
 }
 
 module.exports = { addSampleCourses };

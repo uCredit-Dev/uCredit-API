@@ -14,14 +14,14 @@ const samples = [
   },
 ];
 
-async function addSampleUsers(users) {
-  //user collection is empty
-  if (users.countDocuments({}) === 0) {
-    for (let i = 0; i < samples.length; i++) {
-      const sample = samples[i];
-      await users.create(sample._id, sample.major);
+function addSampleUsers(users) {
+  users.countDocuments({}, function (err, count) {
+    if (err) {
+      console.log(err);
+    } else {
+      if (count === 0) users.insertMany(samples);
     }
-  }
+  });
 }
 
 module.exports = { addSampleUsers };
