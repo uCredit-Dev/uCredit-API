@@ -14,16 +14,14 @@ const distributionSchema = new Schema({
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, defalut: false },
   courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-  user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  user_id: { type: String, required: true },
 });
 
 distributionSchema.statics.findByName = function (name, user_id) {
   return this.find({ name, user_id });
 };
 
-distributionSchema.statics.addCourse = function (course_id, user_id) {
-  this.update();
-};
+distributionSchema.statics.addCourse = function (course_id, user_id) {};
 
 distributionSchema.statics.removeCourse = function (course_id, user_id) {};
 

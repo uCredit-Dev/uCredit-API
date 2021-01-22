@@ -23,12 +23,12 @@ const courseSchema = new Schema({
   distribution_ids: [
     { type: Schema.Types.ObjectId, ref: "Distribution", required: true },
   ],
-  user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  user_id: { type: String, required: true },
 });
 
 //custom static model functions
-courseSchema.statics.findByTerm = function (user_id, term) {
-  return this.find({ user_id, term });
+courseSchema.statics.findByDistributionId = function (d_id) {
+  return this.find({ distribution_ids: d_id });
 };
 
 const Course = mongoose.model("Course", courseSchema);

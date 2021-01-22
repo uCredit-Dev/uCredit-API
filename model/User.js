@@ -12,10 +12,13 @@ const userSchema = new Schema({
   distributions: [{ type: ObjectId, ref: "Distribution" }],
 });
 
-userSchema.methods.getCoursesByDistribution = function (distr_id) {};
+userSchema.statics.findCoursesByTerm = async function (user_id, year, term) {
+  const user = await this.findOne({ _id: user_id })
+    .populate({ path: year, match: { term } })
+    .exec();
+  return user[year];
+};
 
-userSchema.methods.getCoursesBySemester = function () {};
-
-const Course = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;
