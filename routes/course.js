@@ -106,4 +106,6 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
+//change course's distribution
+
 module.exports = router;
