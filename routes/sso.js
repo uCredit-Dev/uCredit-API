@@ -23,7 +23,7 @@ const secret = process.env.SESSION_SECRET;
 
 const JHU_SSO_URL = "https://idp.jh.edu/idp/profile/SAML2/Redirect/SSO";
 const SP_NAME = "ucredit";
-const BASE_URL = "https://ucredit-api.herokurouter.com";
+const BASE_URL = "https://ucredit-api.herokuapp.com";
 
 // Setup SAML strategy
 const samlStrategy = new saml.Strategy(
