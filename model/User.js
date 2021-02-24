@@ -5,6 +5,10 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema({
   _id: { type: String, required: true },
   major: { type: String, required: true },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true },
+  affiliation: { type: String, required: true },
   freshman: [{ type: ObjectId, ref: "Course" }],
   sophomore: [{ type: ObjectId, ref: "Course" }],
   junior: [{ type: ObjectId, ref: "Course" }],
