@@ -1,5 +1,4 @@
-//generate public key
-//change secret
+//TODO:
 //process user attribute
 //contact enterpriseauth@jhmi.edu to be added to the trusted SP list
 require("dotenv").config();
