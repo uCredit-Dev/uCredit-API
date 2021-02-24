@@ -6,6 +6,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
+certs
+ucredit_metadata.xml
 
 # Icon must end with two \r
 Icon
