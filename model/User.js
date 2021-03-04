@@ -3,12 +3,12 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
-  _id: { type: String, required: true },
-  major: { type: String, required: true },
+  _id: { type: String, required: true }, //JHED ID
+  majors: { type: String, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true },
-  affiliation: { type: String, required: true },
+  affiliation: { type: String, required: true }, //STUDENT, FACULTY or STAFF
   freshman: [{ type: ObjectId, ref: "Course" }],
   sophomore: [{ type: ObjectId, ref: "Course" }],
   junior: [{ type: ObjectId, ref: "Course" }],
