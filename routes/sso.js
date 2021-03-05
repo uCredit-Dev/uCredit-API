@@ -7,10 +7,11 @@ const passport = require("passport");
 const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
-const fs = require("fs");
-const path = require("path");
+//const fs = require("fs");
+//const path = require("path");
 
 const router = express.Router();
+/*
 const PbK = fs.readFileSync(
   path.resolve(__dirname, "../certs/cert.pem"),
   "utf8"
@@ -19,7 +20,10 @@ const PvK = fs.readFileSync(
   path.resolve(__dirname, "../certs/key.pem"),
   "utf8"
 );
+*/
 const secret = process.env.SESSION_SECRET;
+const PbK = process.env.PUBLIC_KEY;
+const PvK = process.env.PRIVATE_KEY;
 
 const JHU_SSO_URL = "https://idp.jh.edu/idp/profile/SAML2/Redirect/SSO";
 const SP_NAME = "ucredit";
