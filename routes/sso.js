@@ -26,7 +26,7 @@ const PbK = process.env.PUBLIC_KEY;
 const PvK = process.env.PRIVATE_KEY;
 
 const JHU_SSO_URL = "https://idp.jh.edu/idp/profile/SAML2/Redirect/SSO";
-const SP_NAME = "ucredit";
+const SP_NAME = "https://ucredit-api.herokuapp.com";
 const BASE_URL = "https://ucredit-api.herokuapp.com";
 
 // Setup SAML strategy
