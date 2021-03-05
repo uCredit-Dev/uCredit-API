@@ -88,7 +88,7 @@ router.post(
 
 // route to metadata
 router.get("/api/metadata", (req, res) => {
-  res.type("routerlication/xml");
+  res.type("application/xml");
   res.status(200);
   res.send(samlStrategy.generateServiceProviderMetadata(PbK, PbK));
 });
