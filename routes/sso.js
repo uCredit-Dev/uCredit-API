@@ -11,16 +11,7 @@ const bodyParser = require("body-parser");
 //const path = require("path");
 
 const router = express.Router();
-/*
-const PbK = fs.readFileSync(
-  path.resolve(__dirname, "../certs/cert.pem"),
-  "utf8"
-);
-const PvK = fs.readFileSync(
-  path.resolve(__dirname, "../certs/key.pem"),
-  "utf8"
-);
-*/
+
 const secret = process.env.SESSION_SECRET;
 const PbK = process.env.PUBLIC_KEY;
 const PvK = process.env.PRIVATE_KEY;
@@ -80,9 +71,11 @@ router.post(
   passport.authenticate("samlStrategy"),
   (req, res) => {
     // the user data is in req.user
-    res.send(
+    res.json({ data: req.user });
+    /*res.send(
       `welcome ${req.user.first_name} ${req.user.last_name}, JHED id: ${req.user.id}, affiliation: ${req.user.affiliation}, job title: ${req.user.user_field_job_title}, email: ${req.user.email}`
     );
+    */
   }
 );
 
