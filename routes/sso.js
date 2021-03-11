@@ -1,6 +1,5 @@
 //TODO:
 //process user attribute
-//contact enterpriseauth@jhmi.edu to be added to the trusted SP list
 require("dotenv").config();
 const express = require("express");
 const passport = require("passport");
@@ -19,6 +18,13 @@ const PvK = process.env.PRIVATE_KEY;
 const JHU_SSO_URL = "https://idp.jh.edu/idp/profile/SAML2/Redirect/SSO";
 const SP_NAME = "https://ucredit-api.herokuapp.com";
 const BASE_URL = "https://ucredit-api.herokuapp.com";
+
+const displayName = "urn:oid:2.16.840.1.113730.3.1.241";
+const grade = "user_field_job_title";
+const email = "email";
+const school = "urn:oid:1.3.6.1.4.1.5923.1.1.1.4";
+const affiliation = "user_field_affiliation";
+const JHEDid = "uid";
 
 // Setup SAML strategy
 const samlStrategy = new saml.Strategy(
@@ -71,11 +77,10 @@ router.post(
   passport.authenticate("samlStrategy"),
   (req, res) => {
     // the user data is in req.user
-    res.json({ data: req.user });
-    /*res.send(
-      `welcome ${req.user.first_name} ${req.user.last_name}, JHED id: ${req.user.id}, affiliation: ${req.user.affiliation}, job title: ${req.user.user_field_job_title}, email: ${req.user.email}`
+    //res.json({ data: req.user });
+    res.send(
+      `welcome ${req.user[displayName]}, JHED id: ${req.user[JHEDid]}, affiliation: ${req.user[affiliation]}, school: ${req.user[school]}, year: ${req.user[grade]}, email: ${req.user[email]}`
     );
-    */
   }
 );
 
