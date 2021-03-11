@@ -8,6 +8,7 @@
 .LSOverride
 certs
 ucredit_metadata.xml
+userSSOInfo.js
 
 # Icon must end with two \r
 Icon
