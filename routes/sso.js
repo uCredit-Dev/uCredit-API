@@ -89,6 +89,7 @@ router.post(
         email: req.user[email],
         affiliation: req.user[affiliation],
         grade: req.user[grade],
+        school: req.user[school],
       };
       users
         .create(user)
