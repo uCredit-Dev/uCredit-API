@@ -6,6 +6,9 @@ const passport = require("passport");
 const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
+
+const { returnData, errorHandler } = require("./helperMethods.js");
+const users = require("../model/User.js");
 //const fs = require("fs");
 //const path = require("path");
 
@@ -68,7 +71,7 @@ router.get(
   passport.authenticate("samlStrategy")
 );
 
-// callback route
+// callback route, return user object
 router.post(
   "/api/login/callback",
   (req, res, next) => {
@@ -77,10 +80,28 @@ router.post(
   passport.authenticate("samlStrategy"),
   (req, res) => {
     // the user data is in req.user
-    //res.json({ data: req.user });
+    const id = req.user[JHEDid];
+    let user = users.findById(id);
+    if (user === null) {
+      user = {
+        _id: id,
+        name: req.user[displayName],
+        email: req.user[email],
+        affiliation: req.user[affiliation],
+        grade: req.user[grade],
+      };
+      users
+        .create({ user })
+        .then((user) => returnData(user, res))
+        .catch((err) => errorHandler(res, 400, err));
+    } else {
+      returnData(user, res);
+    }
+    /*
     res.send(
       `welcome ${req.user[displayName]}, JHED id: ${req.user[JHEDid]}, affiliation: ${req.user[affiliation]}, school: ${req.user[school]}, year: ${req.user[grade]}, email: ${req.user[email]}`
     );
+    */
   }
 );
 
