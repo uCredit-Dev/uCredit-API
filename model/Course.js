@@ -12,6 +12,11 @@ const courseSchema = new Schema({
     required: true,
     enum: ["fall", "spring", "summer", "intersession"],
   },
+  year: {
+    type: String,
+    required: true,
+    enum: ["freshman", "sophomore", "junior", "senior"],
+  },
   number: String,
   department: String,
   tags: [{ type: String }],

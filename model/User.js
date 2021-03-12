@@ -4,11 +4,11 @@ const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
   _id: { type: String, required: true }, //JHED ID
-  majors: { type: String, required: true },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  majors: { type: [String] },
+  name: { type: String, required: true },
   email: { type: String, required: true },
   affiliation: { type: String, required: true }, //STUDENT, FACULTY or STAFF
+  grade: { type: Number, required: true },
   freshman: [{ type: ObjectId, ref: "Course" }],
   sophomore: [{ type: ObjectId, ref: "Course" }],
   junior: [{ type: ObjectId, ref: "Course" }],
@@ -16,6 +16,7 @@ const userSchema = new Schema({
   distributions: [{ type: ObjectId, ref: "Distribution" }],
 });
 
+//return the user's courses of a specific term(e.g. sophomore spring)
 userSchema.statics.findCoursesByTerm = async function (user_id, year, term) {
   const user = await this.findOne({ _id: user_id })
     .populate({ path: year, match: { term } })
