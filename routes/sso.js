@@ -80,6 +80,7 @@ router.post(
   passport.authenticate("samlStrategy"),
   (req, res) => {
     // the user data is in req.user
+    /*
     const id = req.user[JHEDid];
     let user = await users.findById(id).exec();
     if (user === null) {
@@ -97,11 +98,10 @@ router.post(
     } else {
       returnData(user, res);
     }
-    /*
+    */
     res.send(
       `welcome ${req.user[displayName]}, JHED id: ${req.user[JHEDid]}, affiliation: ${req.user[affiliation]}, school: ${req.user[school]}, year: ${req.user[grade]}, email: ${req.user[email]}`
     );
-    */
   }
 );
 
