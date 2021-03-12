@@ -81,7 +81,7 @@ router.post(
   (req, res) => {
     // the user data is in req.user
     const id = req.user[JHEDid];
-    let user = users.findById(id);
+    let user = await users.findById(id).exec();
     if (user === null) {
       user = {
         _id: id,

@@ -148,6 +148,7 @@ router.patch("/api/courses/changeDistribution/:course_id"),
   };
 
 //delete a course given course id
+//update associated distribution credits
 router.delete("/api/courses/:course_id", (req, res) => {
   const c_id = req.params.course_id;
   courses
