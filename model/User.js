@@ -8,7 +8,8 @@ const userSchema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   affiliation: { type: String, required: true }, //STUDENT, FACULTY or STAFF
-  grade: { type: Number, required: true },
+  school: { type: String, require: true },
+  grade: { type: String, required: true },
   freshman: [{ type: ObjectId, ref: "Course" }],
   sophomore: [{ type: ObjectId, ref: "Course" }],
   junior: [{ type: ObjectId, ref: "Course" }],
