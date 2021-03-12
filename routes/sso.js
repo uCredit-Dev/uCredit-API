@@ -78,7 +78,7 @@ router.post(
     next();
   },
   passport.authenticate("samlStrategy"),
-  (req, res) => {
+  async (req, res) => {
     // the user data is in req.user
     const id = req.user[JHEDid];
     let user = await users.findById(id).exec();
