@@ -6,6 +6,7 @@
 .DS_Store
 .AppleDouble
 .LSOverride
+*.json
 certs
 ucredit_metadata.xml
 userSSOInfo.js
