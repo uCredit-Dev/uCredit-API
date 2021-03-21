@@ -13,8 +13,8 @@ const option = {
 };
 
 //establish connection to cloud database
-function connect() {
-  mongoose.connect(URI, option);
+async function connect() {
+  await mongoose.connect(URI, option);
 
   //handle events emitted by the connection process
   mongoose.connection.on("error", (err) => {
