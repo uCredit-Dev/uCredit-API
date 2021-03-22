@@ -1,4 +1,3 @@
-//const axios = require("axios");
 const SISCourses = require("../model/SISCourse.js");
 const db = require("./db.js");
 const fs = require("fs");
@@ -6,12 +5,11 @@ const util = require("util");
 const path = require("path");
 const readFile = util.promisify(fs.readFile);
 
-let courses = [];
-
-async function cacheCourse() {
+async function cacheCourse(filename) {
+  let courses = [];
   await db.connect();
   const data = await readFile(
-    path.resolve(__dirname, "../ftrFA2019.json"),
+    path.resolve(__dirname, "../" + filename),
     "utf-8"
   );
   courses = JSON.parse(data.toString());
@@ -85,6 +83,7 @@ function byPass(course) {
   );
 }
 
-cacheCourse();
+const filename = "ftrFA2019.json";
+cacheCourse(filename);
 
 module.exports = { cacheCourse };
