@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(courseRouter);
 app.use(ssoRouter);
 //app.use(userRouter);
-//app.use(searchRouter);
+app.use(searchRouter);
 
 //launch api
 app.listen(port, () => {
