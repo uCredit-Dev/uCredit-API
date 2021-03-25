@@ -2,9 +2,10 @@
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
+  res.set('Access-Control-Allow-Origin', '*');
   data
     ? res.json({ data: data })
-    : errorHandler(res, 404, "Resource not found");
+    : errorHandler(res, 404, 'Resource not found');
 }
 
 //set status code of the response and send error info to the user in json
