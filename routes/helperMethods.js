@@ -2,6 +2,7 @@
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
+  console.log('returning data');
   res.set('Access-Control-Allow-Origin', '*');
   data
     ? res.json({ data: data })
