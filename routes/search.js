@@ -3,17 +3,18 @@ const express = require("express");
 const router = express.Router();
 const { returnData, errorHandler } = require("./helperMethods.js");
 const SISCourses = require("../model/SISCourse.js");
+const e = require("express");
 
 router.get("/api/search", (req, res) => {
   //console.log(req.query.department);
   const query = constructQuery(
-    req.body.query,
-    req.body.school,
-    req.body.department,
-    req.body.term,
-    req.body.areas,
-    req.body.credits,
-    req.body.wi
+    req.query.query,
+    req.query.school,
+    req.query.department,
+    req.query.term,
+    req.query.areas,
+    req.query.credits,
+    req.query.wi
   );
   console.log("constructed query:", query);
   SISCourses.find(query)
@@ -41,10 +42,17 @@ function constructQuery(
     areas: { $regex: areas, $options: "i" },
   };
   if (credits != null) {
-    query.credits = credits;
+    let parsed = Number.parseInt(credits);
+    if (!isNaN(parsed)) {
+      query.credits = parsed;
+    }
   }
   if (wi != null) {
-    query.wi = wi;
+    if (wi === "1" || wi === "true") {
+      query.wi = true;
+    } else if (wi === "1" || wi === "false") {
+      query.wi = false;
+    }
   }
   return query;
 }
