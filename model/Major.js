@@ -6,7 +6,9 @@ const Schema = mongoose.Schema;
     distribution requirements.
 */
 const majorSchema = new Schema({
-    name: { type: String, required: true },
-    department: { type: String, required: true },
-    
+  name: { type: String, required: true },
+  department: { type: String, required: true },
+  //tags()
+  //wi
+  //
 });
