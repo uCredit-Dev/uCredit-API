@@ -19,4 +19,20 @@ function errorHandler(res, status, err) {
   });
 }
 
-module.exports = { returnData, errorHandler };
+function distributionCreditUpdate(distribution, course, add) {
+  if (add) {
+    distribution.planned += course.credits;
+    if (course.taken) {
+      distribution.current += course.credits;
+    }
+  } else {
+    distribution.planned -= course.credits;
+    if (course.taken) {
+      distribution.current -= course.credits;
+    }
+  }
+  distribution.satisfied =
+    distribution.planned >= distribution.required ? true : false;
+  distribution.save();
+}
+module.exports = { returnData, errorHandler, distributionCreditUpdate };

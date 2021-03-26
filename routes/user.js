@@ -1,3 +1,2 @@
 //routes to handle user creation
-
-//change/add major
+//add major, auto add distributions?

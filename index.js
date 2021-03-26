@@ -7,6 +7,7 @@ const app = express();
 const courseRouter = require("./routes/course.js");
 const userRouter = require("./routes/user.js");
 const searchRouter = require("./routes/search.js");
+const ssoRouter = require("./routes/sso.js");
 const port = process.env.PORT || 4567;
 
 db.connect();
@@ -16,8 +17,9 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(courseRouter);
+app.use(ssoRouter);
 //app.use(userRouter);
-//app.use(searchRouter);
+app.use(searchRouter);
 
 //launch api
 app.listen(port, () => {

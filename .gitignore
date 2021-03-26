@@ -6,6 +6,11 @@
 .DS_Store
 .AppleDouble
 .LSOverride
+*.json
+certs
+ucredit_metadata.xml
+userSSOInfo.js
+test.js
 
 # Icon must end with two \r
 Icon
