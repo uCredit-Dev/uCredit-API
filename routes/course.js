@@ -1,4 +1,4 @@
-//all routes related to retrieve, update, delete courses
+//all routes related to retrieve, add, update, delete courses
 const { addSampleUsers } = require("../data/userSamples.js");
 const { addSampleDistributions } = require("../data/distributionSamples.js");
 const { addSampleCourses } = require("../data/courseSamples.js");
@@ -10,29 +10,30 @@ const {
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
+const plans = require("../model/Plan.js");
 
 const express = require("express");
 const router = express.Router();
-
+/*
 router.get("/api/addSamples", (req, res) => {
   addSampleUsers(users).catch((err) => errorHandler(res, 500, err));
   addSampleDistributions(distributions).catch((err) =>
     errorHandler(res, 500, err)
   );
   addSampleCourses(courses).catch((err) => errorHandler(res, 500, err));
-});
+});*/
 
-//return all courses of the user
-router.get("/api/courses/user/:user_id", (req, res) => {
-  const user_id = req.params.user_id;
+//return all courses of the user's plan
+router.get("/api/coursesByPlan/:plan_id", (req, res) => {
+  const plan_id = req.params.plan_id;
   courses
-    .findByUserId(user_id)
+    .findByPlanId(plan_id)
     .then((courses) => returnData(courses, res))
     .catch((err) => errorHandler(res, 500, err));
 });
 
 //if distribution_id is not found data field would be an empty array
-router.get("/api/courses/distribution/:distribution_id", (req, res) => {
+router.get("/api/coursesByDistribution/:distribution_id", (req, res) => {
   const d_id = req.params.distribution_id;
   courses
     .findByDistributionId(d_id)
@@ -48,14 +49,13 @@ router.get("/api/courses/:course_id", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-//get courses by term. provide user id, year, and term
-router.get("/api/courses/term/:user_id", (req, res) => {
-  const user_id = req.params.user_id;
+//get courses in a plan by term. provide plan id, year, and term
+router.get("/api/coursesByTerm/:plan_id", (req, res) => {
+  const plan_id = req.params.plan_id;
   const year = req.query.year;
   const term = req.query.term;
-  console.log("route called");
-  users
-    .findCoursesByTerm(user_id, year, term)
+  plans
+    .findCoursesByTerm(plan_id, year, term)
     .then((courses) => returnData(courses, res))
     .catch((err) => errorHandler(res, 500, err));
 });
@@ -64,13 +64,13 @@ router.get("/api/courses/term/:user_id", (req, res) => {
 //distribution field is also updated
 router.post("/api/courses", async (req, res) => {
   const course = req.body;
-  await users
-    .findById(course.user_id)
-    .then((user) => {
+  await plans
+    .findById(course.plan_id)
+    .then((plan) => {
       course.distribution_ids.forEach((id) => {
-        if (!user.distributions.includes(id)) {
+        if (!plan.distribution_ids.includes(id)) {
           errorHandler(res, 400, {
-            message: "Invalid combination of user_id and distribution_ids.",
+            message: "Invalid combination of plan_id and distribution_ids.",
           });
         }
       });
@@ -91,10 +91,10 @@ router.post("/api/courses", async (req, res) => {
           )
           .catch((err) => errorHandler(res, 500, err));
       });
-      //add course id to user's year array
+      //add course id to user plan's year array
       let query = {};
       query[course.year] = course._id; //e.g. { freshman: id }
-      users.findByIdAndUpdate(course.user_id, { $push: query }).exec();
+      plans.findByIdAndUpdate(course.plan_id, { $push: query }).exec();
       returnData(course, res);
     })
     .catch((err) => errorHandler(res, 400, err));
@@ -128,7 +128,8 @@ router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
 });
 
 //change course's distribution, need to provide distribution_ids in req body
-//!!!does not update credit!!! need to consider whether the user can change or not
+//!!!does not update credit for the distributions!!! need to consider whether the user can change or not
+/*
 router.patch("/api/courses/changeDistribution/:course_id"),
   (req, res) => {
     const c_id = req.params.course_id;
@@ -146,6 +147,7 @@ router.patch("/api/courses/changeDistribution/:course_id"),
         .catch((err) => errorHandler(res, 404, err));
     }
   };
+*/
 
 //delete a course given course id
 //update associated distribution credits
@@ -169,7 +171,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
       //delete course id to user's year array
       let query = {};
       query[course.year] = course._id; //e.g. { freshman: id }
-      users.findByIdAndUpdate(course.user_id, { $pull: query }).exec();
+      users.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
       returnData(course, res);
     })
     .catch((err) => errorHandler(res, 500, err));

@@ -5,6 +5,8 @@ const morgan = require("morgan"); //log http request history to terminal
 const express = require("express");
 const app = express();
 const courseRouter = require("./routes/course.js");
+const distributionRouter = require("./routes/distribution.js");
+const planRouter = require("./routes/plan.js");
 const userRouter = require("./routes/user.js");
 const searchRouter = require("./routes/search.js");
 const ssoRouter = require("./routes/sso.js");
@@ -17,6 +19,8 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(courseRouter);
+app.use(distributionRouter);
+app.use(planRouter);
 app.use(ssoRouter);
 //app.use(userRouter);
 app.use(searchRouter);
