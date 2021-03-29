@@ -6,6 +6,7 @@ const Schema = mongoose.Schema;
     A user can have multiple plans for different combination of majors.
 */
 const planSchema = new Schema({
+  name: { type: String, required: true },
   majors: { type: [String] },
   freshman: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   sophomore: [{ type: Schema.Types.ObjectId, ref: "Course" }],

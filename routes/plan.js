@@ -67,17 +67,25 @@ router.delete("/api/plans/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-router.patch("/api/plans/updateMajors", (req, res) => {
+router.patch("/api/plans/update", (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
-  plans
-    .findByIdAndUpdate(
-      id,
-      { majors: majors },
-      { new: true, runValidators: true }
-    )
-    .then((plan) => returnData(plan, res))
-    .catch((err) => errorHandler(res, 500, err));
+  const name = req.body.name;
+  if (!(majors || name)) {
+    errorHandler(res, 400, "Must update majors or name.");
+  } else {
+    let updateBody = {};
+    if (majors) {
+      updateBody.majors = majors;
+    }
+    if (name) {
+      updateBody.name = name;
+    }
+    plans
+      .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
+      .then((plan) => returnData(plan, res))
+      .catch((err) => errorHandler(res, 500, err));
+  }
 });
 
 module.exports = router;
