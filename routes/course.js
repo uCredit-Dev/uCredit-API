@@ -171,7 +171,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
       //delete course id to user's year array
       let query = {};
       query[course.year] = course._id; //e.g. { freshman: id }
-      users.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
+      plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
       returnData(course, res);
     })
     .catch((err) => errorHandler(res, 500, err));
