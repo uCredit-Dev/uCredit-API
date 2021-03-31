@@ -28,6 +28,7 @@ const courseSchema = new Schema({
   distribution_ids: [
     { type: Schema.Types.ObjectId, ref: "Distribution", required: true },
   ],
+  plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
   user_id: { type: String, required: true },
 });
 
@@ -36,8 +37,8 @@ courseSchema.statics.findByDistributionId = function (d_id) {
   return this.find({ distribution_ids: d_id });
 };
 
-courseSchema.statics.findByUserId = function (user_id) {
-  return this.find({ user_id });
+courseSchema.statics.findByPlanId = function (plan_id) {
+  return this.find({ plan_id });
 };
 
 const Course = mongoose.model("Course", courseSchema);
