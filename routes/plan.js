@@ -53,7 +53,7 @@ router.post("/api/plans", (req, res) => {
 
 //delete a plan and its distributions and courses
 //return deleted courses
-/*******need testing ********/
+/*******need to delete the id from the user as well********/
 router.delete("/api/plans/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   plans
@@ -62,6 +62,14 @@ router.delete("/api/plans/:plan_id", (req, res) => {
       //delete distribution & courses
       distributions.deleteMany({ plan_id: plan._id }).exec();
       courses.deleteMany({ plan_id: plan._id }).exec();
+      users
+        .findByIdAndUpdate(
+          //delete plan_id from user
+          plan._id,
+          { $pull: { plan_ids: plan._id } },
+          { new: true, runValidators: true }
+        )
+        .exec();
       returnData(plan, res);
     })
     .catch((err) => errorHandler(res, 500, err));
