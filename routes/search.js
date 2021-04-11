@@ -3,7 +3,6 @@ const express = require("express");
 const router = express.Router();
 const { returnData, errorHandler } = require("./helperMethods.js");
 const SISCourses = require("../model/SISCourse.js");
-const e = require("express");
 
 router.get("/api/search", (req, res) => {
   //console.log(req.query.department);
@@ -16,7 +15,6 @@ router.get("/api/search", (req, res) => {
     req.query.credits,
     req.query.wi
   );
-  console.log("constructed query:", query);
   SISCourses.find(query)
     .then((match) => returnData(match, res))
     .catch((err) => errorHandler(res, 500, err));
