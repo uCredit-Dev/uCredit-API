@@ -13,10 +13,11 @@ const ssoRouter = require("./routes/sso.js");
 const port = process.env.PORT || 4567;
 
 const corsOptions = {
-  origin: "*",
+  origin: ["http://localhost:3000", "https://ucredit.herokuapp.com"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: true,
   optionsSuccessStatus: 204,
+  credentials: true,
 };
 
 db.connect();

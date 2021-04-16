@@ -141,11 +141,13 @@ router.get("/api/retrieveUser", (req, res) => {
   if (!req.user) {
     errorHandler(res, 401, "Not logged in");
   }
+  /*
   res.setHeader("Access-Control-Allow-Origin", [
     "http://localhost:3000",
     "https://ucredit.herokuapp.com",
   ]);
   res.setHeader("Access-Control-Allow-Credentials", true);
+  */
   users
     .findById(req.user.uid)
     .then((user) => returnData(user, res))
