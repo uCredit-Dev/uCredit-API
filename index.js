@@ -22,7 +22,7 @@ app.use(courseRouter);
 app.use(distributionRouter);
 app.use(planRouter);
 app.use(ssoRouter);
-app.use(userRouter);
+//app.use(userRouter);
 app.use(searchRouter);
 
 //launch api

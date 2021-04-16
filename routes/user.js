@@ -9,24 +9,17 @@ const cookieParser = require("cookie-parser");
 
 router.use(cookieParser());
 
-router.get("/api/validateUser/:hash", (req, res) => {
+router.get("/api/retrieveUser", (req, res) => {
+  if (!req.user) {
+    errorHandler(res, 401, "Not logged in");
+  }
+  returnData(req.user.uid, res);
   /*
-  if (!req.cookie) {
-    res.redirect("/api/login");
-  } else {
+  users
+    .findById(req.user.uid)
+    .then((user) => returnData(user, res))
+    .catch((err) => errorHandler(res, 500, err));
     */
-  const hash = req.params.hash;
-  sessions.findOne(hash).then((s) => {
-    if (s) {
-      users
-        .findById(s._id)
-        .then((user) => returnData(user, res))
-        .catch((err) => errorHandler(res, 500, err));
-    } else {
-      errorHandler(res, 401, "invalid hash");
-      //res.redirect("/api/login"); //did not find any matching hash
-    }
-  });
 });
 
 module.exports = router;

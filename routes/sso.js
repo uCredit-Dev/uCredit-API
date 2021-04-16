@@ -104,6 +104,8 @@ router.post(
     }
   */
     }
+    res.redirect("https://ucredit.herokuapp.com/");
+    /*
     bcrypt.hash(user._id, saltRounds).then((hash) => {
       const query = { user_id, hash };
       const update = { createdAt: Date.now };
@@ -113,6 +115,7 @@ router.post(
         .then((s) => res.redirect(`https://ucredit.herokuapp.com/?id=${hash}`))
         .catch((err) => errorHandler(res, 500, err));
     });
+    */
   }
 );
 
@@ -121,6 +124,25 @@ router.get("/api/metadata", (req, res) => {
   res.type("application/xml");
   res.status(200);
   res.send(samlStrategy.generateServiceProviderMetadata(PbK, PbK));
+});
+
+router.get("/api/retrieveUser", (req, res) => {
+  if (!req.user) {
+    errorHandler(res, 401, "Not logged in");
+  }
+  returnData(req.user, res);
+  /*
+  users
+    .findById(req.user.uid)
+    .then((user) => returnData(user, res))
+    .catch((err) => errorHandler(res, 500, err));
+    */
+});
+
+router.delete("/api/retrieveUser", (req, res) => {
+  req.logout();
+  req.session.destroy();
+  returnData({ message: "You have been logged out." }, res);
 });
 
 module.exports = router;
