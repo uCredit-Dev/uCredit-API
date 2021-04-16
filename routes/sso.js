@@ -130,13 +130,10 @@ router.get("/api/retrieveUser", (req, res) => {
   if (!req.user) {
     errorHandler(res, 401, "Not logged in");
   }
-  returnData(req.user, res);
-  /*
   users
     .findById(req.user.uid)
     .then((user) => returnData(user, res))
     .catch((err) => errorHandler(res, 500, err));
-    */
 });
 
 router.delete("/api/retrieveUser", (req, res) => {
