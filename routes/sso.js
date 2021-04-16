@@ -7,6 +7,7 @@ const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const sessions = require("../model/Session");
+//const cors = require("cors");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
@@ -14,6 +15,16 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
 //const fs = require("fs");
 //const path = require("path");
+
+/*
+const corsOptions = {
+  "origin": https://ucredit.herokuapp.com/",
+  "optionsSuccessStatus": 204,
+  "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+  "credentials": true
+
+}
+*/
 
 const router = express.Router();
 
@@ -130,6 +141,8 @@ router.get("/api/retrieveUser", (req, res) => {
   if (!req.user) {
     errorHandler(res, 401, "Not logged in");
   }
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.setHeader("Access-Control-Allow-Credentials", true);
   users
     .findById(req.user.uid)
     .then((user) => returnData(user, res))
