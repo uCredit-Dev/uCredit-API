@@ -5,10 +5,10 @@ const router = express.Router();
 const { returnData, errorHandler } = require("./helperMethods.js");
 const sessions = require("../model/Session");
 const users = require("../model/User");
-const cookieParser = require("cookie-parser");
+//const cookieParser = require("cookie-parser");
 
-router.use(cookieParser());
-
+//router.use(cookieParser());
+/*
 router.get("/api/retrieveUser", (req, res) => {
   if (!req.user) {
     errorHandler(res, 401, "Not logged in");
@@ -19,7 +19,7 @@ router.get("/api/retrieveUser", (req, res) => {
     .findById(req.user.uid)
     .then((user) => returnData(user, res))
     .catch((err) => errorHandler(res, 500, err));
-    */
+    
 });
-
-module.exports = router;
+*/
+//module.exports = router;
