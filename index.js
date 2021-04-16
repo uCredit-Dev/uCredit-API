@@ -12,9 +12,16 @@ const searchRouter = require("./routes/search.js");
 const ssoRouter = require("./routes/sso.js");
 const port = process.env.PORT || 4567;
 
+const corsOptions = {
+  origin: "*",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  preflightContinue: true,
+  optionsSuccessStatus: 204,
+};
+
 db.connect();
 //use middleware functions
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
