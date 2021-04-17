@@ -16,7 +16,7 @@ router.get("/api/plans/:plan_id", (req, res) => {
   plans
     .findById(p_id)
     .then((plan) => returnData(plan, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //get all plans of a user
@@ -28,7 +28,7 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
     .then((user) => {
       returnData(user.plan_ids, res);
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //create plan and add the plan id to user
@@ -48,7 +48,7 @@ router.post("/api/plans", (req, res) => {
         .exec();
       returnData(plan, res);
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //delete a plan and its distributions and courses
@@ -72,7 +72,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
         .exec();
       returnData(plan, res);
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 router.patch("/api/plans/update", (req, res) => {
@@ -92,7 +92,7 @@ router.patch("/api/plans/update", (req, res) => {
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => returnData(plan, res))
-      .catch((err) => errorHandler(res, 500, err));
+      .catch((err) => errorHandler(res, 400, err));
   }
 });
 

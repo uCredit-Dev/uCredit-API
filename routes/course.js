@@ -29,7 +29,7 @@ router.get("/api/coursesByPlan/:plan_id", (req, res) => {
   courses
     .findByPlanId(plan_id)
     .then((courses) => returnData(courses, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //if distribution_id is not found data field would be an empty array
@@ -38,7 +38,7 @@ router.get("/api/coursesByDistribution/:distribution_id", (req, res) => {
   courses
     .findByDistributionId(d_id)
     .then((courses) => returnData(courses, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 router.get("/api/courses/:course_id", (req, res) => {
@@ -46,7 +46,7 @@ router.get("/api/courses/:course_id", (req, res) => {
   courses
     .findById(c_id)
     .then((course) => returnData(course, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //get courses in a plan by term. provide plan id, year, and term
@@ -57,7 +57,7 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
   plans
     .findCoursesByTerm(plan_id, year, term)
     .then((courses) => returnData(courses, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //add course, need to provide course info as json object in request body
@@ -174,7 +174,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
       plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
       returnData(course, res);
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 module.exports = router;

@@ -16,7 +16,7 @@ router.get("/api/distributions/:distribution_id", (req, res) => {
   distributions
     .findById(d_id)
     .then((distribution) => returnData(distribution, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //get all distributions in a plan
@@ -26,7 +26,7 @@ router.get("/api/distributionsByPlan/:plan_id", (req, res) => {
     .findById(plan_id)
     .populate({ path: "distribution_ids" })
     .then((plan) => returnData(plan.distribution_ids, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //create distribution and update its plan
@@ -45,7 +45,7 @@ router.post("/api/distributions", (req, res) => {
         .exec();
       returnData(distribution, res);
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //change required credit setting for distribution
@@ -63,7 +63,7 @@ router.patch("/api/distributions/updateRequiredCredits", (req, res) => {
       distribution.satisfied = distribution.planned >= distribution.required;
       distribution.save().then((result) => returnData(result, res));
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 router.patch("/api/distributions/updateName", (req, res) => {
@@ -72,7 +72,7 @@ router.patch("/api/distributions/updateName", (req, res) => {
   distributions
     .findByIdAndUpdate(id, { name }, { new: true, runValidators: true })
     .then((distribution) => returnData(distribution, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 //delete a distribution and its associated courses(if that is the only distirbution the course belongs to) and update it's plan
@@ -102,7 +102,7 @@ router.delete("/api/distributions/:d_id", (req, res) => {
         .exec();
       returnData(distribution, res);
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 module.exports = router;

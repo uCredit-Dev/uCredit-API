@@ -18,7 +18,7 @@ router.get("/api/search", (req, res) => {
   );
   SISCourses.find(query)
     .then((match) => returnData(match, res))
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 function constructQuery(
