@@ -13,7 +13,8 @@ router.get("/api/search", (req, res) => {
     req.query.term,
     req.query.areas,
     req.query.credits,
-    req.query.wi
+    req.query.wi,
+    req.query.tags
   );
   SISCourses.find(query)
     .then((match) => returnData(match, res))
@@ -27,7 +28,8 @@ function constructQuery(
   term = "",
   areas = "",
   credits,
-  wi
+  wi,
+  tags = ""
 ) {
   let query = {
     $or: [
@@ -38,6 +40,7 @@ function constructQuery(
     department: { $regex: department, $options: "i" },
     terms: { $regex: term, $options: "i" },
     areas: { $regex: areas, $options: "i" },
+    tags: { $regex: tags, $options: "i" },
   };
   if (credits != null) {
     let parsed = Number.parseInt(credits);
