@@ -1,3 +1,5 @@
+//passport is manageing session storage
+/*
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -10,3 +12,4 @@ const sessionSchema = new Schema({
 const Session = mongoose.model("Session", sessionSchema);
 
 module.exports = Session;
+*/

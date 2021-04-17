@@ -6,25 +6,9 @@ const passport = require("passport");
 const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
-const sessions = require("../model/Session");
-//const cors = require("cors");
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
 
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
-//const fs = require("fs");
-//const path = require("path");
-
-/*
-const corsOptions = {
-  "origin": https://ucredit.herokuapp.com/",
-  "optionsSuccessStatus": 204,
-  "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-  "credentials": true
-
-}
-*/
 
 const router = express.Router();
 
@@ -106,27 +90,8 @@ router.post(
         school: req.user[school],
       };
       users.create(user).exec();
-      /*
-        .then((user) => returnData(user, res))
-        .catch((err) => errorHandler(res, 400, err));
-        
-    } else {
-      returnData(user, res);
-    }
-  */
     }
     res.redirect("https://ucredit.herokuapp.com/");
-    /*
-    bcrypt.hash(user._id, saltRounds).then((hash) => {
-      const query = { user_id, hash };
-      const update = { createdAt: Date.now };
-      const options = { upsert: true, new: true, setDefaultsOnInsert: true };
-      sessions
-        .findOneAndUpdate(query, update, options) //if session does not exist, create new one
-        .then((s) => res.redirect(`https://ucredit.herokuapp.com/?id=${hash}`))
-        .catch((err) => errorHandler(res, 500, err));
-    });
-    */
   }
 );
 
@@ -141,13 +106,6 @@ router.get("/api/retrieveUser", (req, res) => {
   if (!req.user) {
     errorHandler(res, 401, "Not logged in");
   }
-  /*
-  res.setHeader("Access-Control-Allow-Origin", [
-    "http://localhost:3000",
-    "https://ucredit.herokuapp.com",
-  ]);
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  */
   users
     .findById(req.user.uid)
     .then((user) => returnData(user, res))
