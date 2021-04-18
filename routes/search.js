@@ -29,7 +29,7 @@ function constructQuery(
   areas = "",
   credits,
   wi,
-  tags = ""
+  tags
 ) {
   let query = {
     $or: [
@@ -40,7 +40,6 @@ function constructQuery(
     department: { $regex: department, $options: "i" },
     terms: { $regex: term, $options: "i" },
     areas: { $regex: areas, $options: "i" },
-    tags: { $regex: tags, $options: "i" },
   };
   if (credits != null) {
     let parsed = Number.parseInt(credits);
@@ -54,6 +53,9 @@ function constructQuery(
     } else if (wi === "1" || wi === "false") {
       query.wi = false;
     }
+  }
+  if (tags != null) {
+    query.tags = { $regex: tags, $options: "i" };
   }
   return query;
 }
