@@ -1,5 +1,3 @@
-//TODO:
-//process user attribute
 require("dotenv").config();
 const express = require("express");
 const passport = require("passport");
@@ -69,7 +67,7 @@ router.get(
   passport.authenticate("samlStrategy")
 );
 
-// callback route, return user object
+// callback route, redirect to frontend url
 router.post(
   "/api/login/callback",
   (req, res, next) => {
@@ -80,6 +78,7 @@ router.post(
     // the user data is in req.user
     const id = req.user[JHEDid];
     let user = await users.findById(id).exec();
+    //if user if not in db already, create and save one
     if (user === null) {
       user = {
         _id: id,
@@ -95,19 +94,13 @@ router.post(
   }
 );
 
-// route to metadata
-router.get("/api/metadata", (req, res) => {
-  res.type("application/xml");
-  res.status(200);
-  res.send(samlStrategy.generateServiceProviderMetadata(PbK, PbK));
-});
-
+//retrieve user object from db
 router.get("/api/retrieveUser", (req, res) => {
   if (!req.user) {
     errorHandler(res, 401, "Not logged in");
   }
   users
-    .findById(req.user.uid)
+    .findById(req.user.uid) //req.user.uid is JHED ID
     .then((user) => returnData(user, res))
     .catch((err) => errorHandler(res, 500, err));
 });
@@ -116,6 +109,13 @@ router.delete("/api/retrieveUser", (req, res) => {
   req.logout();
   req.session.destroy();
   returnData({ message: "You have been logged out." }, res);
+});
+
+// route to metadata
+router.get("/api/metadata", (req, res) => {
+  res.type("application/xml");
+  res.status(200);
+  res.send(samlStrategy.generateServiceProviderMetadata(PbK, PbK));
 });
 
 module.exports = router;
