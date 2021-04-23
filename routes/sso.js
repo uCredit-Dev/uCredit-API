@@ -97,7 +97,11 @@ router.post(
 //retrieve user object from db
 router.get("/api/retrieveUser", (req, res) => {
   if (!req.user) {
-    errorHandler(res, 401, "Not logged in");
+    errorHandler(
+      res,
+      401,
+      "Not logged in  | req.user is " + req.user + " | req is " + req
+    );
   }
   users
     .findById(req.user.uid) //req.user.uid is JHED ID
