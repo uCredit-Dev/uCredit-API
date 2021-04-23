@@ -14,9 +14,9 @@ const port = process.env.PORT || 4567;
 
 const corsOptions = {
   origin: [
-    "http://localhost:3000/",
-    "https://ucredit.herokuapp.com/",
-    "http://127.0.0.1/",
+    "http://localhost:3000",
+    "https://ucredit.herokuapp.com",
+    "http://127.0.0.1",
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: true, // Why do we need this?
