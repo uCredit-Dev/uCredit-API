@@ -58,8 +58,8 @@ router.use(bodyParser.urlencoded({ extended: false }));
 router.use(
   session({
     secret: secret,
-    // resave: false,
-    // saveUninitialized: true,
+    resave: false,
+    saveUninitialized: true,
     cookie: { sameSite: "none", secure: true, maxAge: 24 * 60 * 60 * 1000 },
   })
 );
