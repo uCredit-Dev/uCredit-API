@@ -60,7 +60,7 @@ router.use(
     secret: secret,
     resave: false,
     saveUninitialized: true,
-    cookie: { sameSite: "none" },
+    cookie: { sameSite: "none", secure: false },
   })
 );
 router.use(passport.initialize({}));
