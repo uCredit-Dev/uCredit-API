@@ -34,6 +34,7 @@ const samlStrategy = new saml.Strategy(
     callbackUrl: `${BASE_URL}/api/login/callback`,
     decryptionPvk: PvK,
     privateCert: PvK,
+    sameSite: "none",
   },
   (profile, done) => {
     return done(null, profile);
@@ -54,7 +55,14 @@ passport.deserializeUser(function (user, done) {
 
 // Middleware
 router.use(bodyParser.urlencoded({ extended: false }));
-router.use(session({ secret: secret, resave: false, saveUninitialized: true }));
+router.use(
+  session({
+    secret: secret,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { sameSite: "none" },
+  })
+);
 router.use(passport.initialize({}));
 router.use(passport.session({}));
 
