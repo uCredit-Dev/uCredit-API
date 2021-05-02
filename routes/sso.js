@@ -58,9 +58,9 @@ router.use(bodyParser.urlencoded({ extended: false }));
 router.use(
   session({
     secret: secret,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { sameSite: "none", secure: true },
+    // resave: false,
+    // saveUninitialized: true,
+    cookie: { sameSite: "none", secure: false, maxAge: 24 * 60 * 60 * 1000 },
   })
 );
 router.use(passport.initialize({}));
