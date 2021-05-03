@@ -19,7 +19,7 @@ const corsOptions = {
     "http://127.0.0.1",
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  // preflightContinue: true, // Why do we need this?
+  preflightContinue: false, // Why do we need this?
   optionsSuccessStatus: 204,
   credentials: true,
 };
