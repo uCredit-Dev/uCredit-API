@@ -6,9 +6,8 @@ const Schema = mongoose.Schema;
     distribution requirements.
 */
 const majorSchema = new Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true }, //e.g. B.S. Computer Science
   department: { type: String, required: true },
-  //tags()
-  //wi
-  //
+  distributions: { type: Array },
+  requirements: { type: Array },
 });
