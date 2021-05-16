@@ -101,10 +101,11 @@ router.post(
       users.create(user).exec();
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
+    console.log(hash);
     sessions
       .findByIdAndUpdate(
         id,
-        { createdAt: Date.now, hash },
+        { createdAt: Date.now(), hash },
         { upsert: true, new: true }
       )
       .then((user) => {
