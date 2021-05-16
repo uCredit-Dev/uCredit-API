@@ -4,9 +4,11 @@ const passport = require("passport");
 const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
+const cryptoRandomString = require("crypto-random-string");
 
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
+const sessions = require("../model/Session.js");
 
 const router = express.Router();
 
@@ -98,12 +100,31 @@ router.post(
       };
       users.create(user).exec();
     }
-    res.redirect("https://ucredit.herokuapp.com/");
+    const hash = cryptoRandomString({ length: 20, type: "url-safe" });
+    sessions
+      .findByIdAndUpdate(
+        id,
+        { createdAt: Date.now, hash },
+        { upsert: true, new: true }
+      )
+      .then((user) => {
+        res.redirect(`https://ucredit.herokuapp.com/${hash}`);
+      })
+      .catch((err) => errorHandler(res, 500, err));
   }
 );
 
 //retrieve user object from db
-router.get("/api/retrieveUser", (req, res) => {
+router.get("/api/retrieveUser/:hash", (req, res) => {
+  const hash = req.params.hash;
+  sessions.findOne({ hash }).then((user) => {
+    if (user === null) {
+      errorHandler(res, 401, "User not logged in.");
+    } else {
+      returnData({ id: user._id }, res);
+    }
+  });
+  /*
   if (!req.user) {
     errorHandler(
       res,
@@ -115,12 +136,18 @@ router.get("/api/retrieveUser", (req, res) => {
     .findById(req.user.uid) //req.user.uid is JHED ID
     .then((user) => returnData(user, res))
     .catch((err) => errorHandler(res, 500, err));
+    */
 });
 
-router.delete("/api/retrieveUser", (req, res) => {
-  req.logout();
-  req.session.destroy();
-  returnData({ message: "You have been logged out." }, res);
+router.delete("/api/retrieveUser/:hash", (req, res) => {
+  const hash = req.params.hash;
+  sessions
+    .remove({ hash })
+    .then((user) => returnData(user, res))
+    .catch((err) => errorHandler(res, 500, err));
+  // req.logout();
+  // req.session.destroy();
+  // returnData({ message: "You have been logged out." }, res);
 });
 
 // route to metadata
