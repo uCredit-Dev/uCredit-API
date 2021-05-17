@@ -122,7 +122,10 @@ router.get("/api/retrieveUser/:hash", (req, res) => {
     if (user === null) {
       errorHandler(res, 401, "User not logged in.");
     } else {
-      returnData({ id: user._id }, res);
+      users
+        .findById(user._id)
+        .then((user) => returnData(user, res))
+        .catch((err) => errorHandler(res, 500, res));
     }
   });
   /*
