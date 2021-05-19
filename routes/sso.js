@@ -105,7 +105,8 @@ router.post(
     sessions
       .findByIdAndUpdate(
         id,
-        { createdAt: Date.now(), hash },
+        // { createdAt: Date.now(), hash },
+        { hash },
         { upsert: true, new: true }
       )
       .then((user) => {
