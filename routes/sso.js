@@ -105,7 +105,6 @@ router.post(
       .findByIdAndUpdate(
         id,
         { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
-        // { hash, sessionActivity: Date.now() },
         { upsert: true, new: true }
       )
       .then((user) => {
@@ -128,19 +127,6 @@ router.get("/api/retrieveUser/:hash", (req, res) => {
         .catch((err) => errorHandler(res, 500, res));
     }
   });
-  /*
-  if (!req.user) {
-    errorHandler(
-      res,
-      401,
-      "Not logged in  | req.user is " + req.user + " | req is " + req
-    );
-  }
-  users
-    .findById(req.user.uid) //req.user.uid is JHED ID
-    .then((user) => returnData(user, res))
-    .catch((err) => errorHandler(res, 500, err));
-    */
 });
 
 router.delete("/api/retrieveUser/:hash", (req, res) => {
@@ -149,9 +135,6 @@ router.delete("/api/retrieveUser/:hash", (req, res) => {
     .remove({ hash })
     .then((user) => returnData(user, res))
     .catch((err) => errorHandler(res, 500, err));
-  // req.logout();
-  // req.session.destroy();
-  // returnData({ message: "You have been logged out." }, res);
 });
 
 // route to metadata
