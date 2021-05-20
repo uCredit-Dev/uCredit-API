@@ -14,6 +14,7 @@ const planSchema = new Schema({
   senior: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
+  createdAt: { type: Date, required: false },
 });
 
 //return the user's courses of a specific term(e.g. sophomore spring in plan 1)
