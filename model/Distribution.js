@@ -15,7 +15,7 @@ const distributionSchema = new Schema({
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
   courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-  filter: { type: object, required: false },
+  filter: { type: Object, required: true },
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
   createdAt: { type: Date, required: false },
