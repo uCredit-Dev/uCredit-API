@@ -98,10 +98,9 @@ router.post(
         grade: req.user[grade],
         school: req.user[school],
       };
-      users.create(user).exec();
+      users.create(user);
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
-    console.log(hash);
     sessions
       .findByIdAndUpdate(
         id,
