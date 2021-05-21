@@ -8,8 +8,6 @@ const plans = require("../model/Plan.js");
 const express = require("express");
 const router = express.Router();
 
-module.exports = router;
-
 //get plan by plan id
 router.get("/api/plans/:plan_id", (req, res) => {
   const p_id = req.params.plan_id;
