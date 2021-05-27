@@ -15,7 +15,11 @@ const planSchema = new Schema({
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
   createdAt: { type: Date, required: false },
-  expireAt: { type: Date, default: Date.now() }, //60*60*24
+  expireAt: {
+    type: Date,
+    default: Date.now(),
+    index: { expires: "5m" },
+  }, //60*60*24
 });
 
 //return the user's courses of a specific term(e.g. sophomore spring in plan 1)
