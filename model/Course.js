@@ -30,7 +30,7 @@ const courseSchema = new Schema({
   ],
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
   user_id: { type: String, required: true },
-  createdAt: { type: Date, required: false },
+  expireAt: { type: Date, default: Date.now() },
 });
 
 //custom static model functions
