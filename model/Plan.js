@@ -12,6 +12,7 @@ const planSchema = new Schema({
   sophomore: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   junior: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   senior: [{ type: Schema.Types.ObjectId, ref: "Course" }],
+  years: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
   createdAt: { type: Date, required: false },

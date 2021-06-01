@@ -24,6 +24,8 @@ const courseSchema = new Schema({
   credits: { type: Number, required: true },
   wi: { type: Boolean, default: false },
   taken: { type: Boolean, default: false },
+  preReq: { type: String },
+  isPlaceholder: { type: Boolean, default: false },
   ratings: Array,
   distribution_ids: [
     { type: Schema.Types.ObjectId, ref: "Distribution", required: true },
