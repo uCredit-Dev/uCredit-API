@@ -99,6 +99,10 @@ router.post(
         school: req.user[school],
       };
       users.create(user);
+    } else {
+      user.grade = req.user[grade];
+      user.school = req.user[school];
+      user.save();
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
     sessions
