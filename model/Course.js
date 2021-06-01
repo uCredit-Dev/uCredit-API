@@ -15,7 +15,6 @@ const courseSchema = new Schema({
   year: {
     type: String,
     required: true,
-    enum: ["freshman", "sophomore", "junior", "senior"],
   },
   number: String,
   department: String,
@@ -30,9 +29,10 @@ const courseSchema = new Schema({
   distribution_ids: [
     { type: Schema.Types.ObjectId, ref: "Distribution", required: true },
   ],
+  year_id: { type: Schema.Types.ObjectId, ref: "Plan" },
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
   user_id: { type: String, required: true },
-  expireAt: { type: Date, default: Date.now() },
+  expireAt: { type: Date },
 });
 
 //custom static model functions

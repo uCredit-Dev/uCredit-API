@@ -4,6 +4,7 @@ const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
+const years = require("../model/Year.js");
 
 const express = require("express");
 const router = express.Router();
@@ -33,9 +34,13 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
 //require user_id in body
 router.post("/api/plans", (req, res) => {
   const plan = req.body;
+  const numYears = plan.numYears === undefined ? 4 : req.params.numYears;
+  if (numYears <= 0 || numYears > 5) {
+    errorHandler(res, 400, "numYear must be between 1-5");
+  }
   plans
     .create(plan)
-    .then((plan) => {
+    .then(async (plan) => {
       users
         .findByIdAndUpdate(
           //update user
@@ -44,14 +49,32 @@ router.post("/api/plans", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
+      const yearName = [
+        "freshman",
+        "sophomore",
+        "junior",
+        "senior",
+        "fifth year",
+      ];
+      //create default year documents according to numYears
+      for (let i = 0; i < numYears; i++) {
+        const year = {
+          name: yearName[i],
+          year: i + 1,
+          plan_id: plan._id,
+          user_id: plan.user_id,
+        };
+        const newYear = await years.create(year);
+        plan.years.push(newYear._id);
+      }
+      plan.save();
       returnData(plan, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//delete a plan and its distributions and courses
+//delete a plan and its years, distributions and courses
 //return deleted courses
-/*******need to delete the id from the user as well********/
 router.delete("/api/plans/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   plans
@@ -60,6 +83,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
       //delete distribution & courses
       distributions.deleteMany({ plan_id: plan._id }).exec();
       courses.deleteMany({ plan_id: plan._id }).exec();
+      years.deleteMany({ plan_id: plan._id }).exec();
       users
         .findByIdAndUpdate(
           //delete plan_id from user
@@ -73,6 +97,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+//***need to consider not allow user to change major for a plan ***/
 router.patch("/api/plans/update", (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;

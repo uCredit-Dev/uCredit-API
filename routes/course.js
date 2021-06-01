@@ -11,6 +11,7 @@ const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
+const years = require("../model/Year.js");
 
 const express = require("express");
 const router = express.Router();
@@ -54,10 +55,15 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   const year = req.query.year;
   const term = req.query.term;
-  plans
-    .findCoursesByTerm(plan_id, year, term)
-    .then((courses) => returnData(courses, res))
+  years
+    .findOne({ plan_id, name: year })
+    .populate({ path: "courses", match: term })
+    .then((year) => returnData(year.courses, res))
     .catch((err) => errorHandler(res, 400, err));
+  // plans
+  //   .findCoursesByTerm(plan_id, year, term)
+  //   .then((courses) => returnData(courses, res))
+  //   .catch((err) => errorHandler(res, 400, err));
 });
 
 //add course, need to provide course info as json object in request body
@@ -95,6 +101,12 @@ router.post("/api/courses", async (req, res) => {
       let query = {};
       query[course.year] = course._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(course.plan_id, { $push: query }).exec();
+      years
+        .findOneAndUpdate(
+          { plan_id: course.plan_id, name: course.year },
+          { $push: { courses: course._id } }
+        )
+        .exec();
       returnData(course, res);
     })
     .catch((err) => errorHandler(res, 400, err));
@@ -172,6 +184,12 @@ router.delete("/api/courses/:course_id", (req, res) => {
       let query = {};
       query[course.year] = course._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
+      years
+        .findOneAndUpdate(
+          { plan_id: course.plan_id, name: course.year },
+          { $pull: { courses: course._id } }
+        )
+        .exec();
       returnData(course, res);
     })
     .catch((err) => errorHandler(res, 400, err));

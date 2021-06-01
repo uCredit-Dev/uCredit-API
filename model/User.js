@@ -7,7 +7,7 @@ const userSchema = new Schema({
   email: { type: String },
   affiliation: { type: String }, //STUDENT, FACULTY or STAFF
   school: { type: String },
-  grade: { type: String },
+  grade: { type: String }, //AE UG Sophomore
   plan_ids: [{ type: Schema.Types.ObjectId, ref: "Plan" }],
 });
 
