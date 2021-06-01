@@ -15,7 +15,7 @@ const planSchema = new Schema({
   years: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
-  createdAt: { type: Date, required: false },
+  expireAt: { type: Date, default: Date.now() },
 });
 
 //return the user's courses of a specific term(e.g. sophomore spring in plan 1)
