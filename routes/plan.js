@@ -50,11 +50,11 @@ router.post("/api/plans", (req, res) => {
         )
         .exec();
       const yearName = [
-        "freshman",
-        "sophomore",
-        "junior",
-        "senior",
-        "fifth year",
+        "Freshman",
+        "Sophomore",
+        "Junior",
+        "Senior",
+        "Fifth year",
       ];
       //create default year documents according to numYears
       for (let i = 0; i < numYears; i++) {
