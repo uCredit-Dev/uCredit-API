@@ -64,6 +64,10 @@ router.post("/api/plans", (req, res) => {
           plan_id: plan._id,
           user_id: plan.user_id,
         };
+        //auto delete year if guest User
+        if (plan.user_id === guestUser) {
+          year.expireAt == Date.now() + 60 * 60 * 24 * 1000;
+        }
         const newYear = await years.create(year);
         plan.years.push(newYear._id);
       }
