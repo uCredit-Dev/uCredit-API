@@ -55,7 +55,7 @@ function constructQuery(
     }
   }
   if (tags != null) {
-    query.tags = { $regex: tags, $options: "i" };
+    query.tags = { $in: tags.toUpperCase() };
   }
   return query;
 }
