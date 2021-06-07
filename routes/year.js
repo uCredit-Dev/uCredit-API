@@ -55,8 +55,8 @@ router.post("/api/years", async (req, res) => {
 
 //update the name of the year
 router.patch("/api/years/update", (req, res) => {
-  const name = req.query.name;
-  const year_id = req.query.year_id;
+  const name = req.body.name;
+  const year_id = req.body.year_id;
   if (!name) {
     errorHandler(err, 400, "must specify a new name");
   }
