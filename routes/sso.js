@@ -112,7 +112,7 @@ router.post(
         { upsert: true, new: true }
       )
       .then((user) => {
-        res.redirect(`https://ucredit.herokuapp.com/${hash}`);
+        res.redirect(`https://ucredit.herokuapp.com/login/${hash}`);
       })
       .catch((err) => errorHandler(res, 500, err));
   }
