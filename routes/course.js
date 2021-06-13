@@ -158,27 +158,35 @@ router.patch("/api/courses/dragged", (req, res) => {
         newTerm,
     });
   } else {
-    const index = oldYear.courses.indexOf(c_id);
-    if (index === -1) {
-      throw "invalid course!";
-    }
-    const oldYearCourses = [...oldYear.courses];
-    oldYearCourses.splice(index, 1);
     years
-      .findByIdAndUpdate(
-        oldYear,
-        { courses: oldYearCourses },
-        { new: true, runValidators: true }
-      )
+      .findById(oldYear)
+      .then((year) => {
+        const oldYearCourses = [...year.courses];
+        const index = year.indexOf(c_id);
+        if (index === -1) {
+          throw "invalid course!";
+        }
+        oldYearCourses.splice(index, 1);
+        years
+          .findByIdAndUpdate(
+            oldYear,
+            { courses: oldYearCourses },
+            { new: true, runValidators: true }
+          )
+          .catch((err) => errorHandler(res, 404, err));
+      })
       .catch((err) => errorHandler(res, 404, err));
 
     years
-      .findByIdAndUpdate(
-        newYear,
-        { courses: [...newYear.courses, c_id] },
-        { new: true, runValidators: true }
-      )
+      .findById(newYear)
       .then((y) => {
+        years
+          .findByIdAndUpdate(
+            newYear,
+            { courses: [...y.courses, c_id] },
+            { new: true, runValidators: true }
+          )
+          .catch((err) => errorHandler(res, 404, err));
         courses
           .findByIdAndUpdate(
             c_id,
