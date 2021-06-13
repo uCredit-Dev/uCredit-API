@@ -155,8 +155,7 @@ router.patch("/api/courses/dragged", (req, res) => {
         ", courseId is " +
         c_id +
         ", new term is " +
-        newTerm +
-        ", and cours",
+        newTerm,
     });
   } else {
     const index = oldYear.courses.indexOf(c_id);
