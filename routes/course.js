@@ -160,26 +160,23 @@ router.patch("/api/courses/dragged", (req, res) => {
   } else {
     years
       .findById(oldYear)
-      .then((y) => {
+      .then((returnedYear) => {
+        const y = returnedYear;
         const oldYearCourses = [...y.courses];
-        const index = oldYearCourses.indexOf(c_id);
-        if (index === -1) {
-          throw "invalid course!";
+        const index = y.courses.indexOf(c_id);
+        if (index !== -1) {
+          oldYearCourses.splice(index, 1);
+          years
+            .findByIdAndUpdate(
+              oldYear,
+              { courses: oldYearCourses },
+              { new: true, runValidators: true }
+            )
+            .catch((err) => errorHandler(res, 404, err));
         }
-        oldYearCourses.splice(index, 1);
-        years
-          .findByIdAndUpdate(
-            oldYear,
-            { courses: oldYearCourses },
-            { new: true, runValidators: true }
-          )
-          .catch((err) => errorHandler(res, 404, err));
       })
       .catch((err) =>
-        errorHandler(res, 404, {
-          ...err,
-          // message: "Old year not found. Body old year was " + oldYear,
-        })
+        errorHandler(res, 404, { ...err, message: "the year is " + y })
       );
 
     years
