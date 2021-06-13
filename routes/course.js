@@ -139,6 +139,52 @@ router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
   }
 });
 
+// Updates course
+router.patch("/api/courses/dragged/:course_id", (req, res) => {
+  const c_id = req.params.course_id;
+  const newYear = req.body.newYear;
+  const oldYear = req.body.oldYear;
+  const courseId = req.body.courseId;
+  const newTerm = req.body.newTerm;
+  if (
+    newYear === undefined ||
+    oldYear === undefined ||
+    courseId === undefined
+  ) {
+    errorHandler(res, 400, {
+      message:
+        "One of these is undefined: new year is " +
+        newYear +
+        ", old year is " +
+        oldYear +
+        ", courseId is " +
+        courseId,
+    });
+  } else {
+    const index = oldYear.courses.indexOf(c_id);
+    if (index === -1) {
+      throw "invalid course!";
+    }
+    oldYear.courses.splice(index, 1);
+    years
+      .findByIdAndUpdate(oldYear, { courses: oldYear.courses })
+      .catch((err) => errorHandler(res, 404, err));
+
+    years
+      .findByIdAndUpdate(newYear, { courses: [...newYear.courses, c_id] })
+      .then((y) => {
+        courses
+          .findByIdAndUpdate(
+            c_id,
+            { year: y.year, year_id: y._id, term: newTerm },
+            { new: true, runValidators: true }
+          )
+          .catch((err) => errorHandler(res, 404, err));
+      })
+      .catch((err) => errorHandler(res, 404, err));
+  }
+});
+
 //change course's distribution, need to provide distribution_ids in req body
 //!!!does not update credit for the distributions!!! need to consider whether the user can change or not
 /*
