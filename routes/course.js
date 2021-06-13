@@ -178,7 +178,7 @@ router.patch("/api/courses/dragged", (req, res) => {
       .catch((err) =>
         errorHandler(res, 404, {
           ...err,
-          message: "Old year not found. Body old year was " + oldYear,
+          // message: "Old year not found. Body old year was " + oldYear,
         })
       );
 
