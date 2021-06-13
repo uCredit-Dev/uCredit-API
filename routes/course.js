@@ -160,6 +160,7 @@ router.patch("/api/courses/dragged", (req, res) => {
   } else {
     years
       .findById(oldYear)
+      .exec()
       .then((returnedYear) => {
         const y = returnedYear;
         const oldYearCourses = [...y.courses];
@@ -172,6 +173,7 @@ router.patch("/api/courses/dragged", (req, res) => {
               { courses: oldYearCourses },
               { new: true, runValidators: true }
             )
+            .exec()
             .catch((err) => errorHandler(res, 404, err));
         } else {
           errorHandler(res, 404, { ...err, message: "the year is " + y });
@@ -183,6 +185,7 @@ router.patch("/api/courses/dragged", (req, res) => {
 
     years
       .findById(newYear)
+      .exec()
       .then((y) => {
         years
           .findByIdAndUpdate(
@@ -190,13 +193,15 @@ router.patch("/api/courses/dragged", (req, res) => {
             { courses: [...y.courses, c_id] },
             { new: true, runValidators: true }
           )
+          .exec()
           .catch((err) => errorHandler(res, 404, err));
         courses
           .findByIdAndUpdate(
             c_id,
-            { year: y.year, year_id: y._id, term: newTerm },
+            { year: y.year, year_id: y._id, term: newTerm.toLowerCase() },
             { new: true, runValidators: true }
           )
+          .exec()
           .then((course) => returnData(course, res))
           .catch((err) => errorHandler(res, 404, err));
       })
