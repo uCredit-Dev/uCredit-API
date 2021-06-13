@@ -160,9 +160,9 @@ router.patch("/api/courses/dragged", (req, res) => {
   } else {
     years
       .findById(oldYear)
-      .then((year) => {
-        const oldYearCourses = [...year.courses];
-        const index = year.indexOf(c_id);
+      .then((y) => {
+        const oldYearCourses = [...y.courses];
+        const index = oldYearCourses.indexOf(c_id);
         if (index === -1) {
           throw "invalid course!";
         }
