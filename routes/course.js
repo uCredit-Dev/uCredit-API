@@ -176,6 +176,7 @@ router.patch("/api/courses/dragged", (req, res) => {
             { year: y.year, year_id: y._id, term: newTerm },
             { new: true, runValidators: true }
           )
+          .then((course) => returnData(course, res))
           .catch((err) => errorHandler(res, 404, err));
       })
       .catch((err) => errorHandler(res, 404, err));
