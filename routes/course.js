@@ -175,7 +175,12 @@ router.patch("/api/courses/dragged", (req, res) => {
           )
           .catch((err) => errorHandler(res, 404, err));
       })
-      .catch((err) => errorHandler(res, 404, err));
+      .catch((err) =>
+        errorHandler(res, 404, {
+          ...err,
+          message: "Old year not found. Body old year was " + oldYear,
+        })
+      );
 
     years
       .findById(newYear)
@@ -194,9 +199,19 @@ router.patch("/api/courses/dragged", (req, res) => {
             { new: true, runValidators: true }
           )
           .then((course) => returnData(course, res))
-          .catch((err) => errorHandler(res, 404, err));
+          .catch((err) =>
+            errorHandler(res, 404, {
+              ...err,
+              message: "Course not found. Body course was " + c_id,
+            })
+          );
       })
-      .catch((err) => errorHandler(res, 404, err));
+      .catch((err) =>
+        errorHandler(res, 404, {
+          ...err,
+          message: "New year not found. Body new year was " + newYear,
+        })
+      );
   }
 });
 
