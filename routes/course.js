@@ -162,13 +162,22 @@ router.patch("/api/courses/dragged", (req, res) => {
     if (index === -1) {
       throw "invalid course!";
     }
-    oldYear.courses.splice(index, 1);
+    const oldYearCourses = [...oldYear.courses];
+    oldYearCourses.splice(index, 1);
     years
-      .findByIdAndUpdate(oldYear, { courses: oldYear.courses })
+      .findByIdAndUpdate(
+        oldYear,
+        { courses: oldYearCourses },
+        { new: true, runValidators: true }
+      )
       .catch((err) => errorHandler(res, 404, err));
 
     years
-      .findByIdAndUpdate(newYear, { courses: [...newYear.courses, c_id] })
+      .findByIdAndUpdate(
+        newYear,
+        { courses: [...newYear.courses, c_id] },
+        { new: true, runValidators: true }
+      )
       .then((y) => {
         courses
           .findByIdAndUpdate(
