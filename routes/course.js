@@ -140,17 +140,12 @@ router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
 });
 
 // Updates course
-router.patch("/api/courses/dragged/:course_id", (req, res) => {
-  const c_id = req.params.course_id;
+router.patch("/api/courses/dragged", (req, res) => {
+  const c_id = req.body.courseId;
   const newYear = req.body.newYear;
   const oldYear = req.body.oldYear;
-  const courseId = req.body.courseId;
   const newTerm = req.body.newTerm;
-  if (
-    newYear === undefined ||
-    oldYear === undefined ||
-    courseId === undefined
-  ) {
+  if (!(newYear || oldYear || c_id || newTerm)) {
     errorHandler(res, 400, {
       message:
         "One of these is undefined: new year is " +
@@ -158,7 +153,10 @@ router.patch("/api/courses/dragged/:course_id", (req, res) => {
         ", old year is " +
         oldYear +
         ", courseId is " +
-        courseId,
+        c_id +
+        ", new term is " +
+        newTerm +
+        ", and cours",
     });
   } else {
     const index = oldYear.courses.indexOf(c_id);
