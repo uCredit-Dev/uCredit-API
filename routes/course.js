@@ -164,7 +164,7 @@ router.patch("/api/courses/dragged", (req, res) => {
         const y = returnedYear;
         const oldYearCourses = [...y.courses];
         const index = y.courses.indexOf(c_id);
-        if (index !== -1) {
+        if (index !== -1 && newYear !== oldYear) {
           oldYearCourses.splice(index, 1);
           years
             .findByIdAndUpdate(
@@ -182,7 +182,7 @@ router.patch("/api/courses/dragged", (req, res) => {
     years
       .findById(newYear)
       .then((y) => {
-        if (!y.courses.includes(c_id)) {
+        if (newYear !== oldYear) {
           const newArr = [...y.courses];
           newArr.push(c_id);
           years
