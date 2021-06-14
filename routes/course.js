@@ -184,13 +184,17 @@ router.patch("/api/courses/dragged", (req, res) => {
     years
       .findById(newYear)
       .then((y) => {
-        years
-          .findByIdAndUpdate(
-            newYear,
-            { courses: [...y.courses, c_id] },
-            { new: true, runValidators: true }
-          )
-          .catch((err) => errorHandler(res, 404, err));
+        if (!y.courses.includes(c_id)) {
+          const newArr = [...y.courses];
+          newArr.push(c_id);
+          years
+            .findByIdAndUpdate(
+              newYear,
+              { courses: newArr },
+              { new: true, runValidators: true }
+            )
+            .catch((err) => errorHandler(res, 404, err));
+        }
         courses
           .findByIdAndUpdate(
             c_id,
