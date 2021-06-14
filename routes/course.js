@@ -260,11 +260,22 @@ router.delete("/api/courses/:course_id", (req, res) => {
       query[course.year] = course._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
       years
-        .findOneAndUpdate(
-          { plan_id: course.plan_id, name: course.year },
-          { $pull: { courses: course._id } }
-        )
-        .exec();
+        .findById(newYear)
+        .then((y) => {
+          const yearArr = y.courses;
+          const index = yearArr.indexOf(course._id);
+          if (index !== -1) {
+            yearArr.splice(index, 1);
+            years
+              .findByIdAndUpdate(
+                course._id,
+                { courses: yearArr },
+                { new: true, runValidators: true }
+              )
+              .exec();
+          }
+        })
+        .catch((err) => errorHandler(res, 404, err));
       returnData(course, res);
     })
     .catch((err) => errorHandler(res, 400, err));
