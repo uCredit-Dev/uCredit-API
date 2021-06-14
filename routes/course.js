@@ -142,75 +142,60 @@ router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
 // Updates course
 router.patch("/api/courses/dragged", (req, res) => {
   const c_id = req.body.courseId;
-  const newYear = req.body.newYear;
-  const oldYear = req.body.oldYear;
+  const newYear_id = req.body.newYear;
+  const oldYear_id = req.body.oldYear;
   const newTerm = req.body.newTerm;
-  if (!(newYear || oldYear || c_id || newTerm)) {
+  if (!(newYear_id || oldYear_id || c_id || newTerm)) {
     errorHandler(res, 400, {
       message:
-        "One of these is undefined: new year is " +
-        newYear +
-        ", old year is " +
-        oldYear +
+        "One of these is undefined: new year id is " +
+        newYear_id +
+        ", old year id is " +
+        oldYear_id +
         ", courseId is " +
         c_id +
         ", new term is " +
         newTerm,
     });
   } else {
-    if (newYear !== oldYear) {
+    if (newYear_id !== oldYear_id) {
       years
-        .findById(oldYear)
+        .findByIdAndUpdate(
+          oldYear_id,
+          { $pull: { courses: c_id } },
+          { new: true, runValidators: true }
+        )
+        .then((y) => console.log("course_id deleted from old year."))
+        .catch((err) => errorHandler(res, 500, err));
+      years
+        .findByIdAndUpdate(
+          newYear_id,
+          { $push: { courses: c_id } },
+          { new: true, runValidators: true }
+        )
         .then((y) => {
-          const oldYearCourses = [...y.courses];
-          const index = y.courses.indexOf(c_id);
-          if (index !== -1) {
-            oldYearCourses.splice(index, 1);
-            years
-              .findByIdAndUpdate(
-                oldYear,
-                { courses: oldYearCourses },
-                { new: true, runValidators: true }
-              )
-              .exec()
-              .catch((err) => errorHandler(res, 404, err));
-          }
-        })
-        .catch((err) =>
-          errorHandler(res, 404, { ...err, message: "the year is " + y })
-        );
-    }
-
-    years
-      .findById(newYear)
-      .then((y) => {
-        if (newYear !== oldYear) {
-          const newArr = [...y.courses];
-          newArr.push(c_id);
-          years
+          console.log("course_id added to new year.");
+          courses
             .findByIdAndUpdate(
-              newYear,
-              { courses: newArr },
+              c_id,
+              { year: y.name, year_id: y._id, term: newTerm.toLowerCase() },
               { new: true, runValidators: true }
             )
-            .exec()
-            .catch((err) => errorHandler(res, 404, err));
-        }
-        courses
-          .findByIdAndUpdate(
-            c_id,
-            { year: y.year, year_id: y._id, term: newTerm.toLowerCase() },
-            { new: true, runValidators: true }
-          )
-          .then((course) => returnData(course, res))
-          .catch((err) => errorHandler(res, 404, err));
-      })
-      .catch((err) =>
-        errorHandler(res, 404, {
-          ...err,
-          message: "New year not found. Body new year was " + newYear,
+            .then((c) => returnData(c, res))
+            .catch((err) => errorHandler(res, 500, err));
         })
-      );
+        .catch((err) => errorHandler(res, 500, err));
+    } else {
+      //only changing the term
+      courses
+        .findByIdAndUpdate(
+          c_id,
+          { term: newTerm.toLowerCase() },
+          { new: true, runValidators: true }
+        )
+        .then((c) => returnData(c, res))
+        .catch((err) => errorHandler(res, 500, err));
+    }
   }
 });
 
