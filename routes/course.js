@@ -172,6 +172,7 @@ router.patch("/api/courses/dragged", (req, res) => {
                 { courses: oldYearCourses },
                 { new: true, runValidators: true }
               )
+              .exec()
               .catch((err) => errorHandler(res, 404, err));
           }
         })
@@ -192,6 +193,7 @@ router.patch("/api/courses/dragged", (req, res) => {
               { courses: newArr },
               { new: true, runValidators: true }
             )
+            .exec()
             .catch((err) => errorHandler(res, 404, err));
         }
         courses
