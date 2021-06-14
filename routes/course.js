@@ -158,26 +158,27 @@ router.patch("/api/courses/dragged", (req, res) => {
         newTerm,
     });
   } else {
-    years
-      .findById(oldYear)
-      .then((returnedYear) => {
-        const y = returnedYear;
-        const oldYearCourses = [...y.courses];
-        const index = y.courses.indexOf(c_id);
-        if (index !== -1 && newYear !== oldYear) {
-          oldYearCourses.splice(index, 1);
-          years
-            .findByIdAndUpdate(
-              oldYear,
-              { courses: oldYearCourses },
-              { new: true, runValidators: true }
-            )
-            .catch((err) => errorHandler(res, 404, err));
-        }
-      })
-      .catch((err) =>
-        errorHandler(res, 404, { ...err, message: "the year is " + y })
-      );
+    if (newYear !== oldYear) {
+      years
+        .findById(oldYear)
+        .then((y) => {
+          const oldYearCourses = [...y.courses];
+          const index = y.courses.indexOf(c_id);
+          if (index !== -1) {
+            oldYearCourses.splice(index, 1);
+            years
+              .findByIdAndUpdate(
+                oldYear,
+                { courses: oldYearCourses },
+                { new: true, runValidators: true }
+              )
+              .catch((err) => errorHandler(res, 404, err));
+          }
+        })
+        .catch((err) =>
+          errorHandler(res, 404, { ...err, message: "the year is " + y })
+        );
+    }
 
     years
       .findById(newYear)
