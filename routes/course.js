@@ -260,7 +260,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
       query[course.year] = course._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
       years
-        .findById(newYear)
+        .findById(course.year_id)
         .then((y) => {
           const yearArr = y.courses;
           const index = yearArr.indexOf(course._id);
@@ -268,7 +268,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
             yearArr.splice(index, 1);
             years
               .findByIdAndUpdate(
-                course._id,
+                course.year_id,
                 { courses: yearArr },
                 { new: true, runValidators: true }
               )
