@@ -23,7 +23,7 @@ const courseSchema = new Schema({
   credits: { type: Number, required: true },
   wi: { type: Boolean, default: false },
   taken: { type: Boolean, default: false },
-  preReq: { type: String },
+  preReq: { type: Array },
   isPlaceholder: { type: Boolean, default: false },
   isTransfer: { type: Boolean, default: false },
   ratings: Array,

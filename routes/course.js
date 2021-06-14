@@ -139,6 +139,81 @@ router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
   }
 });
 
+// Updates course
+router.patch("/api/courses/dragged", (req, res) => {
+  const c_id = req.body.courseId;
+  const newYear = req.body.newYear;
+  const oldYear = req.body.oldYear;
+  const newTerm = req.body.newTerm;
+  if (!(newYear || oldYear || c_id || newTerm)) {
+    errorHandler(res, 400, {
+      message:
+        "One of these is undefined: new year is " +
+        newYear +
+        ", old year is " +
+        oldYear +
+        ", courseId is " +
+        c_id +
+        ", new term is " +
+        newTerm,
+    });
+  } else {
+    if (newYear !== oldYear) {
+      years
+        .findById(oldYear)
+        .then((y) => {
+          const oldYearCourses = [...y.courses];
+          const index = y.courses.indexOf(c_id);
+          if (index !== -1) {
+            oldYearCourses.splice(index, 1);
+            years
+              .findByIdAndUpdate(
+                oldYear,
+                { courses: oldYearCourses },
+                { new: true, runValidators: true }
+              )
+              .exec()
+              .catch((err) => errorHandler(res, 404, err));
+          }
+        })
+        .catch((err) =>
+          errorHandler(res, 404, { ...err, message: "the year is " + y })
+        );
+    }
+
+    years
+      .findById(newYear)
+      .then((y) => {
+        if (newYear !== oldYear) {
+          const newArr = [...y.courses];
+          newArr.push(c_id);
+          years
+            .findByIdAndUpdate(
+              newYear,
+              { courses: newArr },
+              { new: true, runValidators: true }
+            )
+            .exec()
+            .catch((err) => errorHandler(res, 404, err));
+        }
+        courses
+          .findByIdAndUpdate(
+            c_id,
+            { year: y.year, year_id: y._id, term: newTerm.toLowerCase() },
+            { new: true, runValidators: true }
+          )
+          .then((course) => returnData(course, res))
+          .catch((err) => errorHandler(res, 404, err));
+      })
+      .catch((err) =>
+        errorHandler(res, 404, {
+          ...err,
+          message: "New year not found. Body new year was " + newYear,
+        })
+      );
+  }
+});
+
 //change course's distribution, need to provide distribution_ids in req body
 //!!!does not update credit for the distributions!!! need to consider whether the user can change or not
 /*
@@ -185,11 +260,22 @@ router.delete("/api/courses/:course_id", (req, res) => {
       query[course.year] = course._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
       years
-        .findOneAndUpdate(
-          { plan_id: course.plan_id, name: course.year },
-          { $pull: { courses: course._id } }
-        )
-        .exec();
+        .findById(course.year_id)
+        .then((y) => {
+          const yearArr = y.courses;
+          const index = yearArr.indexOf(course._id);
+          if (index !== -1) {
+            yearArr.splice(index, 1);
+            years
+              .findByIdAndUpdate(
+                course.year_id,
+                { courses: yearArr },
+                { new: true, runValidators: true }
+              )
+              .exec();
+          }
+        })
+        .catch((err) => errorHandler(res, 404, err));
       returnData(course, res);
     })
     .catch((err) => errorHandler(res, 400, err));
