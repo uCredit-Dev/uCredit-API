@@ -194,6 +194,8 @@ router.patch("/api/courses/dragged", (req, res) => {
               { new: true, runValidators: true }
             )
             .catch((err) => errorHandler(res, 404, err));
+        } else {
+          throw y;
         }
         courses
           .findByIdAndUpdate(
