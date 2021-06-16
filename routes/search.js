@@ -11,6 +11,14 @@ router.get("/api/search/all", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
+router.get("/api/search/:year", (req, res) => {
+  const year = req.params.year;
+  const regex = new RegExp(`/^Fall|^Spring|^Summer|^Intersession\s${year}/`);
+  SISCV.find({ terms: { $in: [regex] } })
+    .then((courses) => returnData(courses, res))
+    .catch((err) => errorHandler(res, 500, err));
+});
+
 //return the term version of a specific course
 router.get("/api/searchV", (req, res) => {
   const version = req.query.version;
