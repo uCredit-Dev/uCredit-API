@@ -12,7 +12,7 @@ router.get("/api/search/all", (req, res) => {
 });
 
 router.get("/api/search/skip/:num", (req, res) => {
-  const toSkip = req.params.num;
+  const toSkip = Math.parseInt(req.params.num);
   SISCV.find({})
     .skip(toSkip)
     .limit(toSkip)
