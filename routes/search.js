@@ -1,10 +1,10 @@
+import { compress } from "compress-json";
 //routes to handle search requests
 const express = require("express");
 const router = express.Router();
 const { returnData, errorHandler } = require("./helperMethods.js");
 const SISCourses = require("../model/SISCourse.js");
 const SISCV = require("../model/SISCourseV.js");
-const cjson = require("compressed-json");
 
 router.get("/api/search/all", (req, res) => {
   SISCV.find({})
@@ -20,7 +20,7 @@ router.get("/api/search/skip/:num", (req, res) => {
     .limit(mod)
     .then((courses) =>
       returnData(
-        courses.map((course) => cjson.compress(course)),
+        courses.map((course) => compress(course)),
         res
       )
     )
