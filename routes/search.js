@@ -1,4 +1,3 @@
-import { compress } from "compress-json";
 //routes to handle search requests
 const express = require("express");
 const router = express.Router();
