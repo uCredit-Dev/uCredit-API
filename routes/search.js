@@ -14,7 +14,7 @@ router.get("/api/search/all", (req, res) => {
 router.get("/api/search/skip/:num", (req, res) => {
   const toSkip = req.params.num;
   SISCV.find({})
-    .limit(100)
+    .limit(250)
     .then((courses) => returnData(courses, res))
     .catch((err) => errorHandler(res, 500, err));
 });
