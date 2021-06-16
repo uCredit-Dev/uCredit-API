@@ -11,9 +11,9 @@ router.get("/api/search/all", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-router.get("/api/search/skip/:num/:mod", (req, res) => {
+router.get("/api/search/skip/:num", (req, res) => {
   const toSkip = req.params.num;
-  const mod = req.params.mod;
+  const mod = req.query.mod;
   SISCV.find({})
     .skip(toSkip * mod)
     .limit(mod)
