@@ -4,7 +4,7 @@ const cjson = require("compressed-json");
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
   data
-    ? res.json({ data: cjson.compress.toString(data) })
+    ? res.json(cjson.compress({ data: data }))
     : errorHandler(res, 404, "Resource not found");
 }
 
