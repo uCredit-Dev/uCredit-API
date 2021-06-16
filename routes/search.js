@@ -18,12 +18,7 @@ router.get("/api/search/skip/:num", (req, res) => {
       const out = courses.slice(0, 10);
       returnData(out, res);
     })
-    .catch((err) =>
-      errorHandler(res, 500, {
-        ...err,
-        message: "toSkip is " + toSkip + " out length is " + out.length,
-      })
-    );
+    .catch((err) => errorHandler(res, 500, err));
 });
 
 //return the term version of a specific course
