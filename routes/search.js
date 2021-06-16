@@ -11,13 +11,11 @@ router.get("/api/search/all", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-router.get("/api/search/:semester/:year", (req, res) => {
-  const year = req.params.year;
-  const sem = req.params.semester;
-  // const regex = new RegExp(`(^Fall|^Spring|^Summer|^Intersession) ${year}`);
-  SISCV.find({
-    terms: { $in: [sem + " " + year] },
-  })
+router.get("/api/search/skip/:num", (req, res) => {
+  const toSkip = req.params.num;
+  SISCV.find({})
+    .skip(toSkip * 1000)
+    .limit(1000)
     .then((courses) => returnData(courses, res))
     .catch((err) => errorHandler(res, 500, err));
 });
