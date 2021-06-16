@@ -18,7 +18,12 @@ router.get("/api/search/skip/:num", (req, res) => {
   SISCV.find({})
     .skip(toSkip * mod)
     .limit(mod)
-    .then((courses) => returnData(cjson.compress(courses), res))
+    .then((courses) =>
+      returnData(
+        courses.map((course) => cjson.compress.toString(course)),
+        res
+      )
+    )
     .catch((err) => errorHandler(res, 500, err));
 });
 
