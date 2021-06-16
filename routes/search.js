@@ -17,7 +17,19 @@ router.get("/api/search/skip/:num", (req, res) => {
   SISCV.find({})
     .skip(toSkip * mod)
     .limit(mod)
-    .then((courses) => returnData(courses, res))
+    .then((courses) =>
+      returnData(
+        courses.map((course) => {
+          const out = {
+            ...course,
+            versions: [course.versions[0]],
+            terms: [course.terms[0]],
+          };
+          return out;
+        }),
+        res
+      )
+    )
     .catch((err) => errorHandler(res, 500, err));
 });
 
