@@ -15,7 +15,7 @@ router.get("/api/search/year/:year", (req, res) => {
   const year = req.params.year;
   const regex = new RegExp(`(^Fall|^Spring|^Summer|^Intersession) ${year}`);
   SISCV.find({
-    terms: { $in: [/Intersession\s2021/] },
+    terms: { $in: [regex] },
   })
     .then((courses) => returnData(courses, res))
     .catch((err) => errorHandler(res, 500, err));
