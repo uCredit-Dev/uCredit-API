@@ -11,11 +11,12 @@ router.get("/api/search/all", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-router.get("/api/search/skip/:num", (req, res) => {
+router.get("/api/search/skip/:num/:mod", (req, res) => {
   const toSkip = req.params.num;
+  const mod = req.params.mod;
   SISCV.find({})
-    .skip(toSkip * 500)
-    .limit(500)
+    .skip(toSkip * mod)
+    .limit(mod)
     .then((courses) => returnData(courses, res))
     .catch((err) => errorHandler(res, 500, err));
 });
