@@ -20,7 +20,7 @@ router.get("/api/search/skip/:num", (req, res) => {
     .limit(mod)
     .then((courses) =>
       returnData(
-        courses.map((course) => cjson.compress.toString(course)),
+        courses.map((course) => cjson.compress(course)),
         res
       )
     )
