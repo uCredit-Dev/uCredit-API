@@ -4,7 +4,6 @@ const router = express.Router();
 const { returnData, errorHandler } = require("./helperMethods.js");
 const SISCourses = require("../model/SISCourse.js");
 const SISCV = require("../model/SISCourseV.js");
-const { compress } = require("compress-json");
 
 router.get("/api/search/all", (req, res) => {
   SISCV.find({})
@@ -18,7 +17,7 @@ router.get("/api/search/skip/:num", (req, res) => {
   SISCV.find({})
     .skip(toSkip * mod)
     .limit(mod)
-    .then((courses) => returnData(compress(courses), res))
+    .then((courses) => returnData(courses, res))
     .catch((err) => errorHandler(res, 500, err));
 });
 
