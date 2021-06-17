@@ -1,10 +1,9 @@
 //some helper methods for routing
-const { compress } = require("compress-json");
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
   data
-    ? res.json(compress({ data: data }))
+    ? res.json({ data: data })
     : errorHandler(res, 404, "Resource not found");
 }
 
