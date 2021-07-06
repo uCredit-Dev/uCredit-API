@@ -16,6 +16,7 @@ const courseSchema = new Schema({
     type: String,
     required: true,
   },
+  version: { type: String }, //the version of the SIS course
   number: String,
   department: String,
   tags: [{ type: String }],
