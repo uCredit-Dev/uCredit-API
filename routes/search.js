@@ -11,6 +11,16 @@ router.get("/api/search/all", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
+router.get("/api/search/skip/:num", (req, res) => {
+  const toSkip = req.params.num;
+  const mod = parseInt(req.query.mod);
+  SISCV.find({})
+    .skip(toSkip * mod)
+    .limit(mod)
+    .then((courses) => returnData(courses, res))
+    .catch((err) => errorHandler(res, 500, err));
+});
+
 //return the term version of a specific course
 router.get("/api/searchV", (req, res) => {
   const version = req.query.version;
