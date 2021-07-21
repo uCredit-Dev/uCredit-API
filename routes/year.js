@@ -21,35 +21,64 @@ router.get("/api/years/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//can only add year to the front/end of current years
+//create a new year and add year id to the end of plan's year array
 router.post("/api/years", async (req, res) => {
-  const preUniversity = req.body.preUniversity;
+  //const preUniversity = req.body.preUniversity;
+  //const index = req.body.index;
   let newYear = {
     name: req.body.name,
     plan_id: req.body.plan_id,
     user_id: req.body.user_id,
+    //preUniversity,
   };
-  let plan = await plans.findById(newYear.plan_id).exec();
-  //determine year number
-  if (!preUniversity) {
-    newYear.year = plan.numYears + 1;
-  } else {
-    newYear.year = 0;
-  }
   years
     .create(newYear)
-    .then((nY) => {
-      //update plan's year array
-      if (newYear.year) {
-        //year != 0, not preUniversity
-        plan.years.push(nY._id);
-        plan.numYears++;
-      } else {
-        plan.years.unshift(nY._id);
-      }
-      plan.save();
-      returnData(nY, res);
+    .then((year) => {
+      plans
+        .findByIdAndUpdate(
+          newYear.plan_id,
+          { $push: { years: year._id } },
+          { new: true, runValidators: true }
+        )
+        .exec();
+      returnData(year, res);
     })
+    .catch((err) => errorHandler(res, 400, err));
+  /*
+  let plan = await plans.findById(newYear.plan_id).exec();
+  //determine year number
+  if (preUniversity && plan.years[0].preUniversity) {
+    errorHandler(res, 400, "preUniversity year already exists in this plan.");
+  } else {
+    years
+      .create(newYear)
+      .then((nY) => {
+        //update plan's year array
+        if (preUniversity) {
+          plan.years.unshift(nY._id);
+        } else {
+          plan.years.slice(index, 0, nY._id); //insert year according to index
+        }
+        plan.numYears++;
+        plan.save();
+        returnData(nY, res);
+      })
+      .catch((err) => errorHandler(res, 400, err));
+  }
+  */
+});
+
+//change the order of the year ids in plan object
+router.patch("/api/years/changeOrder", async (req, res) => {
+  const year_ids = req.body.year_ids;
+  const plan_id = req.body.plan_id;
+  plans
+    .findByIdAndUpdate(
+      plan_id,
+      { years: year_ids },
+      { new: true, runValidators: true }
+    )
+    .then((plan) => returnData(plan, res))
     .catch((err) => errorHandler(res, 400, err));
 });
 

@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const yearSchema = new Schema({
   name: { type: String, required: true }, //freshman
-  year: { type: Number, required: true }, //e.g. 0(pre-university/transfer credits), 1, 2
+  //preUniversity: { type: Boolean, required: true },
   courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   plan_id: [{ type: Schema.Types.ObjectId, ref: "Plan", required: true }],
   user_id: { type: String, required: true },
