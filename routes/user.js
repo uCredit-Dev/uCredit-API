@@ -1,2 +1,2 @@
-//routes to handle user creation
-//add major, auto add distributions?
+//routes to handle user info modification & validation
+//update grade?

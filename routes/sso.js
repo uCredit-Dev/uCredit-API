@@ -1,16 +1,14 @@
-//TODO:
-//process user attribute
 require("dotenv").config();
 const express = require("express");
 const passport = require("passport");
 const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
+const cryptoRandomString = require("crypto-random-string");
 
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
-//const fs = require("fs");
-//const path = require("path");
+const sessions = require("../model/Session.js");
 
 const router = express.Router();
 
@@ -38,6 +36,7 @@ const samlStrategy = new saml.Strategy(
     callbackUrl: `${BASE_URL}/api/login/callback`,
     decryptionPvk: PvK,
     privateCert: PvK,
+    // sameSite: "none",
   },
   (profile, done) => {
     return done(null, profile);
@@ -58,7 +57,14 @@ passport.deserializeUser(function (user, done) {
 
 // Middleware
 router.use(bodyParser.urlencoded({ extended: false }));
-router.use(session({ secret: secret, resave: false, saveUninitialized: true }));
+router.use(
+  session({
+    secret: secret,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { sameSite: "none", secure: true },
+  })
+);
 router.use(passport.initialize({}));
 router.use(passport.session({}));
 
@@ -71,7 +77,7 @@ router.get(
   passport.authenticate("samlStrategy")
 );
 
-// callback route, return user object
+// callback route, redirect to frontend url
 router.post(
   "/api/login/callback",
   (req, res, next) => {
@@ -82,6 +88,7 @@ router.post(
     // the user data is in req.user
     const id = req.user[JHEDid];
     let user = await users.findById(id).exec();
+    //if user if not in db already, create and save one
     if (user === null) {
       user = {
         _id: id,
@@ -91,20 +98,48 @@ router.post(
         grade: req.user[grade],
         school: req.user[school],
       };
-      users
-        .create(user)
-        .then((user) => returnData(user, res))
-        .catch((err) => errorHandler(res, 400, err));
+      users.create(user);
     } else {
-      returnData(user, res);
+      user.grade = req.user[grade];
+      user.school = req.user[school];
+      user.save();
     }
-    /*
-    res.send(
-      `welcome ${req.user[displayName]}, JHED id: ${req.user[JHEDid]}, affiliation: ${req.user[affiliation]}, school: ${req.user[school]}, year: ${req.user[grade]}, email: ${req.user[email]}`
-    );
-    */
+    const hash = cryptoRandomString({ length: 20, type: "url-safe" });
+    sessions
+      .findByIdAndUpdate(
+        id,
+        { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
+        { upsert: true, new: true }
+      )
+      .then((user) => {
+        res.redirect(`https://ucredit.herokuapp.com/login/${hash}`);
+      })
+      .catch((err) => errorHandler(res, 500, err));
   }
 );
+
+//retrieve user object from db
+router.get("/api/retrieveUser/:hash", (req, res) => {
+  const hash = req.params.hash;
+  sessions.findOne({ hash }).then((user) => {
+    if (user === null) {
+      errorHandler(res, 401, "User not logged in.");
+    } else {
+      users
+        .findById(user._id)
+        .then((user) => returnData(user, res))
+        .catch((err) => errorHandler(res, 500, res));
+    }
+  });
+});
+
+router.delete("/api/retrieveUser/:hash", (req, res) => {
+  const hash = req.params.hash;
+  sessions
+    .remove({ hash })
+    .then((user) => returnData(user, res))
+    .catch((err) => errorHandler(res, 500, err));
+});
 
 // route to metadata
 router.get("/api/metadata", (req, res) => {
