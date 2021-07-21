@@ -1,14 +1,13 @@
-//const { ObjectId } = require("bson");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
-  _id: { type: String, required: true }, //JHED ID
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  affiliation: { type: String, required: true }, //STUDENT, FACULTY or STAFF
-  school: { type: String, require: true },
-  grade: { type: String, required: true },
+  _id: { type: String }, //JHED ID
+  name: { type: String },
+  email: { type: String },
+  affiliation: { type: String }, //STUDENT, FACULTY or STAFF
+  school: { type: String },
+  grade: { type: String }, //AE UG Sophomore
   plan_ids: [{ type: Schema.Types.ObjectId, ref: "Plan" }],
 });
 

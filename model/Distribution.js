@@ -17,6 +17,7 @@ const distributionSchema = new Schema({
   courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+  expireAt: { type: Date },
 });
 
 distributionSchema.statics.findByName = function (name, user_id) {

@@ -1,2 +1,2 @@
-//routes to handle user info modification
+//routes to handle user info modification & validation
 //update grade?

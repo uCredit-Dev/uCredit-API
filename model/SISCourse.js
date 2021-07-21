@@ -15,14 +15,11 @@ const courseSchema = new Schema({
   credits: { type: Number, required: true },
   wi: { type: Boolean, required: true },
   bio: { type: String },
+  level: { type: String },
   tags: [{ type: String }],
-  preReq: [
-    {
-      title: { type: String, required: true },
-      number: { type: String, required: true },
-      credits: { type: String, required: true },
-    },
-  ],
+  preReq: { type: Array },
+  coReq: { type: Array },
+  restrictions: { type: Array },
 });
 
 const SISCourse = mongoose.model("SISCourse", courseSchema);
