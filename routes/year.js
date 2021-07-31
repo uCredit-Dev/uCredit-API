@@ -23,13 +23,10 @@ router.get("/api/years/:plan_id", (req, res) => {
 
 //create a new year and add year id to the end of plan's year array
 router.post("/api/years", async (req, res) => {
-  //const preUniversity = req.body.preUniversity;
-  //const index = req.body.index;
   let newYear = {
     name: req.body.name,
     plan_id: req.body.plan_id,
     user_id: req.body.user_id,
-    //preUniversity,
   };
   years
     .create(newYear)
@@ -44,28 +41,6 @@ router.post("/api/years", async (req, res) => {
       returnData(year, res);
     })
     .catch((err) => errorHandler(res, 400, err));
-  /*
-  let plan = await plans.findById(newYear.plan_id).exec();
-  //determine year number
-  if (preUniversity && plan.years[0].preUniversity) {
-    errorHandler(res, 400, "preUniversity year already exists in this plan.");
-  } else {
-    years
-      .create(newYear)
-      .then((nY) => {
-        //update plan's year array
-        if (preUniversity) {
-          plan.years.unshift(nY._id);
-        } else {
-          plan.years.slice(index, 0, nY._id); //insert year according to index
-        }
-        plan.numYears++;
-        plan.save();
-        returnData(nY, res);
-      })
-      .catch((err) => errorHandler(res, 400, err));
-  }
-  */
 });
 
 //change the order of the year ids in plan object
