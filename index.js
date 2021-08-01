@@ -12,6 +12,7 @@ const userRouter = require("./routes/user.js");
 const searchRouter = require("./routes/search.js");
 const ssoRouter = require("./routes/sso.js");
 const evalRouter = require("./routes/evaluation.js");
+const sisRouter = require("./routes/sisData.js");
 const port = process.env.PORT || 4567;
 
 const corsOptions = {
@@ -40,6 +41,7 @@ app.use(ssoRouter);
 //app.use(userRouter);
 app.use(searchRouter);
 app.use(evalRouter);
+app.use(sisRouter);
 
 //launch api
 app.listen(port, () => {
