@@ -66,7 +66,7 @@ router.post("/api/plans", (req, res) => {
           expireAt:
             plan.user_id === "guestUser"
               ? Date.now() + 60 * 60 * 24 * 1000
-              : null,
+              : undefined,
         };
         const newYear = await years.create(year);
         plan.years.push(newYear._id);
