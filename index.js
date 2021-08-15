@@ -2,7 +2,6 @@ const db = require("./data/db.js");
 const cors = require("cors");
 const helmet = require("helmet"); //provide security enhancement
 const morgan = require("morgan"); //log http request history to terminal
-const compression = require("compression");
 const express = require("express");
 const app = express();
 const courseRouter = require("./routes/course.js");
@@ -34,7 +33,6 @@ app.use(cors(corsOptions));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(compression());
 app.use(courseRouter);
 app.use(distributionRouter);
 app.use(yearRouter);
