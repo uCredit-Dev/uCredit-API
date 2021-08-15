@@ -30,6 +30,7 @@ const corsOptions = {
 
 db.connect();
 //use middleware functions
+app.use(compression());
 app.use(cors(corsOptions));
 app.use(helmet());
 app.use(morgan("dev"));
@@ -39,7 +40,6 @@ app.use(distributionRouter);
 app.use(yearRouter);
 app.use(planRouter);
 app.use(ssoRouter);
-app.use(compression());
 //app.use(userRouter);
 app.use(searchRouter);
 app.use(evalRouter);
