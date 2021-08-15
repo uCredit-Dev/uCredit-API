@@ -2,7 +2,7 @@
 const express = require("express");
 const compression = require("compression");
 const router = express.Router();
-router.use(compression());
+//router.use(compression());
 
 const { returnData, errorHandler } = require("./helperMethods.js");
 const SISCourses = require("../model/SISCourse.js");
