@@ -4,8 +4,9 @@ const router = express.Router();
 const { returnData, errorHandler } = require("./helperMethods.js");
 const SISCourses = require("../model/SISCourse.js");
 const SISCV = require("../model/SISCourseV.js");
+const compression = require("compression");
 
-router.get("/api/search/all", (req, res) => {
+router.get("/api/search/all", compression(), (req, res) => {
   SISCV.find({})
     .then((courses) => returnData(courses, res))
     .catch((err) => errorHandler(res, 500, err));
