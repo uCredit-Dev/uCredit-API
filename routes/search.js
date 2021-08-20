@@ -156,7 +156,7 @@ router.get("/api/search", (req, res) => {
     req.query.wi,
     req.query.tags
   );
-  SISCourses.find(query)
+  SISCV.find(query)
     .then((match) => returnData(match, res))
     .catch((err) => errorHandler(res, 400, err));
 });
