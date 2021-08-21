@@ -157,18 +157,7 @@ router.get("/api/search", (req, res) => {
     req.query.tags
   );
   SISCV.find(query)
-    .then((results) => {
-      let courses = [];
-      results.forEach((c) => {
-        let course = {};
-        course.title = c.title;
-        course.number = c.number;
-        course.terms = c.terms;
-        course.version = c.versions; //the most recent semester
-        courses.push(course);
-      });
-      returnData(courses, res);
-    })
+    .then((match) => returnData(match, res))
     .catch((err) => errorHandler(res, 400, err));
 });
 
