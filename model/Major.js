@@ -12,6 +12,7 @@ const Schema = mongoose.Schema;
       [A] = Area
       [Y] = Before Program start term(e.g. Fall 2019)
       [N] = Part of the name of the course
+      [W] = WI
 */
 const majorSchema = new Schema({
   degree_name: { type: String, required: true }, //e.g. B.S. Computer Science
@@ -25,7 +26,6 @@ const majorSchema = new Schema({
       min_cedits_per_course: { type: Number, required: true },
       description: { type: String, required: true },
       criteria: { type: String, required: true },
-      wi: { type: Boolean, required: false },
       user_select: { type: Boolean, default: false }, //if true, user can put any course into this distribution
       double_count: { type: Boolean, default: false }, //courses being classified to this distribution might also be double counted for another distribution
       exception: { type: String }, //course that match the exception expression cannot be added toward this distirbution
@@ -36,7 +36,6 @@ const majorSchema = new Schema({
           criteria: { type: String, required: true },
           exception: { type: String },
           exclusive: { type: Boolean, default: false },
-          wi: { type: Boolean, default: false },
         },
       ],
     },
