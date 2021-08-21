@@ -10,6 +10,7 @@ const Schema = mongoose.Schema;
 */
 const distributionSchema = new Schema({
   name: { type: String, required: true },
+  wi: { type: Boolean, required: false },
   required: { type: Number, required: true },
   planned: { type: Number, default: 0 },
   current: { type: Number, default: 0 },

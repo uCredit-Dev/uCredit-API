@@ -25,6 +25,7 @@ const majorSchema = new Schema({
       min_cedits_per_course: { type: Number, required: true },
       description: { type: String, required: true },
       criteria: { type: String, required: true },
+      wi: { type: Boolean, required: false },
       user_select: { type: Boolean, default: false }, //if true, user can put any course into this distribution
       double_count: { type: Boolean, default: false }, //courses being classified to this distribution might also be double counted for another distribution
       exception: { type: String }, //course that match the exception expression cannot be added toward this distirbution
