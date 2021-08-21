@@ -36,6 +36,7 @@ const majorSchema = new Schema({
           criteria: { type: String, required: true },
           exception: { type: String },
           exclusive: { type: Boolean, default: false },
+          wi: { type: Boolean, default: false },
         },
       ],
     },
