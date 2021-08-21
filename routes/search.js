@@ -1,6 +1,8 @@
 //routes to handle search requests
 const express = require("express");
 const router = express.Router();
+//router.use(compression());
+
 const { returnData, errorHandler } = require("./helperMethods.js");
 const SISCourses = require("../model/SISCourse.js");
 const SISCV = require("../model/SISCourseV.js");
@@ -154,7 +156,7 @@ router.get("/api/search", (req, res) => {
     req.query.wi,
     req.query.tags
   );
-  SISCourses.find(query)
+  SISCV.find(query)
     .then((match) => returnData(match, res))
     .catch((err) => errorHandler(res, 400, err));
 });

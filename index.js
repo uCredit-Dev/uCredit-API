@@ -19,6 +19,7 @@ const corsOptions = {
   origin: [
     "http://localhost:3000",
     "https://ucredit.herokuapp.com",
+    "https://ucredit.me",
     "http://127.0.0.1",
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
