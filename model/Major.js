@@ -12,6 +12,7 @@ const Schema = mongoose.Schema;
       [A] = Area
       [Y] = Before Program start term(e.g. Fall 2019)
       [N] = Part of the name of the course
+      [W] = WI
 */
 const majorSchema = new Schema({
   degree_name: { type: String, required: true }, //e.g. B.S. Computer Science
