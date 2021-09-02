@@ -15,9 +15,10 @@ const router = express.Router();
 //get years by plan id
 router.get("/api/years/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
-  years
-    .find({ plan_id })
-    .then((years) => returnData(years, res))
+  plans
+    .findById(plan_id)
+    .populate({ path: "years" })
+    .then((plan) => returnData(plan.years, res))
     .catch((err) => errorHandler(res, 400, err));
 });
 
