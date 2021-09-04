@@ -70,7 +70,8 @@ function constructQuery(
   wi,
   tags
 ) {
-  userQuery.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"); //escape special character for regex
+  userQuery = userQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
+  console.log(userQuery);
   let query = {
     $or: [
       { title: { $regex: userQuery, $options: "i" } },
