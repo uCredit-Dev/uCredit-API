@@ -102,7 +102,6 @@ router.delete("/api/years/:year_id", (req, res) => {
     if (year.year) {
       //not a preUniversity year, delete last year
       plan.year_ids.pop();
-      plan.numYears--;
     } else {
       plan.year_ids.shift();
     }
