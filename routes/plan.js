@@ -34,10 +34,6 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
 //require user_id in body
 router.post("/api/plans", (req, res) => {
   const plan = req.body;
-  const numYears = plan.numYears === undefined ? 4 : req.params.numYears;
-  if (numYears <= 0 || numYears > 5) {
-    errorHandler(res, 400, "numYear must be between 1-5");
-  }
   plans
     .create(plan)
     .then(async (plan) => {
@@ -49,18 +45,11 @@ router.post("/api/plans", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
-      const yearName = [
-        "Freshman",
-        "Sophomore",
-        "Junior",
-        "Senior",
-        "Fifth year",
-      ];
-      //create default year documents according to numYears
-      for (let i = 0; i < numYears; i++) {
+      const yearName = ["Freshman", "Sophomore", "Junior", "Senior"];
+      //create default year documents according to yearName
+      for (let i = 0; i < yearName.length; i++) {
         const year = {
           name: yearName[i],
-          year: i + 1,
           plan_id: plan._id,
           user_id: plan.user_id,
           expireAt:
@@ -69,7 +58,7 @@ router.post("/api/plans", (req, res) => {
               : undefined,
         };
         const newYear = await years.create(year);
-        plan.years.push(newYear._id);
+        plan.year_ids.push(newYear._id);
       }
       plan.save();
       returnData(plan, res);

@@ -17,7 +17,7 @@ router.get("/api/years/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findById(plan_id)
-    .populate({ path: "years" })
+    .populate({ path: "year_ids" })
     .then((plan) => returnData(plan.years, res))
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -35,7 +35,7 @@ router.post("/api/years", async (req, res) => {
       plans
         .findByIdAndUpdate(
           newYear.plan_id,
-          { $push: { years: year._id } },
+          { $push: { year_ids: year._id } },
           { new: true, runValidators: true }
         )
         .exec();
@@ -51,7 +51,7 @@ router.patch("/api/years/changeOrder", async (req, res) => {
   plans
     .findByIdAndUpdate(
       plan_id,
-      { years: year_ids },
+      { year_ids: year_ids },
       { new: true, runValidators: true }
     )
     .then((plan) => returnData(plan, res))
@@ -98,13 +98,13 @@ router.delete("/api/years/:year_id", (req, res) => {
         .catch((err) => errorHandler(res, 500, err));
     });
     let plan = await plans.findById(year.plan_id);
-    plan.years = plan.years.filter((y) => y != year._id); //remove year_id from plan
+    plan.year_ids = plan.year_ids.filter((y) => y != year._id); //remove year_id from plan
     if (year.year) {
       //not a preUniversity year, delete last year
-      plan.years.pop();
+      plan.year_ids.pop();
       plan.numYears--;
     } else {
-      plan.years.shift();
+      plan.year_ids.shift();
     }
     plan.save();
     returnData(year, res);
