@@ -8,12 +8,7 @@ const Schema = mongoose.Schema;
 const planSchema = new Schema({
   name: { type: String, required: true },
   majors: { type: [String] },
-  numYears: { type: Number, default: 4 },
-  freshman: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-  sophomore: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-  junior: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-  senior: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-  years: [{ type: Schema.Types.ObjectId, ref: "Year" }],
+  year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
   expireAt: { type: Date },
