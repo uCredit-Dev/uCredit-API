@@ -22,12 +22,14 @@ router.get("/api/years/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//create a new year and add year id to the end of plan's year array
+// create a new year and add year id to the beginning/end of plan's year array depending on the boolean variable "preUniversity"
+// if true, add to the beginning; else to the end
 router.post("/api/years", async (req, res) => {
   let newYear = {
     name: req.body.name,
     plan_id: req.body.plan_id,
     user_id: req.body.user_id,
+    preUniversity: req.body.preUniversity,
   };
   years
     .create(newYear)
@@ -35,7 +37,16 @@ router.post("/api/years", async (req, res) => {
       plans
         .findByIdAndUpdate(
           newYear.plan_id,
-          { $push: { year_ids: year._id } },
+          newYear.preUniversity
+            ? {
+                $push: {
+                  year_ids: {
+                    $each: [year._id],
+                    $position: 0,
+                  },
+                },
+              }
+            : { $push: { year_ids: year._id } },
           { new: true, runValidators: true }
         )
         .exec();
