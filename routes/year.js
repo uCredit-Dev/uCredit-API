@@ -28,6 +28,7 @@ router.post("/api/years", async (req, res) => {
     name: req.body.name,
     plan_id: req.body.plan_id,
     user_id: req.body.user_id,
+    year: req.body.year,
   };
   years
     .create(newYear)
