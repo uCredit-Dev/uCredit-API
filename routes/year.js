@@ -60,7 +60,7 @@ router.patch("/api/years/changeOrder", async (req, res) => {
 });
 
 //update the name of the year
-router.patch("/api/years/update", (req, res) => {
+router.patch("/api/years/updateName", (req, res) => {
   const name = req.body.name;
   const year_id = req.body.year_id;
   if (!name) {
