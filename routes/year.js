@@ -59,7 +59,7 @@ router.patch("/api/years/changeOrder", async (req, res) => {
 });
 
 //update the name of the year
-router.patch("/api/years/updateName", (req, res) => {
+router.patch("/api/years/update", (req, res) => {
   const name = req.body.name;
   const year_id = req.body.year_id;
   if (!name) {
@@ -69,22 +69,6 @@ router.patch("/api/years/updateName", (req, res) => {
     .findByIdAndUpdate(year_id, { name }, { new: true, runValidators: true })
     .then((year) => {
       courses.updateMany({ year_id }, { year: name }).exec();
-      returnData(year, res);
-    })
-    .catch((err) => errorHandler(res, 400, err));
-});
-
-//update the name of the year
-router.patch("/api/years/updateYear", (req, res) => {
-  const year = req.body.year;
-  const year_id = req.body.year_id;
-  if (!year) {
-    errorHandler(err, 400, "must specify a new name");
-  }
-  years
-    .findByIdAndUpdate(year_id, { year }, { new: true, runValidators: true })
-    .then((year) => {
-      courses.updateMany({ year_id }, { year: year.name }).exec();
       returnData(year, res);
     })
     .catch((err) => errorHandler(res, 400, err));
