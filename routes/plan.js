@@ -33,7 +33,13 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
 //create plan and add the plan id to user
 //require user_id in body
 router.post("/api/plans", (req, res) => {
-  const plan = req.body;
+  const plan = {
+    name: req.body.name,
+    user_id: req.body.user_id,
+    majors: req.body.majors,
+    expireAt: req.body.expireAt,
+  };
+  const year = req.body.year;
   const numYears = plan.numYears === undefined ? 4 : req.params.numYears;
   if (numYears <= 0 || numYears > 5) {
     errorHandler(res, 400, "numYear must be between 1-5");
@@ -56,13 +62,14 @@ router.post("/api/plans", (req, res) => {
         "Senior",
         "Fifth year",
       ];
+      const startYear = getStartYear(year);
       //create default year documents according to numYears
       for (let i = 0; i < numYears; i++) {
         const year = {
           name: yearName[i],
-          year: i + 1,
           plan_id: plan._id,
           user_id: plan.user_id,
+          year: startYear + i,
           expireAt:
             plan.user_id === "guestUser"
               ? Date.now() + 60 * 60 * 24 * 1000
@@ -76,6 +83,20 @@ router.post("/api/plans", (req, res) => {
     })
     .catch((err) => errorHandler(res, 400, err));
 });
+
+const getStartYear = (year) => {
+  if (year.includes("Sophomore")) {
+    return new Date().getFullYear() - 1;
+  } else if (year.includes("Junior")) {
+    return new Date().getFullYear() - 2;
+  } else if (year.includes("Senior")) {
+    return new Date().getFullYear() - 3;
+  } else if (year.includes("Fifth year")) {
+    return new Date().getFullYear() - 4;
+  } else {
+    return new Date().getFullYear();
+  }
+};
 
 //delete a plan and its years, distributions and courses
 //return deleted courses
