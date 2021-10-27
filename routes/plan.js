@@ -40,7 +40,7 @@ router.post("/api/plans", (req, res) => {
     expireAt: req.body.expireAt,
   };
   const year = req.body.year;
-  const numYears = plan.numYears === undefined ? 4 : req.params.numYears;
+  const numYears = plan.numYears === undefined ? 5 : req.params.numYears;
   if (numYears <= 0 || numYears > 5) {
     errorHandler(res, 400, "numYear must be between 1-5");
   }
@@ -56,11 +56,11 @@ router.post("/api/plans", (req, res) => {
         )
         .exec();
       const yearName = [
+        "AP Equivalents",
         "Freshman",
         "Sophomore",
         "Junior",
         "Senior",
-        "Fifth year",
       ];
       const startYear = getStartYear(year);
       //create default year documents according to numYears
@@ -91,8 +91,6 @@ const getStartYear = (year) => {
     return new Date().getFullYear() - 2;
   } else if (year.includes("Senior")) {
     return new Date().getFullYear() - 3;
-  } else if (year.includes("Fifth year")) {
-    return new Date().getFullYear() - 4;
   } else {
     return new Date().getFullYear();
   }
