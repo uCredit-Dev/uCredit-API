@@ -41,7 +41,7 @@ router.post("/api/plans", (req, res) => {
   };
   const year = req.body.year;
   const numYears = plan.numYears === undefined ? 5 : req.params.numYears;
-  if (numYears <= 0 || numYears > 5) {
+  if (numYears <= 0 || numYears >= 5) {
     errorHandler(res, 400, "numYear must be between 1-5");
   }
   plans
