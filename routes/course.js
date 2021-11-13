@@ -102,10 +102,7 @@ router.post("/api/courses", async (req, res) => {
       query[course.year] = course._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(course.plan_id, { $push: query }).exec();
       years
-        .findOneAndUpdate(
-          { plan_id: course.plan_id, name: course.year },
-          { $push: { courses: course._id } }
-        )
+        .findByIdAndUpdate(course.year_id, { $push: { courses: course._id } })
         .exec();
       returnData(course, res);
     })
