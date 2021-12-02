@@ -10,6 +10,7 @@ const planSchema = new Schema({
   majors: { type: [String] },
   year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
+  carts: [{ type: Schema.Types.ObjectId, ref: "Cart" }],
   user_id: { type: String, required: true },
   expireAt: { type: Date },
 });
