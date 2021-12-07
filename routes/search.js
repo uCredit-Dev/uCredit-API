@@ -22,16 +22,17 @@ router.get("/api/search/skip/:num", (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
-  const query = constructQuery(
-    req.query.query,
-    req.query.school,
-    req.query.department,
-    req.query.term,
-    req.query.areas,
-    req.query.credits,
-    req.query.wi,
-    req.query.tags
-  );
+  const query = constructQuery({
+    query: req.query.query,
+    school: req.query.school,
+    department: req.query.department,
+    term: req.query.term,
+    areas: req.query.areas,
+    credits: req.query.credits,
+    wi: req.query.wi,
+    tags: req.query.tags,
+    level: req.query.level,
+  });
   SISCV.find(query)
     .then((results) => {
       returnData(results, res);
@@ -60,16 +61,18 @@ router.get("/api/searchVersion", (req, res) => {
   }
 });
 
-function constructQuery(
-  userQuery = "",
-  school = "",
-  department = "",
-  term = "",
-  areas = "",
-  credits,
-  wi,
-  tags
-) {
+function constructQuery(params) {
+  let {
+    userQuery = "",
+    school = "",
+    department = "",
+    term = "",
+    areas = "",
+    credits,
+    wi,
+    tags,
+    level = "",
+  } = params;
   userQuery = userQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
   console.log(userQuery);
   let query = {
@@ -81,6 +84,7 @@ function constructQuery(
     "versions.department": { $regex: department, $options: "i" },
     "versions.term": { $regex: term, $options: "i" },
     "versions.areas": { $regex: areas, $options: "i" },
+    "versions.level": { $regex: level, $options: "i" },
   };
   if (credits != null) {
     let parsed = Number.parseInt(credits);
