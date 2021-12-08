@@ -82,13 +82,11 @@ router.patch("/api/years/updateYear", (req, res) => {
   if (!year) {
     errorHandler(err, 400, "must specify a new name");
   }
-  years
-    .findByIdAndUpdate(year_id, { year }, { new: true, runValidators: true })
-    .then((year) => {
-      courses.updateMany({ year_id }, { year: year.name }).exec();
-      returnData(year, res);
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    let retrievedYear = await years.findByIdAndUpdate(year_id, { year }, { new: true, runValidators: true });
+    courses.updateMany({ year_id }, { retrievedYear: year.name }).exec();
+    returnData(retrievedYear, res);
+  } catch (err) { errorHandler(res, 400, err); }
 });
 
 //delete plan and its associated courses, remove year_id from the associated plan document
