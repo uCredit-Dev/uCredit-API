@@ -22,16 +22,16 @@ router.get("/api/search/skip/:num", (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
-  const query = constructQuery(
-    req.query.query,
-    req.query.school,
-    req.query.department,
-    req.query.term,
-    req.query.areas,
-    req.query.credits,
-    req.query.wi,
-    req.query.tags
-  );
+  const query = constructQuery({
+    userQuery: req.query.query,
+    school: req.query.school,
+    department: req.query.department,
+    term: req.query.term,
+    areas: req.query.areas,
+    credits: req.query.credits,
+    wi: req.query.wi,
+    tags: req.query.tags
+  });
   SISCV.find(query)
     .then((results) => {
       returnData(results, res);
@@ -60,34 +60,27 @@ router.get("/api/searchVersion", (req, res) => {
   }
 });
 
-function constructQuery(
-  userQuery = "",
-  school = "",
-  department = "",
-  term = "",
-  areas = "",
-  credits,
-  wi,
-  tags
-) {
-  userQuery = userQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
+function constructQuery(queryObject) {
+  let userQuery = queryObject.userQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
   console.log(userQuery);
   let query = {
     $or: [
       { title: { $regex: userQuery, $options: "i" } },
       { number: { $regex: userQuery, $options: "i" } },
     ],
-    "versions.school": { $regex: school, $options: "i" },
-    "versions.department": { $regex: department, $options: "i" },
-    "versions.term": { $regex: term, $options: "i" },
-    "versions.areas": { $regex: areas, $options: "i" },
+    "versions.school": { $regex: queryObject.school, $options: "i" },
+    "versions.department": { $regex: queryObject.department, $options: "i" },
+    "versions.term": { $regex: queryObject.term, $options: "i" },
+    "versions.areas": { $regex: queryObject.areas, $options: "i" },
   };
+  let credits = queryObject.credits;
   if (credits != null) {
     let parsed = Number.parseInt(credits);
     if (!isNaN(parsed)) {
       query["versions.credits"] = parsed;
     }
   }
+  let wi = queryObject.wi;
   if (wi != null) {
     if (wi === "1" || wi === "true") {
       query["versions.wi"] = true;
@@ -95,6 +88,7 @@ function constructQuery(
       query["versions.wi"] = false;
     }
   }
+  let tags = queryObject.tags;
   if (tags != null) {
     query["versions.tags"] = { $in: tags.toUpperCase() };
   }
