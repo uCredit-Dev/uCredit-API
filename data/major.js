@@ -51,11 +51,11 @@ const bsCS = {
   ],
   requirments: [
     {
-      name: "Computer Sicence Upper",
+      name: "Computer Science Upper",
       required: 16,
       byCredit: true,
       filter: {
-        number: /EN\.601\.[3-9]{1}[0-9]{2}/g, //"EN.601.3/4/5/6/7/8/9**"
+        number: /EN\.601\.[3-9]{1}\d{2}/g, //"EN.601.3/4/5/6/7/8/9**"
       },
     },
     {
