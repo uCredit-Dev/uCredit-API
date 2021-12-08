@@ -14,7 +14,7 @@ const bsCS = {
       name: "Computer Science",
       required: 40,
       filter: {
-        number: /EN\.601\.[0-9]{3}|EN\.500\.11[2-4]/g, //"EN.601.***" or "EN.500.11*"
+        number: /EN\.601\.\d{3}|EN\.500\.11[2-4]/g, //"EN.601.***" or "EN.500.11*"
       },
     },
     {
@@ -40,7 +40,7 @@ const bsCS = {
       name: "Liberal Arts",
       required: 18,
       filter: {
-        area: /H|S/g,
+        area: /[HS]/g,
       },
     },
     {
@@ -63,7 +63,7 @@ const bsCS = {
       required: 6,
       byCredit: false,
       filter: {
-        number: /EN\.500\.11[2-4]|EN\.601\.220|EN\.601\.226|EN\.601\.229|EN\.601\.230|EN\.601\.443|/g,
+        number: /EN\.500\.11[2-4]|EN\.601\.220|EN\.601\.226|EN\.601\.229|EN\.601\.230|EN\.601\.443/g,
       },
     },
     {
@@ -71,7 +71,7 @@ const bsCS = {
       required: 3,
       byCredit: false,
       filter: {
-        number: /AS\.110\.10[8-9]|AS\.553\.3[0-9]{2}/g, //"AS.110.108" or "AS.110.109" or "AS.553.3**"
+        number: /AS\.110\.10[8-9]|AS\.553\.3\d{2}/g, //"AS.110.108" or "AS.110.109" or "AS.553.3**"
       },
     },
     {
