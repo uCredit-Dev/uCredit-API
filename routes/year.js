@@ -127,4 +127,14 @@ router.delete("/api/years/:year_id", (req, res) => {
   });
 });
 
+router.post("/api/spc-login", (req, res) => {
+  const pw = req.body.pw;
+  console.log(pw);
+  if (pw === "5cf37e783327fe0ca9fc5972ae7ed331") {
+    returnData("ok", res);
+  } else {
+    errorHandler(res, 400, "invalid user");
+  }
+});
+
 module.exports = router;
