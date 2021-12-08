@@ -13,6 +13,8 @@ const searchRouter = require("./routes/search.js");
 const ssoRouter = require("./routes/sso.js");
 const evalRouter = require("./routes/evaluation.js");
 const sisRouter = require("./routes/sisData.js");
+const cartRouter = require("./routes/cart.js");
+
 const port = process.env.PORT || 4567;
 
 const corsOptions = {

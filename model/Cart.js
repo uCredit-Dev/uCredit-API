@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const cartSchema = new Schema({
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
-  major: { type: Schema.Types.Major, ref: "Major", required: true },
+  major_id: { type: Schema.Types.ObjectId, ref: "Major", required: true },
   classes: [
     {
       /*

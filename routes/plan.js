@@ -123,6 +123,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
       distributions.deleteMany({ plan_id: plan._id }).exec();
       courses.deleteMany({ plan_id: plan._id }).exec();
       years.deleteMany({ plan_id: plan._id }).exec();
+      carts.deleteMany({ plan_id: plan._id }).exec();
       users
         .findByIdAndUpdate(
           //delete plan_id from user
