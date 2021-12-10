@@ -22,7 +22,18 @@ router.get("/api/search/skip/:num", (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
-  const query = constructQuery({
+  const { query, school, department, term, areas, credits, wi, tags, level } = {
+    query: req.query.query,
+    school: req.query.school,
+    department: req.query.department,
+    term: req.query.term,
+    areas: req.query.areas,
+    credits: req.query.credits,
+    wi: req.query.wi,
+    tags: req.query.tags,
+    level: req.query.level,
+  };
+  const constructedQuery = constructQuery({
     query: req.query.query,
     school: req.query.school,
     department: req.query.department,
@@ -33,11 +44,11 @@ router.get("/api/search", (req, res) => {
     tags: req.query.tags,
     level: req.query.level,
   });
-  SISCV.find(query)
+  SISCV.find(constructedQuery)
     .then((results) => {
       returnData(results, res);
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 500, constructedQuery));
 });
 
 //return the term version of a specific course
