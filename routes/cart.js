@@ -1,5 +1,6 @@
 const carts = require("../model/Cart.js");
 const plans = require("../model/Plan.js");
+const majors = require("../model/Major.js");
 const { returnData, errorHandler } = require("./helperMethods.js");
 
 const express = require("express");
@@ -26,11 +27,21 @@ router.post("/api/carts", async (req, res) => {
   const cart = {
     user_id: req.body.user_id,
     plan_id: req.body.plan_id,
-    major: req.body.major,
+    major_id: req.body.major_id,
     classes: [],
   };
 
   // get distribution from the major field
+  await majors
+    .findById(major_id)
+    .then((major) => {
+      major.distributions.forEach((dist) => {
+        dist.fine_requirements.forEach((fine_req) => {
+          // we have each fine requirement now
+        });
+      });
+    })
+    .catch((err) => errorHandler(res, 500, err));
   // loop through each object in distributions
   // pull each of the fine requirements objects into classes
 

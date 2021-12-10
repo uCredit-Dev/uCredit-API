@@ -13,6 +13,7 @@ const cartSchema = new Schema({
         */
       distribution: {
         name: { type: String, required: true }, // Name of the distribution (e.g. "Upper Level General" or "Gateway"
+        description: { type: String, required: true }, // NEW
         required: { type: Number, required: true }, // Required number of credits
         planned: { type: Number, required: true }, // Number of credits from course array
         criteria: { type: String, required: true }, // What courses fulfill this requirement
