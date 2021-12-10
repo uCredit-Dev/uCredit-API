@@ -41,3 +41,6 @@ const majorSchema = new Schema({
     },
   ],
 });
+
+const Major = mongoose.model("Major", majorSchema);
+module.exports = Major;
