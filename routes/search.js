@@ -61,6 +61,7 @@ router.get("/api/searchVersion", (req, res) => {
 });
 
 function constructQuery(queryObject) {
+  if (queryObject === null) return;
   let userQuery = queryObject.userQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
   console.log(userQuery);
   let query = {
