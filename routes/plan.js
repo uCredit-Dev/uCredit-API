@@ -51,7 +51,7 @@ router.post("/api/plans", (req, res) => {
         .findByIdAndUpdate(
           //update user
           retrievedPlan.user_id,
-          { $push: { plan_ids: retrivedPlan._id } },
+          { $push: { plan_ids: retrievedPlan._id } },
           { new: true, runValidators: true }
         )
         .exec();
@@ -71,7 +71,7 @@ router.post("/api/plans", (req, res) => {
           user_id: retrievedPlan.user_id,
           year: startYear + i,
           expireAt:
-            retrivedPlan.user_id === "guestUser"
+            retrievedPlan.user_id === "guestUser"
               ? Date.now() + 60 * 60 * 24 * 1000
               : undefined,
         };

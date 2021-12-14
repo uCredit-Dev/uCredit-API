@@ -59,7 +59,7 @@ const bsCS = {
       },
     },
     {
-      name: "Computer Sicence Core",
+      name: "Computer Science Core",
       required: 6,
       byCredit: false,
       filter: {
