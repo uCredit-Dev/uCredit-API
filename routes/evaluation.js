@@ -10,6 +10,6 @@ router.get("/api/evals/:number", (req, res) => {
     .findOne({ num })
     .then((review) => returnData(review, res))
     .catch((err) => errorHandler(res, 500, err));
-});
+})
 
 module.exports = router;
