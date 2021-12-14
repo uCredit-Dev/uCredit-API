@@ -58,7 +58,7 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
   years
     .findOne({ plan_id, name: year })
     .populate({ path: "courses", match: term })
-    .then((year) => returnData(year.courses, res))
+    .then((retrievedYear) => returnData(retrievedYear.courses, res))
     .catch((err) => errorHandler(res, 400, err));
   // plans
   //   .findCoursesByTerm(plan_id, year, term)
