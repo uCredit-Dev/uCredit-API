@@ -75,7 +75,7 @@ router.patch("/api/years/updateName", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//update the name of the year
+//update the year
 router.patch("/api/years/updateYear", (req, res) => {
   const year = req.body.year;
   const year_id = req.body.year_id;
