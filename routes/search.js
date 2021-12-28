@@ -22,8 +22,29 @@ router.get("/api/search/skip/:num", (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
+  const {
+    userQuery,
+    school,
+    department,
+    term,
+    areas,
+    credits,
+    wi,
+    tags,
+    level,
+  } = {
+    userQuery: req.query.query,
+    school: req.query.school,
+    department: req.query.department,
+    term: req.query.term,
+    areas: req.query.areas,
+    credits: req.query.credits,
+    wi: req.query.wi,
+    tags: req.query.tags,
+    level: req.query.level,
+  };
   const query = constructQuery({
-    query: req.query.query,
+    userQuery: req.query.query,
     school: req.query.school,
     department: req.query.department,
     term: req.query.term,
@@ -37,7 +58,7 @@ router.get("/api/search", (req, res) => {
     .then((results) => {
       returnData(results, res);
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => errorHandler(res, 500, constructedQuery));
 });
 
 //return the term version of a specific course
