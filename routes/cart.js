@@ -6,6 +6,7 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 const express = require("express");
 const router = express.Router();
 
+// GET a cart by cart id
 router.get("/api/carts/:cart_id", (req, res) => {
   const cart_id = req.params.cart_id;
   carts
@@ -14,6 +15,7 @@ router.get("/api/carts/:cart_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+// GET all the carts in an id
 router.get("/api/cartsByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   carts
@@ -23,6 +25,7 @@ router.get("/api/cartsByPlan/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+// POST a new cart
 router.post("/api/carts", async (req, res) => {
   const cart = {
     user_id: req.body.user_id,
@@ -36,14 +39,22 @@ router.post("/api/carts", async (req, res) => {
     .findById(major_id)
     .then((major) => {
       major.distributions.forEach((dist) => {
+        const dist_name = dist.name;
         dist.fine_requirements.forEach((fine_req) => {
-          // we have each fine requirement now
+          const distribution = {
+            name: dist_name, // NEED TO OVERHAUL MAJOR STORAGE TO MAKE THIS UNIQUE
+            description: fine_req.description,
+            required: fine_req.required_credits,
+            //planned: ,
+            criteria: fine_req.criteria,
+            courses: [],
+          };
+          // Add this distribution to cart
+          cart.classes.push(distribution);
         });
       });
     })
     .catch((err) => errorHandler(res, 500, err));
-  // loop through each object in distributions
-  // pull each of the fine requirements objects into classes
 
   carts
     .create(cart)
@@ -79,13 +90,16 @@ router.delete("/api/carts/:cart_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-module.exports = router;
-
 // PATCH add a course to a class array
+
+/*
 router.patch("/api/distributions/addCourse/:cart_id", (req, res) => {
   const cart_id = req.params.cart_id;
   const course = req.body.course_id;
   //const distribution = req.body.dist_id;
 });
+*/
 
 // PATCH delete a course from a class array
+
+module.exports = router;

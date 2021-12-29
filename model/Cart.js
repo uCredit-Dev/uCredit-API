@@ -12,7 +12,9 @@ const cartSchema = new Schema({
         Rather, it is here to denote what distribution requirement this collection of courses fulfills
         */
       distribution: {
-        name: { type: String, required: true }, // Name of the distribution (e.g. "Upper Level General" or "Gateway"
+        name: { type: String, required: true }, // Get the name from the "distribution" element in Major. Not super specific
+        // WHAT WE WANT TO AIM FOR: Name of the distribution (e.g. "Upper Level General" or "Gateway"
+        // Eventually update Major schema to contain the name of every specific major requirement like what we want here
         description: { type: String, required: true }, // NEW
         required: { type: Number, required: true }, // Required number of credits
         planned: { type: Number, required: true }, // Number of credits from course array
