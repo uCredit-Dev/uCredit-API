@@ -40,7 +40,7 @@ app.use(distributionRouter);
 app.use(yearRouter);
 app.use(planRouter);
 app.use(ssoRouter);
-app.use(userRouter);
+//app.use(userRouter);
 app.use(majorRouter);
 app.use(searchRouter);
 app.use(evalRouter);
