@@ -46,7 +46,7 @@ router.post("/api/plans", (req, res) => {
   }
   plans
     .create(plan)
-    .then(async (retrivedPlan) => {
+    .then(async (retrievedPlan) => {
       users
         .findByIdAndUpdate(
           //update user
