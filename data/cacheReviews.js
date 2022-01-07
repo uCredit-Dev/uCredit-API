@@ -1,6 +1,6 @@
 const axios = require("axios");
 const db = require("./db.js");
-const eval = require("../model/Evaluation.js");
+const evaluation = require("../model/Evaluation.js");
 
 db.connect()
   .then(() => {
@@ -11,7 +11,7 @@ db.connect()
         for (i = 0; i < evals.length; i++) {
           delete evals[i]._id;
         }
-        eval.insertMany(evals).then((c) => console.log("completed"));
+        evaluation.insertMany(evals).then((c) => console.log("completed"));
       })
       .catch((err) => console.log(err));
   })
