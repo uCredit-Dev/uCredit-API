@@ -14,6 +14,6 @@ const evalSchema = new Schema({
   rev: { type: Array },
 });
 
-const eval = mongoose.model("Evaluation", evalSchema);
+const evaluation = mongoose.model("Evaluation", evalSchema);
 
-module.exports = eval;
+module.exports = evaluation;

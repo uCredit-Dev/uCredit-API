@@ -3,6 +3,7 @@ require("dotenv").config(); //search for env variables
 const SISCourses = require("../model/SISCourse.js");
 const db = require("./db.js");
 const axios = require("axios");
+const { all } = require("../routes/course.js");
 const key = process.env.SIS_API_KEY;
 
 async function update() {
@@ -12,27 +13,17 @@ async function update() {
       console.log("connected");
       SISCourses.find({ level: null }, "number").then((allCourses) => {
         console.log("found all courses");
-        for (let i = 0; i < allCourses.length; i++) {
-          let dbCourse = allCourses[i];
-          //console.log(dbCourse);
-          const number = dbCourse.number.replace(regex, "");
-          //console.log("axios for course", number);
-          axios
-            .get(`https://sis.jhu.edu/api/classes/${number}?key=${key}`)
-            .then((res) => {
-              //last element in array is the most up to date course
-              const section = res.data[res.data.length - 1].SectionName;
-              const numberWithSec = number + section;
-              console.log("axios for", numberWithSec);
-              axios
-                .get(
-                  `https://sis.jhu.edu/api/classes/${numberWithSec}?key=${key}`
-                )
-                .then((res) =>
-                  addProperty(dbCourse, res.data[res.data.length - 1])
-                );
-            })
-            .catch((err) => console.log(err));
+        for (let dbCourse of allCourses) {
+          try {
+            const number = dbCourse.number.replace(regex, "");
+            let res1 = await axios.get(`https://sis.jhu.edu/api/classes/${number}?key=${key}`)
+            //last element in array is the most up to date course
+            const section = res1.data[res1.data.length - 1].SectionName;
+            const numberWithSec = number + section;
+            console.log("axios for", numberWithSec);
+            let res2 = await axios.get(`https://sis.jhu.edu/api/classes/${numberWithSec}?key=${key}`)
+            addProperty(dbCourse, res2.data[res2.data.length - 1]);
+          } catch (err) { console.log(err); }
         }
       });
     })
@@ -41,7 +32,6 @@ async function update() {
 
 function addProperty(course, res) {
   const details = res.SectionDetails[0];
-  //console.log(details);
   course.level = res.Level;
   course.bio = details.Description;
   course.preReq = details.Prerequisites;
@@ -70,13 +60,11 @@ function addProperty(course, res) {
   */
 function getField(arr, field) {
   let brief = [];
-  for (let i = 0; i < arr.length; i++) {
-    const p = arr[i];
+  for (let p of arr) {
     if (!brief.includes(p[field])) {
       brief.push(p[field]);
     }
   }
-  //console.log("processed field array:", brief);
   return brief;
 }
 

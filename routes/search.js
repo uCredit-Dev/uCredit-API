@@ -22,27 +22,6 @@ router.get("/api/search/skip/:num", (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
-  const {
-    userQuery,
-    school,
-    department,
-    term,
-    areas,
-    credits,
-    wi,
-    tags,
-    level,
-  } = {
-    userQuery: req.query.query,
-    school: req.query.school,
-    department: req.query.department,
-    term: req.query.term,
-    areas: req.query.areas,
-    credits: req.query.credits,
-    wi: req.query.wi,
-    tags: req.query.tags,
-    level: req.query.level,
-  };
   const query = constructQuery({
     userQuery: req.query.query,
     school: req.query.school,
