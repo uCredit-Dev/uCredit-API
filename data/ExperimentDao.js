@@ -1,4 +1,5 @@
 const Experiment = require("../model/Experiment");
+const User = require("../model/User")
 const ApiError = require("../model/ApiError");
 
 class ExperimentDao {
@@ -101,9 +102,11 @@ class ExperimentDao {
       throw new ApiError(400, "Invalid Percentage");
     }
 
-    const allParticipants = ["mtiavis1", "wtong10"]; //Replace this when figure out how to call backend
-    for (let i = 1; i <= 98; i++) {
-      allParticipants.push(`User${i}`);
+    const allUsers = await User.find({}).lean().select("-__v");
+
+    const allParticipants = [];
+    for (let user of allUsers) {
+      allParticipants.push(user._id);
     }
     allParticipants.sort(() => Math.random() - 0.5); //Shuffling array
 
