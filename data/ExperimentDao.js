@@ -150,13 +150,17 @@ class ExperimentDao {
       }
     }
 
+    const finalPercentageOfParticipants = Math.round(
+      (target.active.length / allParticipants.length) * percentConverterToInt
+    );
+
     return Experiment.findByIdAndUpdate(
       target._id,
       {
         experimentName: target.experimentName,
         likes: target.likes,
         dislikes: target.dislikes,
-        percent_participating: percent_participating,
+        percent_participating: finalPercentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
       },
