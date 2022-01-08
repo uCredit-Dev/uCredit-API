@@ -13,6 +13,7 @@ const searchRouter = require("./routes/search.js");
 const ssoRouter = require("./routes/sso.js");
 const evalRouter = require("./routes/evaluation.js");
 const sisRouter = require("./routes/sisData.js");
+const experimentsRouter = require("./routes/experiments.js");
 
 function createApp() {
   const corsOptions = {
@@ -43,6 +44,7 @@ function createApp() {
   app.use(searchRouter);
   app.use(evalRouter);
   app.use(sisRouter);
+  app.use(experimentsRouter);
 
   return app;
 }
