@@ -115,7 +115,8 @@ class ExperimentDao {
     }
 
     let target = await this.findExperiment(experiment_name);
-    if (target === undefined) { //If could not find original experiment, then make a new one
+    if (target === undefined) {
+      //If could not find original experiment, then make a new one
       target = await this.create({
         name: experiment_name,
         blacklist: [],

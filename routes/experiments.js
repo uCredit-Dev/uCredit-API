@@ -62,10 +62,9 @@ router.put("/api/experiments/delete/:experiment_name", async (req, res, next) =>
   }
 });
 
-router.post("/api/experiments/:experiment_name", async (req, res, next) => {
+router.post("/api/experiments/updateExperiment", async (req, res, next) => {
   try {
-    const { experiment_name } = req.params;
-    const { percent_participating } = req.body;
+    const { experiment_name, percent_participating } = req.body;
     if (!percent_participating || !experiment_name ) {
       throw new ApiError(
         400,
