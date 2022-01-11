@@ -19,12 +19,12 @@ const majorSchema = new Schema({
   department: { type: String, required: true },
   total_degree_credit: { type: Number, required: true },
   wi_credit: { type: Number, required: true },
-  url: { type: String, required: true },
+  url: { type: String },
   distributions: [
     {
       name: { type: String, required: true },
       required_credits: { type: Number, required: true },
-      min_cedits_per_course: { type: Number, required: true },
+      min_credits_per_course: { type: Number, required: true },
       pathing: { type: Boolean, default: false },
       description: { type: String, required: true },
       criteria: { type: String, required: true },
