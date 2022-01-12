@@ -7,7 +7,7 @@ const { user, createUser } = require("./testUtils");
 
 beforeEach((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/majors", { useNewUrlParser: true })
+    .connect("mongodb://localhost:27017/plans", { useNewUrlParser: true })
     .then(() => done());
 });
 
@@ -50,6 +50,18 @@ describe("plan routes", () => {
     expect(actual[0].name).toEqual(plan1.name);
     expect(actual[1].name).toEqual(plan2.name);
   });
+
+  it("should delete a plan by its id", async () => {
+    const plan = await createPlan(planData);
+    const deleted = await deletePlan(plan._id);
+    expect(deleted).toMatchObject(planDocument);
+    const actual = await plans.findOne({
+      name: planData.name,
+      user_id: planData.user_id,
+      majors: planData.majors,
+    });
+    expect(actual).toBeFalsy();
+  });
 });
 
 const planData = {
@@ -78,5 +90,10 @@ async function getPlan(planId) {
 
 async function getAllPlans(userId) {
   const res = await request.get(`/api/plansByUser/${userId}`);
+  return res.body.data;
+}
+
+async function deletePlan(planId) {
+  const res = await request.delete(`/api/plans/${planId}`);
   return res.body.data;
 }
