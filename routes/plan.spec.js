@@ -3,6 +3,7 @@ const supertest = require("supertest");
 const { returnData } = require("./helperMethods");
 const plans = require("../model/Plan");
 const createApp = require("../app");
+const { user, createUser } = require("./testUtils");
 
 beforeEach((done) => {
   mongoose
@@ -19,7 +20,7 @@ afterEach((done) => {
 const request = supertest(createApp());
 
 describe("plan routes", () => {
-  it("should create a new plan", async () => {
+  it("should create a new plan for a guest", async () => {
     await createPlan(planData);
     const plan = await plans.findOne({
       name: planData.name,
@@ -38,6 +39,16 @@ describe("plan routes", () => {
     const plan = await createPlan(planData);
     const actual = await getPlan(plan._id);
     expect(actual).toMatchObject(planDocument);
+  });
+
+  it("should return all plans a user has", async () => {
+    createUser();
+    const plan1 = await createPlan({ ...planData, user_id: "user" });
+    const plan2 = await createPlan({ ...planData, name: "Plan 2", user_id: "user" });
+    const actual = await getAllPlans("user");
+    expect(actual.length).toEqual(2);
+    expect(actual[0].name).toEqual(planData.name);
+    expect(actual[1].name).toEqual("Plan 2");
   });
 });
 
@@ -62,5 +73,10 @@ async function createPlan(data) {
 
 async function getPlan(planId) {
   const res = await request.get(`/api/plans/${planId}`);
+  return res.body.data;
+}
+
+async function getAllPlans(userId) {
+  const res = await request.get(`/api/plansByUser/${userId}`);
   return res.body.data;
 }
