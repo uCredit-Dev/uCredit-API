@@ -68,5 +68,3 @@ const majorData = {
     },
   ],
 };
-
-export {};
