@@ -67,6 +67,18 @@ describe("plan routes", () => {
     const deleted = await deletePlan(plan._id);
     expect(deleted).toMatchObject(planDocument);
   });
+
+  it("should update major", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, { majors: ["B.A. Economics"] });
+    expect(updated.majors).toEqual(["B.A. Economics"]);
+  });
+
+  it("shouldn't update anything except major", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, { majors: ["B.A. Economics"] });
+    expect(updated).toMatchObject({ ...planDocument, majors: ["B.A. Economics"] });
+  });
 });
 
 const planData = {
@@ -100,5 +112,11 @@ async function getAllPlans(userId) {
 
 async function deletePlan(planId) {
   const res = await request.delete(`/api/plans/${planId}`);
+  return res.body.data;
+}
+
+async function updatePlan(planId, data) {
+  data.plan_id = planId;
+  const res = await request.patch("/api/plans/update").send(data);
   return res.body.data;
 }
