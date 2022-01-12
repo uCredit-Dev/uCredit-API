@@ -19,17 +19,7 @@ afterEach((done) => {
 
 const request = supertest(createApp());
 
-describe("plan routes", () => {
-  it("should create a new plan for a guest", async () => {
-    await createPlan(planData);
-    const plan = await plans.findOne({
-      name: planData.name,
-      user_id: planData.user_id,
-      majors: planData.majors,
-    });
-    expect(plan).toBeTruthy();
-  });
-
+describe("plan api", () => {
   it("should return the newly created plan", async () => {
     const plan = await createPlan(planData);
     expect(plan).toMatchObject(planDocument);
@@ -51,6 +41,48 @@ describe("plan routes", () => {
     expect(plans[1].name).toEqual(plan2.name);
   });
 
+  it("should return a deleted plan", async () => {
+    const plan = await createPlan(planData);
+    const deleted = await deletePlan(plan._id);
+    expect(deleted).toMatchObject(planDocument);
+  });
+
+  it("should return a plan with updated major", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, { majors: ["B.A. Economics"] });
+    expect(updated.majors).toEqual(["B.A. Economics"]);
+  });
+
+  it("should return a plan with only major updated", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, { majors: ["B.A. Economics"] });
+    expect(updated).toMatchObject({ ...planDocument, majors: ["B.A. Economics"] });
+  });
+
+  it("should return a plan with updated name", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, { name: "Plan 2" });
+    expect(updated.name).toEqual("Plan 2");
+  });
+
+  it("should return a plan with only name updated", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, { name: "Plan 2" });
+    expect(updated).toMatchObject({ ...planDocument, name: "Plan 2" });
+  });
+});
+
+describe("plan database", () => {
+  it("should create a new plan for a guest", async () => {
+    await createPlan(planData);
+    const plan = await plans.findOne({
+      name: planData.name,
+      user_id: planData.user_id,
+      majors: planData.majors,
+    });
+    expect(plan).toBeTruthy();
+  });
+
   it("should delete a plan by its id", async () => {
     const plan = await createPlan(planData);
     await deletePlan(plan._id);
@@ -60,36 +92,6 @@ describe("plan routes", () => {
       majors: plan.majors,
     });
     expect(actual).toBeFalsy();
-  });
-
-  it("should return a deleted plan", async () => {
-    const plan = await createPlan(planData);
-    const deleted = await deletePlan(plan._id);
-    expect(deleted).toMatchObject(planDocument);
-  });
-
-  it("should update major", async () => {
-    const plan = await createPlan(planData);
-    const updated = await updatePlan(plan._id, { majors: ["B.A. Economics"] });
-    expect(updated.majors).toEqual(["B.A. Economics"]);
-  });
-
-  it("shouldn't update anything except major", async () => {
-    const plan = await createPlan(planData);
-    const updated = await updatePlan(plan._id, { majors: ["B.A. Economics"] });
-    expect(updated).toMatchObject({ ...planDocument, majors: ["B.A. Economics"] });
-  });
-
-  it("should update name", async () => {
-    const plan = await createPlan(planData);
-    const updated = await updatePlan(plan._id, { name: "Plan 2" });
-    expect(updated.name).toEqual("Plan 2");
-  });
-
-  it("shouldn't update anything except name", async () => {
-    const plan = await createPlan(planData);
-    const updated = await updatePlan(plan._id, { name: "Plan 2" });
-    expect(updated).toMatchObject({ ...planDocument, name: "Plan 2" });
   });
 });
 
