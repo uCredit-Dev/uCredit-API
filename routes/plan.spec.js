@@ -33,6 +33,11 @@ describe("plan routes", () => {
     const data = await createPlan();
     expect(data).toMatchObject(planDocument);
   });
+
+  it("should return a plan by its id", async () => {
+    const data = await getPlan();
+    expect(data).toMatchObject(planDocument);
+  });
 });
 
 const planData = {
@@ -51,5 +56,11 @@ const planDocument = {
 
 async function createPlan() {
   const res = await request.post("/api/plans").send(planData);
+  return res.body.data;
+}
+
+async function getPlan() {
+  const data = await createPlan();
+  const res = await request.get(`/api/plans/${data._id}`);
   return res.body.data;
 }
