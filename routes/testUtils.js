@@ -10,8 +10,8 @@ const user = {
   plan_ids: [],
 };
 
-function createUser() {
-  users.create(user);
+function createUser(id = "user") {
+  users.create({ ...user, _id: id });
 }
 
 module.exports = { user, createUser };
