@@ -31,8 +31,8 @@ describe("plan routes", () => {
   });
 
   it("should return the newly created plan", async () => {
-    const actual = await createPlan(planData);
-    expect(actual).toMatchObject(planDocument);
+    const plan = await createPlan(planData);
+    expect(plan).toMatchObject(planDocument);
   });
 
   it("should return a plan by its id", async () => {
@@ -45,10 +45,10 @@ describe("plan routes", () => {
     createUser();
     const plan1 = await createPlan({ ...planData, user_id: "user" });
     const plan2 = await createPlan({ ...planData, name: "Plan 2", user_id: "user" });
-    const actual = await getAllPlans("user");
-    expect(actual.length).toEqual(2);
-    expect(actual[0].name).toEqual(plan1.name);
-    expect(actual[1].name).toEqual(plan2.name);
+    const plans = await getAllPlans("user");
+    expect(plans.length).toEqual(2);
+    expect(plans[0].name).toEqual(plan1.name);
+    expect(plans[1].name).toEqual(plan2.name);
   });
 
   it("should delete a plan by its id", async () => {
@@ -78,6 +78,18 @@ describe("plan routes", () => {
     const plan = await createPlan(planData);
     const updated = await updatePlan(plan._id, { majors: ["B.A. Economics"] });
     expect(updated).toMatchObject({ ...planDocument, majors: ["B.A. Economics"] });
+  });
+
+  it("should update name", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, { name: "Plan 2" });
+    expect(updated.name).toEqual("Plan 2");
+  });
+
+  it("shouldn't update anything except name", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, { name: "Plan 2" });
+    expect(updated).toMatchObject({ ...planDocument, name: "Plan 2" });
   });
 });
 
