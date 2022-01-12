@@ -22,9 +22,9 @@ describe("plan routes", () => {
   it("should create a new plan", async () => {
     await createPlan(planData);
     const plan = await plans.findOne({
-      name: "Unnamed Plan",
-      user_id: "guestUser",
-      majors: ["B.S. Computer Science (OLD - Pre-2021)"],
+      name: planData.name,
+      user_id: planData.user_id,
+      majors: planData.majors,
     });
     expect(plan).toBeTruthy();
   });
@@ -50,9 +50,9 @@ const planData = {
 };
 
 const planDocument = {
-  name: "Unnamed Plan",
-  user_id: "guestUser",
-  majors: ["B.S. Computer Science (OLD - Pre-2021)"],
+  name: planData.name,
+  user_id: planData.user_id,
+  majors: planData.majors,
 };
 
 async function createPlan(data) {
