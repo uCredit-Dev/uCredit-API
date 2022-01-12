@@ -11,7 +11,9 @@ const user = {
 };
 
 function createUser(id = "user") {
-  users.create({ ...user, _id: id });
+  const createdUser = { ...user, _id: id };
+  users.create(createdUser);
+  return createdUser;
 }
 
 module.exports = { user, createUser };
