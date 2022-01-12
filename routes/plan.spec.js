@@ -53,14 +53,19 @@ describe("plan routes", () => {
 
   it("should delete a plan by its id", async () => {
     const plan = await createPlan(planData);
-    const deleted = await deletePlan(plan._id);
-    expect(deleted).toMatchObject(planDocument);
+    await deletePlan(plan._id);
     const actual = await plans.findOne({
-      name: planData.name,
-      user_id: planData.user_id,
-      majors: planData.majors,
+      name: plan.name,
+      user_id: plan.user_id,
+      majors: plan.majors,
     });
     expect(actual).toBeFalsy();
+  });
+
+  it("should return a deleted plan", async () => {
+    const plan = await createPlan(planData);
+    const deleted = await deletePlan(plan._id);
+    expect(deleted).toMatchObject(planDocument);
   });
 });
 
