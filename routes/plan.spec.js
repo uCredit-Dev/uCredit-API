@@ -19,15 +19,17 @@ afterEach((done) => {
 const request = supertest(createApp());
 
 describe("plan routes", () => {
+
   it("should create a new plan", async () => {
-    await request
-      .post("/api/plans")
-      .send(planData)
-      .then(async () => {
-        const plan = await plans.findOne({ name: "Unnamed Plan" });
-        expect(plan).toBeTruthy();
-      });
+    await createPlan();
+    const plan = await plans.findOne({
+      name: "Unnamed Plan",
+      user_id: "guestUser",
+      majors: ["B.S. Computer Science (OLD - Pre-2021)"],
+    });
+    expect(plan).toBeTruthy();
   });
+
 });
 
 const planData = {
@@ -38,4 +40,7 @@ const planData = {
   expireAt: Date.now() + 60 * 60 * 24,
 };
 
-export { }
+async function createPlan() {
+  await request.post("/api/plans").send(planData);
+}
+
