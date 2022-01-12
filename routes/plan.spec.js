@@ -47,8 +47,8 @@ describe("plan routes", () => {
     const plan2 = await createPlan({ ...planData, name: "Plan 2", user_id: "user" });
     const actual = await getAllPlans("user");
     expect(actual.length).toEqual(2);
-    expect(actual[0].name).toEqual(planData.name);
-    expect(actual[1].name).toEqual("Plan 2");
+    expect(actual[0].name).toEqual(plan1.name);
+    expect(actual[1].name).toEqual(plan2.name);
   });
 });
 
