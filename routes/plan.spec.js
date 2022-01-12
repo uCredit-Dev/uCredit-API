@@ -20,7 +20,7 @@ const request = supertest(createApp());
 
 describe("plan routes", () => {
   it("should create a new plan", async () => {
-    await createPlan();
+    await createPlan(planData);
     const plan = await plans.findOne({
       name: "Unnamed Plan",
       user_id: "guestUser",
@@ -30,13 +30,14 @@ describe("plan routes", () => {
   });
 
   it("should return the newly created plan", async () => {
-    const data = await createPlan();
-    expect(data).toMatchObject(planDocument);
+    const actual = await createPlan(planData);
+    expect(actual).toMatchObject(planDocument);
   });
 
   it("should return a plan by its id", async () => {
-    const data = await getPlan();
-    expect(data).toMatchObject(planDocument);
+    const plan = await createPlan(planData);
+    const actual = await getPlan(plan._id);
+    expect(actual).toMatchObject(planDocument);
   });
 });
 
@@ -54,13 +55,12 @@ const planDocument = {
   majors: ["B.S. Computer Science (OLD - Pre-2021)"],
 };
 
-async function createPlan() {
-  const res = await request.post("/api/plans").send(planData);
+async function createPlan(data) {
+  const res = await request.post("/api/plans").send(data);
   return res.body.data;
 }
 
-async function getPlan() {
-  const data = await createPlan();
-  const res = await request.get(`/api/plans/${data._id}`);
+async function getPlan(planId) {
+  const res = await request.get(`/api/plans/${planId}`);
   return res.body.data;
 }
