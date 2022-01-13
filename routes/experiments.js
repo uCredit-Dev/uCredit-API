@@ -72,7 +72,7 @@ router.post("/api/experiments/:experiment_name", async (req, res, next) => {
   try {
     const { experiment_name } = req.params;
     const { percent_participating } = req.body;
-    if (!percent_participating || !experiment_name ) {
+    if (percent_participating === undefined || !experiment_name ) {
       throw new ApiError(
         400,
         "You must provide percent_participating and experiment_name attribute!"
