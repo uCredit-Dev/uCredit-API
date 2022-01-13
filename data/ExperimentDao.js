@@ -15,14 +15,21 @@ class ExperimentDao {
       throw new ApiError(400, "Every experiment must have an active list");
     }
 
+    const allUsers = await User.find({}).lean().select("-__v");
+    const percentConverterToInt = 100;
+    const percentageOfParticipants = Math.round(
+      (active.length / allUsers.length) * percentConverterToInt
+    );
+
     const experiment = await Experiment.create({
       experimentName: name,
       likes: 0,
       dislikes: 0,
-      percent_participating: 0,
+      percent_participating: percentageOfParticipants,
       blacklist: [...blacklist],
       active: [...active],
     });
+
     return {
       _id: experiment._id.toString(),
       experimentName: experiment.experimentName,
