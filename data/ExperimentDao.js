@@ -47,13 +47,19 @@ class ExperimentDao {
     target.active.push(user_id);
     target.blacklist = target.blacklist.filter((user) => user !== user_id);
 
+    const allUsers = await User.find({}).lean().select("-__v");
+    const percentConverterToInt = 100;
+    const percentageOfParticipants = Math.round(
+      (target.active.length / allUsers.length) * percentConverterToInt
+    );
+
     return Experiment.findByIdAndUpdate(
       target._id,
       {
         experimentName: target.experimentName,
         likes: target.likes,
         dislikes: target.dislikes,
-        percent_participating: target.percent_participating,
+        percent_participating: percentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
       },
@@ -77,13 +83,19 @@ class ExperimentDao {
     target.blacklist.push(user_id);
     target.active = target.active.filter((user) => user !== user_id);
 
+    const allUsers = await User.find({}).lean().select("-__v");
+    const percentConverterToInt = 100;
+    const percentageOfParticipants = Math.round(
+      (target.active.length / allUsers.length) * percentConverterToInt
+    );
+
     return Experiment.findByIdAndUpdate(
       target._id,
       {
         experimentName: target.experimentName,
         likes: target.likes,
         dislikes: target.dislikes,
-        percent_participating: target.percent_participating,
+        percent_participating: percentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
       },
