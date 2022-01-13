@@ -109,7 +109,6 @@ class ExperimentDao {
       allParticipants.push(user._id);
     }
     allParticipants.sort(() => Math.random() - 0.5); //Shuffling array
-
     if (allParticipants.length === 0) {
       throw new ApiError(
         400,
@@ -133,7 +132,7 @@ class ExperimentDao {
     );
 
     if (initialPercentageOfParticipants === percent_participating) {
-      return []; //Same percentage, don't need to do anything
+      return target; //Same percentage, don't need to do anything
     }
 
     let needToIncrease =

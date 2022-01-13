@@ -21,8 +21,11 @@ router.get("/api/experiments/percent/:experiment_name", async (req, res, next) =
     //user_id is jhed id
     const { experiment_name } = req.params;
     const data = await experiments.findExperiment(experiment_name);
-    console.log(data)
-    res.json(data.percent_participating);
+    if (data === undefined) {
+      res.json(0)
+    } else {
+      res.json(data.percent_participating);
+    }
   } catch (err) {
     next(err);
   }
@@ -37,6 +40,9 @@ router.put("/api/experiments/add/:experiment_name", async (req, res, next) => {
         400,
         "You must provide user_id and experiment_name attribute!"
       );
+    }
+    if (user_id === "guestUser") {
+      throw new ApiError(400, "Cannot add guest users");
     }
     const data = await experiments.updateAdd(experiment_name, user_id);
     res.json({ data });
