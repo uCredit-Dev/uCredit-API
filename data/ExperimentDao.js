@@ -122,8 +122,10 @@ class ExperimentDao {
       );
     }
 
+    let arr = ['', new_name];
+
     let updateBody = {};
-    updateBody.experimentName = new_name;
+    updateBody.experimentName = arr.join('');
 
     return Experiment.findByIdAndUpdate(target._id, updateBody, {
       new: true,
