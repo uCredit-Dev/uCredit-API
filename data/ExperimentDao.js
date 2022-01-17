@@ -1,5 +1,5 @@
 const Experiment = require("../model/Experiment");
-const User = require("../model/User")
+const User = require("../model/User");
 const ApiError = require("../model/ApiError");
 
 class ExperimentDao {
@@ -121,19 +121,14 @@ class ExperimentDao {
         "Fail to update experiment name that does not exist"
       );
     }
-    target.experimentName = new_name;
-    return Experiment.findByIdAndUpdate(
-      target._id,
-      {
-        experimentName: { $eq: target.experimentName},
-        likes: target.likes,
-        dislikes: target.dislikes,
-        percent_participating: finalPercentageOfParticipants,
-        blacklist: target.blacklist,
-        active: target.active,
-      },
-      { new: true, runValidators: true }
-    )
+
+    let updateBody = {};
+    updateBody.experimentName = new_name;
+
+    return Experiment.findByIdAndUpdate(target._id, updateBody, {
+      new: true,
+      runValidators: true,
+    })
       .lean()
       .select("-__v");
   }
