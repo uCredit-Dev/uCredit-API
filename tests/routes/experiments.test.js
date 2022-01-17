@@ -258,7 +258,7 @@ describe("Test experiments endpoints", () => {
       describe("Return 200 and updated experiment when changing name of experiment", () => {
         test("Change the name of an experiment", async () => {
           const response = await request
-            .patch(`${endpoint}/changeName/${EXPERIMENT_ONE}`)
+            .put(`${endpoint}/changeName/${EXPERIMENT_ONE}`)
             .send({ new_name: `New Experiment Name` });
           expect(response.status).toBe(200);
           expect(response.body.data.experimentName).toBe(`New Experiment Name`);
@@ -268,7 +268,7 @@ describe("Test experiments endpoints", () => {
       describe("Return 400 when given invalid parameters", () => {
         test("Changing experiment name that does not exist", async () => {
           const response = await request
-            .patch(`${endpoint}/changeName/${JUNK_JHED}`)
+            .put(`${endpoint}/changeName/${JUNK_JHED}`)
             .send({ new_name: `${EXPERIMENT_ONE}` });
           expect(response.status).toBe(400);
         });

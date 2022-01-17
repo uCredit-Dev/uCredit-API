@@ -68,7 +68,7 @@ router.put("/api/experiments/delete/:experiment_name", async (req, res, next) =>
   }
 });
 
-router.patch("/api/experiments/changeName/:experiment_name", async (req, res, next) => {
+router.put("/api/experiments/changeName/:experiment_name", async (req, res, next) => {
   try {
     const { experiment_name } = req.params;
     const { new_name } = req.body;
