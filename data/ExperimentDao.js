@@ -125,7 +125,7 @@ class ExperimentDao {
     return Experiment.findByIdAndUpdate(
       target._id,
       {
-        experimentName: target.experimentName,
+        experimentName: { $eq: target.experimentName},
         likes: target.likes,
         dislikes: target.dislikes,
         percent_participating: finalPercentageOfParticipants,
