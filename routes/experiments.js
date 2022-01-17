@@ -68,6 +68,23 @@ router.put("/api/experiments/delete/:experiment_name", async (req, res, next) =>
   }
 });
 
+router.put("/api/experiments/changeName/:experiment_name", async (req, res, next) => {
+  try {
+    const { experiment_name } = req.params;
+    const { new_name } = req.body;
+    if (!new_name || !experiment_name ) {
+      throw new ApiError(
+        400,
+        "You must provide user_id and experiment_name attribute!"
+      );
+    }
+    const data = await experiments.updateName(experiment_name, new_name);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post("/api/experiments/:experiment_name", async (req, res, next) => {
   try {
     const { experiment_name } = req.params;

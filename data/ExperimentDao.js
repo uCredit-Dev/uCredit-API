@@ -112,6 +112,32 @@ class ExperimentDao {
       .select("-__v");
   }
 
+  async updateName(experiment_name, new_name) {
+    let target = await this.findExperiment(experiment_name);
+    if (target === undefined) {
+      //Could not find original experiment
+      throw new ApiError(
+        400,
+        "Fail to update experiment name that does not exist"
+      );
+    }
+    target.experimentName = new_name;
+    return Experiment.findByIdAndUpdate(
+      target._id,
+      {
+        experimentName: target.experimentName,
+        likes: target.likes,
+        dislikes: target.dislikes,
+        percent_participating: finalPercentageOfParticipants,
+        blacklist: target.blacklist,
+        active: target.active,
+      },
+      { new: true, runValidators: true }
+    )
+      .lean()
+      .select("-__v");
+  }
+
   async updateParticipation(experiment_name, percent_participating) {
     if (experiment_name === "White List") {
       throw new ApiError(400, "Do not update the White List using this");
