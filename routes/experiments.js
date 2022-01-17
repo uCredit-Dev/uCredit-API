@@ -75,7 +75,7 @@ router.put("/api/experiments/changeName/:experiment_name", async (req, res, next
     if (!new_name || !experiment_name ) {
       throw new ApiError(
         400,
-        "You must provide user_id and experiment_name attribute!"
+        "You must provide new_name and experiment_name attribute!"
       );
     }
     const data = await experiments.updateName(experiment_name, new_name);
@@ -96,6 +96,22 @@ router.post("/api/experiments/:experiment_name", async (req, res, next) => {
       );
     }
     const data = await experiments.updateParticipation(experiment_name, percent_participating);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/api/experiments/:experiment_name", async (req, res, next) => {
+  try {
+    const { experiment_name } = req.params;
+    if (!experiment_name ) {
+      throw new ApiError(
+        400,
+        "You must provide experiment_name attribute!"
+      );
+    }
+    const data = await experiments.deleteExperiment(experiment_name);
     res.json({ data });
   } catch (err) {
     next(err);
