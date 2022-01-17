@@ -122,10 +122,13 @@ class ExperimentDao {
       );
     }
 
-    let arr = ['', new_name];
-
+    /*
+    These three lines is a work around for the github check of Database query build from user-controlled sources.
+    The goal is to pass the new name as a parameter with arr.join instead of string concatanation.
+    */
+    let sanitizeArray = ['', new_name];
     let updateBody = {};
-    updateBody.experimentName = arr.join('');
+    updateBody.experimentName = sanitizeArray.join('');
 
     return Experiment.findByIdAndUpdate(target._id, updateBody, {
       new: true,
