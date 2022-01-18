@@ -252,6 +252,12 @@ class ExperimentDao {
     return true;
   }
 
+  async retrieveAll() {
+    let data = await Experiment.find({}).lean().select("-__v");
+    data = data.filter(experiment => experiment.experimentName !== "White List");
+    return data;
+  }
+
   async findExperiment(experiment_name) {
     let data = await Experiment.find({}).lean().select("-__v");
 

@@ -54,6 +54,19 @@ describe("Test experiments endpoints", () => {
       });
     });
 
+    describe(`Test GET ${endpoint}/allExperiments`, () => {
+      describe("Return 200 and experiment names for successful request", () => {
+        test("Return all experiment names except White List", async () => {
+          const response = await request.get(`${endpoint}/allExperiments`);
+          expect(response.status).toBe(200);
+          expect(response.body.data.length).toBe(3);
+          for (const experimentName of response.body.data) {
+            expect(experimentName).not.toBe("White List");
+          }
+        });
+      });
+    });
+
     describe(`Test GET ${endpoint}/:user_id`, () => {
       describe("Return 200 and experiment names for successful request", () => {
         test("Return experiment names for an existing user", async () => {

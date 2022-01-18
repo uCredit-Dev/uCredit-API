@@ -5,6 +5,15 @@ const ApiError = require("../model/ApiError");
 const router = express.Router();
 const experiments = new ExperimentDao();
 
+router.get("/api/experiments/allExperiments", async (req, res, next) => {
+  try {
+    const data = await experiments.retrieveAll();
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get("/api/experiments/:user_id", async (req, res, next) => {
   try {
     //user_id is jhed id
