@@ -87,17 +87,17 @@ router.post("/api/plans", (req, res) => {
 const getStartYear = (year) => {
   const date = new Date();
   if (
-    year.includes("Sophomore") ||
+    (year.includes("Sophomore") && date.getMonth() > 7) ||
     (year.includes("Freshman") && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 2;
   } else if (
-    year.includes("Junior") ||
+    (year.includes("Junior") && date.getMonth() > 7) ||
     (year.includes("Sophomore") && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 3;
   } else if (
-    year.includes("Senior") ||
+    (year.includes("Senior") && date.getMonth() > 7) ||
     (year.includes("Junior") && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 4;
