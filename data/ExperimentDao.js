@@ -23,8 +23,6 @@ class ExperimentDao {
 
     const experiment = await Experiment.create({
       experimentName: name,
-      likes: 0,
-      dislikes: 0,
       percent_participating: percentageOfParticipants,
       blacklist: [...blacklist],
       active: [...active],
@@ -33,8 +31,6 @@ class ExperimentDao {
     return {
       _id: experiment._id.toString(),
       experimentName: experiment.experimentName,
-      likes: experiment.likes,
-      dislikes: experiment.dislikes,
       percent_participating: experiment.percent_participating,
       blacklist: experiment.blacklist,
       active: experiment.active,
@@ -64,8 +60,6 @@ class ExperimentDao {
       target._id,
       {
         experimentName: target.experimentName,
-        likes: target.likes,
-        dislikes: target.dislikes,
         percent_participating: percentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
@@ -100,8 +94,6 @@ class ExperimentDao {
       target._id,
       {
         experimentName: target.experimentName,
-        likes: target.likes,
-        dislikes: target.dislikes,
         percent_participating: percentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
@@ -217,8 +209,6 @@ class ExperimentDao {
       target._id,
       {
         experimentName: target.experimentName,
-        likes: target.likes,
-        dislikes: target.dislikes,
         percent_participating: finalPercentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
