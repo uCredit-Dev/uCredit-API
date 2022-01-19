@@ -18,29 +18,21 @@ afterEach((done) => {
 
 const request = supertest(createApp());
 
-describe("major routes", () => {
-  it("should create a new major", async () => {
-    await request
-      .post("/api/majors")
-      .send(majorData)
-      .then(async () => {
-        const major = await majors.findOne({ department: "Computer Science" });
-        expect(major).toBeTruthy();
-      });
-  });
-
+describe("major api", () => {
   it("should return a major after posting", async () => {
-    await request
-      .post("/api/majors")
-      .send(majorData)
-      .then(async (res) => {
-        const data = res.body.data;
-        expect(data).toMatchObject(majorData);
-      });
+    const major = await createMajor(majorData);
+    expect(major).toMatchObject(majorData);
   });
 });
 
-const data = { test: true };
+describe("major db", () => {
+  it("should create a new major", async () => {
+    await createMajor(majorData);
+    const major = await majors.findOne({ department: "Computer Science" });
+    expect(major).toBeTruthy();
+  });
+});
+
 const majorData = {
   degree_name: "B.A. Computer Science",
   department: "Computer Science",
@@ -68,3 +60,8 @@ const majorData = {
     },
   ],
 };
+
+async function createMajor(data) {
+  const res = await request.post("/api/majors").send(data);
+  return res.body.data;
+}
