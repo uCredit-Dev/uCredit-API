@@ -23,6 +23,25 @@ describe("major api", () => {
     const major = await createMajor(majorData);
     expect(major).toMatchObject(majorData);
   });
+
+  it("should return a major that was just created", async () => {
+    const major = await createMajor(majorData);
+    const allMajors = await getMajors();
+    expect(allMajors).toContainEqual(major);
+    expect(allMajors).toHaveLength(1);
+  });
+
+  it("should return all majors", async () => {
+    const major1 = await createMajor(majorData);
+    const major2 = await createMajor({
+      ...majorData,
+      degree_name: "B.S. Computer Science",
+    });
+    const allMajors = await getMajors();
+    expect(allMajors).toContainEqual(major1);
+    expect(allMajors).toContainEqual(major2);
+    expect(allMajors).toHaveLength(2);
+  });
 });
 
 describe("major db", () => {
@@ -63,5 +82,10 @@ const majorData = {
 
 async function createMajor(data) {
   const res = await request.post("/api/majors").send(data);
+  return res.body.data;
+}
+
+async function getMajors() {
+  const res = await request.get("/api/majors/all");
   return res.body.data;
 }
