@@ -70,6 +70,19 @@ describe("plan api", () => {
     const updated = await updatePlan(plan._id, { name: "Plan 2" });
     expect(updated).toMatchObject({ ...planDocument, name: "Plan 2" });
   });
+
+  it("should update both major and name in one request", async () => {
+    const plan = await createPlan(planData);
+    const updated = await updatePlan(plan._id, {
+      name: "Plan 2",
+      majors: ["B.A. Economics"],
+    });
+    expect(updated).toMatchObject({
+      ...planDocument,
+      name: "Plan 2",
+      majors: ["B.A. Economics"],
+    });
+  });
 });
 
 describe("plan database", () => {
@@ -86,12 +99,50 @@ describe("plan database", () => {
   it("should delete a plan by its id", async () => {
     const plan = await createPlan(planData);
     await deletePlan(plan._id);
-    const actual = await plans.findOne({
-      name: plan.name,
-      user_id: plan.user_id,
-      majors: plan.majors,
-    });
+    const actual = await plans.findById(plan._id).lean();
     expect(actual).toBeFalsy();
+  });
+
+  it("should update a plan's major", async () => {
+    const plan = await createPlan(planData);
+    await updatePlan(plan._id, { majors: ["B.A. Economics"] });
+    const actual = await plans.findById(plan._id).lean();
+    expect(actual.majors).toEqual(["B.A. Economics"]);
+  });
+
+  it("should only update the plan's major", async () => {
+    const plan = await createPlan(planData);
+    await updatePlan(plan._id, { majors: ["B.A. Economics"] });
+    const actual = await plans.findById(plan._id).lean();
+    expect(actual).toMatchObject({ ...planDocument, majors: ["B.A. Economics"] });
+  });
+
+  it("should update a plan's name", async () => {
+    const plan = await createPlan(planData);
+    await updatePlan(plan._id, { name: "Plan 2" });
+    const actual = await plans.findById(plan._id).lean();
+    expect(actual.name).toEqual("Plan 2");
+  });
+
+  it("should only update a plan's name", async () => {
+    const plan = await createPlan(planData);
+    await updatePlan(plan._id, { name: "Plan 2" });
+    const actual = await plans.findById(plan._id).lean();
+    expect(actual).toMatchObject({ ...planDocument, name: "Plan 2" });
+  });
+
+  it("should update both major and name in one request", async () => {
+    const plan = await createPlan(planData);
+    await updatePlan(plan._id, {
+      name: "Plan 2",
+      majors: ["B.A. Economics"],
+    });
+    const actual = await plans.findById(plan._id).lean();
+    expect(actual).toMatchObject({
+      ...planDocument,
+      name: "Plan 2",
+      majors: ["B.A. Economics"],
+    });
   });
 });
 
