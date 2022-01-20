@@ -54,6 +54,19 @@ describe("Test experiments endpoints", () => {
       });
     });
 
+    describe(`Test GET ${endpoint}/allExperiments`, () => {
+      describe("Return 200 and experiment names for successful request", () => {
+        test("Return all experiment names except White List", async () => {
+          const response = await request.get(`${endpoint}/allExperiments`);
+          expect(response.status).toBe(200);
+          expect(response.body.data.length).toBe(3);
+          for (const experimentName of response.body.data) {
+            expect(experimentName).not.toBe("White List");
+          }
+        });
+      });
+    });
+
     describe(`Test GET ${endpoint}/:user_id`, () => {
       describe("Return 200 and experiment names for successful request", () => {
         test("Return experiment names for an existing user", async () => {
@@ -133,7 +146,7 @@ describe("Test experiments endpoints", () => {
             `${endpoint}/percent/${EXPERIMENT_ONE}`
           );
           expect(response.status).toBe(200);
-          expect(response.body).toBe(0);
+          expect(response.body).toBe(2);
         });
 
         test("Return 0% when using an experiment that does not exist", async () => {
@@ -249,6 +262,48 @@ describe("Test experiments endpoints", () => {
             .put(`${endpoint}/delete/${EXPERIMENT_ONE}`)
             .send({ user_id: `${MARK_JHED}` });
 
+          expect(response.status).toBe(400);
+        });
+      });
+    });
+
+    describe(`Test PUT ${endpoint}/changeName/:experiment_name`, () => {
+      describe("Return 200 and updated experiment when changing name of experiment", () => {
+        test("Change the name of an experiment", async () => {
+          const response = await request
+            .put(`${endpoint}/changeName/${EXPERIMENT_ONE}`)
+            .send({ new_name: `New Experiment Name` });
+          expect(response.status).toBe(200);
+          expect(response.body.data.experimentName).toBe(`New Experiment Name`);
+        });
+      });
+
+      describe("Return 400 when given invalid parameters", () => {
+        test("Changing experiment name that does not exist", async () => {
+          const response = await request
+            .put(`${endpoint}/changeName/${JUNK_JHED}`)
+            .send({ new_name: `${EXPERIMENT_ONE}` });
+          expect(response.status).toBe(400);
+        });
+      });
+    });
+
+    describe(`Test DELETE ${endpoint}/:experiment_name`, () => {
+      describe("Return 200 and deleted experiment", () => {
+        test("Delete Experiment", async () => {
+          const response = await request
+            .delete(`${endpoint}/${EXPERIMENT_ONE}`);
+          expect(response.status).toBe(200);
+          expect(response.body.data.experimentName).toBe(`${EXPERIMENT_ONE}`);
+          expect(response.body.data.blacklist.length).toBe(0);
+          expect(response.body.data.active.length).toBe(2);
+        });
+      });
+
+      describe("Return 400 when given invalid parameters", () => {
+        test("Attempting to delete expeirment name that does not exist", async () => {
+          const response = await request
+            .delete(`${endpoint}/${JUNK_JHED}`);
           expect(response.status).toBe(400);
         });
       });

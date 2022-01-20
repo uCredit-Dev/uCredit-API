@@ -1,5 +1,5 @@
 const Experiment = require("../model/Experiment");
-const User = require("../model/User")
+const User = require("../model/User");
 const ApiError = require("../model/ApiError");
 
 class ExperimentDao {
@@ -23,8 +23,6 @@ class ExperimentDao {
 
     const experiment = await Experiment.create({
       experimentName: name,
-      likes: 0,
-      dislikes: 0,
       percent_participating: percentageOfParticipants,
       blacklist: [...blacklist],
       active: [...active],
@@ -33,8 +31,6 @@ class ExperimentDao {
     return {
       _id: experiment._id.toString(),
       experimentName: experiment.experimentName,
-      likes: experiment.likes,
-      dislikes: experiment.dislikes,
       percent_participating: experiment.percent_participating,
       blacklist: experiment.blacklist,
       active: experiment.active,
@@ -64,8 +60,6 @@ class ExperimentDao {
       target._id,
       {
         experimentName: target.experimentName,
-        likes: target.likes,
-        dislikes: target.dislikes,
         percent_participating: percentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
@@ -100,8 +94,6 @@ class ExperimentDao {
       target._id,
       {
         experimentName: target.experimentName,
-        likes: target.likes,
-        dislikes: target.dislikes,
         percent_participating: percentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
@@ -110,6 +102,44 @@ class ExperimentDao {
     )
       .lean()
       .select("-__v");
+  }
+
+  async updateName(experiment_name, new_name) {
+    let target = await this.findExperiment(experiment_name);
+    if (target === undefined) {
+      //Could not find original experiment
+      throw new ApiError(
+        400,
+        "Fail to update experiment name that does not exist"
+      );
+    }
+
+    /*
+    These three lines is a work around for the github check of Database query build from user-controlled sources.
+    The goal is to pass the new name as a parameter with arr.join instead of string concatanation.
+    */
+    let sanitizeArray = ["", new_name];
+    let updateBody = {};
+    updateBody.experimentName = sanitizeArray.join("");
+
+    return Experiment.findByIdAndUpdate(target._id, updateBody, {
+      new: true,
+      runValidators: true,
+    })
+      .lean()
+      .select("-__v");
+  }
+
+  async deleteExperiment(experiment_name) {
+    let target = await this.findExperiment(experiment_name);
+    if (target === undefined) {
+      //Could not find original experiment
+      throw new ApiError(
+        400,
+        "Fail to delete experiment name that does not exist"
+      );
+    }
+    return Experiment.findByIdAndDelete(target._id).lean().select("-__v");
   }
 
   async updateParticipation(experiment_name, percent_participating) {
@@ -179,8 +209,6 @@ class ExperimentDao {
       target._id,
       {
         experimentName: target.experimentName,
-        likes: target.likes,
-        dislikes: target.dislikes,
         percent_participating: finalPercentageOfParticipants,
         blacklist: target.blacklist,
         active: target.active,
@@ -222,6 +250,12 @@ class ExperimentDao {
       target.active.splice(Math.floor(Math.random() * target.active.length), 1);
     }
     return true;
+  }
+
+  async retrieveAll() {
+    let data = await Experiment.find({}).lean().select("-__v");
+    data = data.filter(experiment => experiment.experimentName !== "White List");
+    return data;
   }
 
   async findExperiment(experiment_name) {

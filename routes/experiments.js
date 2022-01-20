@@ -5,6 +5,15 @@ const ApiError = require("../model/ApiError");
 const router = express.Router();
 const experiments = new ExperimentDao();
 
+router.get("/api/experiments/allExperiments", async (req, res, next) => {
+  try {
+    const data = await experiments.retrieveAll();
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get("/api/experiments/:user_id", async (req, res, next) => {
   try {
     //user_id is jhed id
@@ -68,6 +77,23 @@ router.put("/api/experiments/delete/:experiment_name", async (req, res, next) =>
   }
 });
 
+router.put("/api/experiments/changeName/:experiment_name", async (req, res, next) => {
+  try {
+    const { experiment_name } = req.params;
+    const { new_name } = req.body;
+    if (!new_name || !experiment_name ) {
+      throw new ApiError(
+        400,
+        "You must provide new_name and experiment_name attribute!"
+      );
+    }
+    const data = await experiments.updateName(experiment_name, new_name);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post("/api/experiments/:experiment_name", async (req, res, next) => {
   try {
     const { experiment_name } = req.params;
@@ -79,6 +105,22 @@ router.post("/api/experiments/:experiment_name", async (req, res, next) => {
       );
     }
     const data = await experiments.updateParticipation(experiment_name, percent_participating);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/api/experiments/:experiment_name", async (req, res, next) => {
+  try {
+    const { experiment_name } = req.params;
+    if (!experiment_name ) {
+      throw new ApiError(
+        400,
+        "You must provide experiment_name attribute!"
+      );
+    }
+    const data = await experiments.deleteExperiment(experiment_name);
     res.json({ data });
   } catch (err) {
     next(err);
