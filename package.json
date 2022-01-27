@@ -26,9 +26,6 @@
     "start": "nodemon",
     "test": "jest"
   },
-  "jest": {
-    "testEnvironment": "node"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QinyuanWu/uCredit-API.git"
@@ -42,6 +39,8 @@
   "devDependencies": {
     "@shelf/jest-mongodb": "^2.2.0",
     "@types/jest": "^27.4.0",
+    "jest": "^27.4.7",
+    "jest-environment-node": "^27.4.6",
     "supertest": "^6.1.6"
   }
 }
