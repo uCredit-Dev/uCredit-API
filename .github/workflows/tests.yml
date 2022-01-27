@@ -20,7 +20,8 @@ jobs:
       with:
         mongodb-version: '5.0'
 
-    - run: |
-      npm install
-      npm install -g jest
+    - name: Install Dependencies
+      run: |
+        npm install
+        npm install -g jest
     - run: npm test
