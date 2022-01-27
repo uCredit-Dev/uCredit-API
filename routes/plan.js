@@ -46,12 +46,12 @@ router.post("/api/plans", (req, res) => {
   }
   plans
     .create(plan)
-    .then(async (plan) => {
+    .then(async (retrievedPlan) => {
       users
         .findByIdAndUpdate(
           //update user
-          plan.user_id,
-          { $push: { plan_ids: plan._id } },
+          retrievedPlan.user_id,
+          { $push: { plan_ids: retrievedPlan._id } },
           { new: true, runValidators: true }
         )
         .exec();
@@ -65,21 +65,21 @@ router.post("/api/plans", (req, res) => {
       const startYear = getStartYear(year);
       //create default year documents according to numYears
       for (let i = 0; i < numYears; i++) {
-        const year = {
+        const retrievedYear = {
           name: yearName[i],
-          plan_id: plan._id,
-          user_id: plan.user_id,
+          plan_id: retrievedPlan._id,
+          user_id: retrievedPlan.user_id,
           year: startYear + i,
           expireAt:
-            plan.user_id === "guestUser"
+            retrievedPlan.user_id === "guestUser"
               ? Date.now() + 60 * 60 * 24 * 1000
               : undefined,
         };
-        const newYear = await years.create(year);
-        plan.year_ids.push(newYear._id);
+        const newYear = await years.create(retrievedYear);
+        retrievedPlan.year_ids.push(newYear._id);
       }
-      plan.save();
-      returnData(plan, res);
+      retrievedPlan.save();
+      returnData(retrievedPlan, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -87,17 +87,17 @@ router.post("/api/plans", (req, res) => {
 const getStartYear = (year) => {
   const date = new Date();
   if (
-    year.includes("Sophomore") ||
+    (year.includes("Sophomore") && date.getMonth() > 7) ||
     (year.includes("Freshman") && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 2;
   } else if (
-    year.includes("Junior") ||
+    (year.includes("Junior") && date.getMonth() > 7) ||
     (year.includes("Sophomore") && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 3;
   } else if (
-    year.includes("Senior") ||
+    (year.includes("Senior") && date.getMonth() > 7) ||
     (year.includes("Junior") && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 4;

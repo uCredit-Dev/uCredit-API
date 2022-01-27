@@ -8,8 +8,8 @@ db.connect()
       .get("https://jhu-course-rating-api.herokuapp.com/courses")
       .then((res) => {
         let evals = res.data;
-        for (i = 0; i < evals.length; i++) {
-          delete evals[i]._id;
+        for (element of evals) {
+          delete element._id;
         }
         evaluation.insertMany(evals).then((c) => console.log("completed"));
       })

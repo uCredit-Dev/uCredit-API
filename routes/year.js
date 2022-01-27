@@ -84,9 +84,9 @@ router.patch("/api/years/updateYear", (req, res) => {
   }
   years
     .findByIdAndUpdate(year_id, { year }, { new: true, runValidators: true })
-    .then((year) => {
-      courses.updateMany({ year_id }, { year: year.name }).exec();
-      returnData(year, res);
+    .then((retrievedYear) => {
+      courses.updateMany({ year_id }, { year: retrievedYear.name }).exec();
+      returnData(retrievedYear, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });

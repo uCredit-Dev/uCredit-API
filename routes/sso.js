@@ -105,16 +105,15 @@ router.post(
       user.save();
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
-    sessions
+    await sessions
       .findByIdAndUpdate(
         id,
         { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
         { upsert: true, new: true }
       )
-      .then((user) => {
+      try {
         res.redirect(`https://ucredit.me/login/${hash}`);
-      })
-      .catch((err) => errorHandler(res, 500, err));
+      } catch (err) { errorHandler(res, 500, err); }
   }
 );
 
@@ -127,7 +126,7 @@ router.get("/api/retrieveUser/:hash", (req, res) => {
     } else {
       users
         .findById(user._id)
-        .then((user) => returnData(user, res))
+        .then((retrievedUser) => returnData(retrievedUser, res))
         .catch((err) => errorHandler(res, 500, res));
     }
   });
