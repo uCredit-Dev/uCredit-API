@@ -61,7 +61,7 @@ const majorData = {
     {
       name: "Core",
       required_credits: 15,
-      min_cedits_per_course: 3,
+      min_credits_per_course: 3,
       description: "Core courses",
       criteria: "Criteria",
       user_select: false, //if true, user can put any course into this distribution
