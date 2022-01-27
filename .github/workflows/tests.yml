@@ -24,4 +24,5 @@ jobs:
       run: |
         npm install
         npm install -g jest
+        npm install -g jest-environment-node
     - run: npm test
