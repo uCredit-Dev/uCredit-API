@@ -4,8 +4,8 @@ const users = require("../model/User.js");
 const express = require("express");
 const router = express.Router();
 
-router.get("/api/user/:username", (req, res) => {
-  const username = req.params.username;
+router.get("/api/user", (req, res) => {
+  const username = req.query.username;
   const query = {
     $or: [
       { _id: { $regex: username, $options: "i" } },
