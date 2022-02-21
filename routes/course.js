@@ -29,7 +29,7 @@ router.get("/api/coursesByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   courses
     .findByPlanId(plan_id)
-    .then((courses) => returnData(courses, res))
+    .then((retrievedCourses) => returnData(retrievedCourses, res))
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -38,7 +38,7 @@ router.get("/api/coursesByDistribution/:distribution_id", (req, res) => {
   const d_id = req.params.distribution_id;
   courses
     .findByDistributionId(d_id)
-    .then((courses) => returnData(courses, res))
+    .then((retrievedCourses) => returnData(retrievedCourses, res))
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -58,7 +58,7 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
   years
     .findOne({ plan_id, name: year })
     .populate({ path: "courses", match: term })
-    .then((year) => returnData(year.courses, res))
+    .then((retrievedYear) => returnData(retrievedYear.courses, res))
     .catch((err) => errorHandler(res, 400, err));
   // plans
   //   .findCoursesByTerm(plan_id, year, term)
@@ -84,30 +84,27 @@ router.post("/api/courses", async (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
   courses
     .create(course)
-    .then((course) => {
-      course.distribution_ids.forEach((id) => {
+    .then((retrievedCourse) => {
+      retrievedCourse.distribution_ids.forEach((id) => {
         distributions
           .findByIdAndUpdate(
             id,
-            { $push: { courses: course._id } },
+            { $push: { courses: retrievedCourse._id } },
             { new: true, runValidators: true }
           )
           .then((distribution) =>
-            distributionCreditUpdate(distribution, course, true)
+            distributionCreditUpdate(distribution, retrievedCourse, true)
           )
           .catch((err) => errorHandler(res, 500, err));
       });
       //add course id to user plan's year array
       let query = {};
-      query[course.year] = course._id; //e.g. { freshman: id }
-      plans.findByIdAndUpdate(course.plan_id, { $push: query }).exec();
+      query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
+      plans.findByIdAndUpdate(retrievedCourse.plan_id, { $push: query }).exec();
       years
-        .findOneAndUpdate(
-          { plan_id: course.plan_id, name: course.year },
-          { $push: { courses: course._id } }
-        )
+        .findByIdAndUpdate(retrievedCourse.year_id, { $push: { courses: retrievedCourse._id } })
         .exec();
-      returnData(course, res);
+      returnData(retrievedCourse, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });

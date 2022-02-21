@@ -5,11 +5,11 @@ const util = require("util");
 const path = require("path");
 const readFile = util.promisify(fs.readFile);
 
-async function cacheCourse(filename) {
+async function cacheCourse(fileName) {
   let courses = [];
   await db.connect();
   const data = await readFile(
-    path.resolve(__dirname, "../" + filename),
+    path.resolve(__dirname, "../" + fileName),
     "utf-8"
   );
   courses = JSON.parse(data.toString());
@@ -44,7 +44,7 @@ async function extractProperty(courses) {
           school: course.SchoolName,
           department: course.Department,
           credits: Number.parseFloat(course.Credits),
-          wi: course.IsWritingIntensive === "Yes" ? true : false,
+          wi: course.IsWritingIntensive === "Yes"
         };
 
         console.log("$$$$$new course:", brief.title);

@@ -75,18 +75,18 @@ router.patch("/api/years/updateName", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//update the name of the year
+//update the year
 router.patch("/api/years/updateYear", (req, res) => {
   const year = req.body.year;
   const year_id = req.body.year_id;
   if (!year) {
-    errorHandler(err, 400, "must specify a new name");
+    errorHandler(err, 400, "must specify a new year");
   }
   years
     .findByIdAndUpdate(year_id, { year }, { new: true, runValidators: true })
-    .then((year) => {
-      courses.updateMany({ year_id }, { year: year.name }).exec();
-      returnData(year, res);
+    .then((retrievedYear) => {
+      courses.updateMany({ year_id }, { year: retrievedYear.name }).exec();
+      returnData(retrievedYear, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -129,6 +129,7 @@ router.delete("/api/years/:year_id", (req, res) => {
 
 router.post("/api/spc-login", (req, res) => {
   const pw = req.body.pw;
+  console.log(pw);
   if (pw === "5cf37e783327fe0ca9fc5972ae7ed331") {
     returnData("ok", res);
   } else {

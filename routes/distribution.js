@@ -34,16 +34,16 @@ router.post("/api/distributions", (req, res) => {
   const distribution = req.body;
   distributions
     .create(distribution)
-    .then((distribution) => {
+    .then((retrievedDistribution) => {
       plans
         .findByIdAndUpdate(
           //update plan
-          distribution.plan_id,
-          { $push: { distribution_ids: distribution._id } },
+          retrievedDistribution.plan_id,
+          { $push: { distribution_ids: retrievedDistribution._id } },
           { new: true, runValidators: true }
         )
         .exec();
-      returnData(distribution, res);
+      returnData(retrievedDistribution, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });

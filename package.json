@@ -23,7 +23,11 @@
     "path": "^0.12.7"
   },
   "scripts": {
-    "start": "nodemon"
+    "start": "nodemon",
+    "test": "jest"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "repository": {
     "type": "git",
@@ -34,5 +38,10 @@
   "bugs": {
     "url": "https://github.com/QinyuanWu/uCredit-API/issues"
   },
-  "homepage": "https://github.com/QinyuanWu/uCredit-API#readme"
+  "homepage": "https://github.com/QinyuanWu/uCredit-API#readme",
+  "devDependencies": {
+    "@shelf/jest-mongodb": "^2.2.0",
+    "@types/jest": "^27.4.0",
+    "supertest": "^6.1.6"
+  }
 }

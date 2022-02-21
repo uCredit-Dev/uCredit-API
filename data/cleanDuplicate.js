@@ -8,9 +8,9 @@ const readFile = util.promisify(fs.readFile);
     and filters duplicate courses based on course number and write the filtered array
     into a new json file.
 */
-async function cleanDup(fileName) {
+async function cleanDup(file) {
   //read file
-  let data = await readFile(path.resolve(__dirname, "../" + fileName), "utf-8");
+  let data = await readFile(path.resolve(__dirname, "../" + file), "utf-8");
   data = JSON.parse(data.toString());
   console.log("length before filter is " + data.length);
 
