@@ -52,7 +52,7 @@ async function extractProperty(courses) {
       } else {
         //update terms offered
         //console.log("-----found dup in db: ", courseFromDB.title);
-        courseFromDB.terms.push(course.Term);
+        courseFromDB.terms.unshift(course.Term);
         courseFromDB.save();
         dupCount++;
       }
@@ -83,7 +83,7 @@ function byPass(course) {
   );
 }
 
-const filename = "ftrFA2019.json";
+const filename = "ftrFA2021.json";
 cacheCourse(filename);
 
 module.exports = { cacheCourse };

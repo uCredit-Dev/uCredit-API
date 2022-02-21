@@ -39,7 +39,7 @@ async function cleanDup(fileName) {
   );
 }
 
-const fileName = "FA2019.json";
+const fileName = "FA2021.json";
 cleanDup(fileName);
 
 module.exports = { cleanDup };
