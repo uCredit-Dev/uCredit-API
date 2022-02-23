@@ -20,6 +20,71 @@ router.get("/api/search/skip/:num", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
+// broader vision:
+// two different versions
+// version one: does everything on backend
+// version 2
+
+// smart search route migrated from frontend
+router.get("/api/search/smart", async (req, res) => {
+  // this is the logic to perform a single search
+  // break up string, find all substrings nto subqueries
+  // for each subquery
+    // create a new promise
+    // construct a mongodb query
+    // await the model.find promise
+    // resovle the unique values
+  // recombine unique values
+  // send data to backend
+  let fullQuery = req.query.query;
+  console.log(req.query);
+
+  let substrings = [];
+  let substringSize = Math.max(fullQuery.length - 5, 3); // this is themin size of a subtring
+
+  for (let start = 0; start < fullQuery.length; start++) {
+    for (let end = fullQuery.length; end - start >= substringSize; end--) {
+      substrings.push(fullQuery.slice (start, end));
+    }
+  }
+  console.log(substrings);
+
+  let SISCVSet = new Set();
+  const findQueryPromise = (fullQuery) => {
+    return new Promise(async (resolve) => {
+      const query = constructQuery({
+        userQuery: fullQuery,
+        school: req.query.school,
+        department: req.query.department,
+        term: req.query.term,
+        areas: req.query.areas,
+        credits: req.query.credits,
+        wi: req.query.wi,
+        tags: req.query.tags,
+        level: req.query.level,
+      });
+      let results = await SISCV.find(query);
+      // remove elements alerady in set. resolve ones that aren't in the set yet
+      // is this messy to do async? possible collisions with operating on this same dataset?
+      // results = results.filter(result => {
+      //   if (SISCVSet.has(result._id)) {
+      //     return false;
+      //   }
+      //   SISCVSet.add(result._id);
+      //   return true;
+      // });
+      resolve(results);
+    });
+  }
+
+  let findQueryPromises = substrings.map(substring => findQueryPromise(substring));
+  let results = (await Promise.all(findQueryPromises)).flat(1);
+  // console.log(results.map(result => result.title));
+  let uniques = new Set(results);
+  // returnData(results.map(result => result.title), res);
+  returnData(results, res);
+});
+
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
   const query = constructQuery({
