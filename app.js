@@ -7,6 +7,7 @@ const courseRouter = require("./routes/course.js");
 const distributionRouter = require("./routes/distribution.js");
 const yearRouter = require("./routes/year.js");
 const planRouter = require("./routes/plan.js");
+const planReviwerRouter = require("./routes/planReview.js");
 const userRouter = require("./routes/user.js");
 const majorRouter = require("./routes/major.js");
 const searchRouter = require("./routes/search.js");
@@ -38,8 +39,9 @@ function createApp() {
   app.use(distributionRouter);
   app.use(yearRouter);
   app.use(planRouter);
+  app.use(planReviwerRouter);
   app.use(ssoRouter);
-  //app.use(userRouter);
+  app.use(userRouter);
   app.use(majorRouter);
   app.use(searchRouter);
   app.use(evalRouter);
