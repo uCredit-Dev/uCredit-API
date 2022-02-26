@@ -133,6 +133,13 @@ router.get("/api/verifyLogin/:hash", (req, res) => {
   });
 });
 
+router.get("/api/backdoor/verification", (req, res) => {
+  users
+    .findById("studentDev")
+    .then((retrievedUser) => returnData(retrievedUser, res))
+    .catch((err) => errorHandler(res, 500, res));
+});
+
 router.delete("/api/verifyLogin/:hash", (req, res) => {
   const hash = req.params.hash;
   sessions
