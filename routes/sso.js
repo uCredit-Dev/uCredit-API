@@ -133,9 +133,10 @@ router.get("/api/verifyLogin/:hash", (req, res) => {
   });
 });
 
-router.get("/api/backdoor/verification", (req, res) => {
+router.get("/api/backdoor/verification/:id", (req, res) => {
+  const id = req.params.id;
   users
-    .findById("studentDev")
+    .findById(id)
     .then((retrievedUser) => returnData(retrievedUser, res))
     .catch((err) => errorHandler(res, 500, res));
 });
