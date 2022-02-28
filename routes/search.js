@@ -22,47 +22,37 @@ router.get("/api/search/skip/:num", (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
+  const queryTerm = req.query.year
+    ? req.query.term + " " + req.query.year
+    : req.query.term;
   const query = constructQuery({
     userQuery: req.query.query,
     school: req.query.school,
     department: req.query.department,
-    term: req.query.term,
+    term: queryTerm,
     areas: req.query.areas,
     wi: req.query.wi,
+    credits: req.query.credits,
     tags: req.query.tags,
     level: req.query.level,
   });
-  if (req.query.credits && req.query.credits.length > 0) {
-    req.query.credits.split("").forEach((c) => {
-      SISCV.find({ ...query, ["versions.credits"]: Number.parseInt(c) })
-        .then((results) => {
-          results = results.filter((result) => {
-            if (req.query.areas && result.areas.includes("None")) {
-              return false;
-            }
-            return true;
-
-            // if (result)
-          });
-          returnData(results, res);
-        })
-        .catch((err) => errorHandler(res, 500, err.message));
-    });
-  } else
-    SISCV.find(query)
-      .then((results) => {
-        results = results.filter((result) => {
-          for (let version of result.versions) {
-            if (req.query.areas && version.areas.includes("None")) {
-              return false;
-            }
+  SISCV.find(query)
+    .then((results) => {
+      results = results.filter((result) => {
+        for (let version of result.versions) {
+          if (
+            version.term === queryTerm &&
+            req.query.areas &&
+            version.areas === "None"
+          ) {
+            return false;
           }
           return true;
-          // if (result)
-        });
-        returnData(results, res);
-      })
-      .catch((err) => errorHandler(res, 500, err.message));
+        }
+      });
+      returnData(results, res);
+    })
+    .catch((err) => errorHandler(res, 500, err.message));
 });
 
 //return the term version of a specific course
@@ -94,13 +84,11 @@ function constructQuery(params) {
     term = "",
     areas = "",
     wi,
-    tags,
+    credits = "",
+    tags = "",
     level = "",
   } = params;
   userQuery = userQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
-  // areas = areas.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
-  // areas = areas.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
-  console.log(userQuery);
   let query = {
     $or: [
       { title: { $regex: userQuery, $options: "i" } },
@@ -109,16 +97,27 @@ function constructQuery(params) {
     "versions.school": { $regex: school, $options: "i" },
     "versions.department": { $regex: department, $options: "i" },
     "versions.term": { $regex: term, $options: "i" },
-    "versions.areas": { $regex: areas, $options: "i" },
     "versions.level": { $regex: level, $options: "i" },
-    "versions.tags": { $regex: tags ? tags : "", $options: "i" },
   };
-  // if (credits != null) {
-  //   let parsed = Number.parseInt(credits);
-  //   if (!isNaN(parsed)) {
-  //     query["versions.credits"] = parsed;
-  //   }
-  // }
+
+  if (areas !== "") {
+    query["versions.areas"] = {
+      $in: areas.split("").map((area) => new RegExp(area)),
+    };
+  }
+
+  if (tags !== "") {
+    query["versions.tags"] = {
+      $in: tags.split("|").map((tag) => new RegExp(tag)),
+    };
+  }
+
+  if (credits !== "") {
+    query["versions.credits"] = {
+      $in: credits.split(""),
+    };
+  }
+
   if (wi != null) {
     if (wi === "1" || wi === "true") {
       query["versions.wi"] = true;
@@ -126,9 +125,6 @@ function constructQuery(params) {
       query["versions.wi"] = false;
     }
   }
-  // if (tags != null) {
-  //   query["versions.tags"] = { $in: tags.toUpperCase() };
-  // }
   return query;
 }
 
