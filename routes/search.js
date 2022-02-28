@@ -40,8 +40,8 @@ router.get("/api/search", (req, res) => {
           return false;
         }
 
-        if (result)
-      })
+        // if (result)
+      });
       returnData(results, res);
     })
     .catch((err) => errorHandler(res, 500, constructedQuery));
