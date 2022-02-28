@@ -85,6 +85,53 @@ router.get("/api/search/smart", async (req, res) => {
   returnData(results, res);
 });
 
+router.get("/api/search/smart/multi", async (req, res) => {
+  let fullQuery = req.query.query;
+  let substringLength = parseInt(req.query.queryLength, 10);
+  console.log(req.query);
+
+  let substrings = [];
+
+  for (let start = 0; start <= fullQuery.length - substringLength; start++) {
+    substrings.push(fullQuery.slice(start, start + substringLength));
+  }
+  console.log(substrings);
+
+  const findQueryPromise = (fullQuery) => {
+    return new Promise(async (resolve) => {
+      const query = constructQuery({
+        userQuery: fullQuery,
+        school: req.query.school,
+        department: req.query.department,
+        term: req.query.term,
+        areas: req.query.areas,
+        credits: req.query.credits,
+        wi: req.query.wi,
+        tags: req.query.tags,
+        level: req.query.level,
+      });
+      let results = await SISCV.find(query);
+      // remove elements alerady in set. resolve ones that aren't in the set yet
+      // is this messy to do async? possible collisions with operating on this same dataset?
+      // results = results.filter(result => {
+      //   if (SISCVSet.has(result._id)) {
+      //     return false;
+      //   }
+      //   SISCVSet.add(result._id);
+      //   return true;
+      // });
+      resolve(results);
+    });
+  }
+
+  let findQueryPromises = substrings.map(substring => findQueryPromise(substring));
+  let results = (await Promise.all(findQueryPromises)).flat(1);
+  // console.log(results.map(result => result.title));
+  let uniques = new Set(results);
+  // returnData(results.map(result => result.title), res);
+  returnData(results, res);
+});
+
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
   const query = constructQuery({
