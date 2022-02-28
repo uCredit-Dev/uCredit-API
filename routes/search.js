@@ -45,7 +45,7 @@ router.get("/api/search", (req, res) => {
           });
           returnData(results, res);
         })
-        .catch((err) => errorHandler(res, 500, err));
+        .catch((err) => errorHandler(res, 500, err.message));
     });
   } else
     SISCV.find(query)
@@ -61,7 +61,7 @@ router.get("/api/search", (req, res) => {
         });
         returnData(results, res);
       })
-      .catch((err) => errorHandler(res, 500, err));
+      .catch((err) => errorHandler(res, 500, err.message));
 });
 
 //return the term version of a specific course
@@ -110,7 +110,7 @@ function constructQuery(params) {
     "versions.term": { $regex: term, $options: "i" },
     "versions.areas": { $regex: areas, $options: "i" },
     "versions.level": { $regex: level, $options: "i" },
-    "versions.tags": { $regex: tags, $options: "i" },
+    "versions.tags": { $regex: tags ? tags : "", $options: "i" },
   };
   // if (credits != null) {
   //   let parsed = Number.parseInt(credits);
