@@ -44,7 +44,7 @@ router.get("/api/search", (req, res) => {
       });
       returnData(results, res);
     })
-    .catch((err) => errorHandler(res, 500, constructedQuery));
+    .catch((err) => errorHandler(res, 500, query));
 });
 
 //return the term version of a specific course
