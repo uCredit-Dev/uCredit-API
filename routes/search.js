@@ -28,23 +28,40 @@ router.get("/api/search", (req, res) => {
     department: req.query.department,
     term: req.query.term,
     areas: req.query.areas,
-    credits: req.query.credits,
     wi: req.query.wi,
     tags: req.query.tags,
     level: req.query.level,
   });
-  SISCV.find(query)
-    .then((results) => {
-      results = results.filter((result) => {
-        if (result.areas.includes("None")) {
-          return false;
-        }
+  if (req.query.credits && req.query.credits.length > 0) {
+    req.query.credits.split("").forEach((c) => {
+      SISCV.find({ ...query, ["versions.credits"]: Number.parseInt(c) })
+        .then((results) => {
+          results = results.filter((result) => {
+            if (result.areas.includes("None")) {
+              return false;
+            }
 
-        // if (result)
-      });
-      returnData(results, res);
-    })
-    .catch((err) => errorHandler(res, 500, query));
+            // if (result)
+          });
+          returnData(results, res);
+        })
+        .catch((err) => errorHandler(res, 500, err));
+    });
+  } else
+    SISCV.find(query)
+      .then((results) => {
+        results = results.filter((result) => {
+          for (let version of result.versions) {
+            if (version.areas.includes("None")) {
+              return false;
+            }
+          }
+
+          // if (result)
+        });
+        returnData(results, res);
+      })
+      .catch((err) => errorHandler(res, 500, err));
 });
 
 //return the term version of a specific course
@@ -75,7 +92,6 @@ function constructQuery(params) {
     department = "",
     term = "",
     areas = "",
-    credits,
     wi,
     tags,
     level = "",
@@ -94,7 +110,6 @@ function constructQuery(params) {
     "versions.term": { $regex: term, $options: "i" },
     "versions.areas": { $regex: areas, $options: "i" },
     "versions.level": { $regex: level, $options: "i" },
-    "versions.credits": { $regex: credits, $options: "i" },
     "versions.tags": { $regex: tags, $options: "i" },
   };
   // if (credits != null) {
