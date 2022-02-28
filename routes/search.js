@@ -35,6 +35,13 @@ router.get("/api/search", (req, res) => {
   });
   SISCV.find(query)
     .then((results) => {
+      results = results.filter((result) => {
+        if (result.areas.includes("None")) {
+          return false;
+        }
+
+        if (result)
+      })
       returnData(results, res);
     })
     .catch((err) => errorHandler(res, 500, constructedQuery));
@@ -74,6 +81,8 @@ function constructQuery(params) {
     level = "",
   } = params;
   userQuery = userQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
+  // areas = areas.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
+  // areas = areas.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
   console.log(userQuery);
   let query = {
     $or: [
@@ -85,13 +94,15 @@ function constructQuery(params) {
     "versions.term": { $regex: term, $options: "i" },
     "versions.areas": { $regex: areas, $options: "i" },
     "versions.level": { $regex: level, $options: "i" },
+    "versions.credits": { $regex: credits, $options: "i" },
+    "versions.tags": { $regex: tags, $options: "i" },
   };
-  if (credits != null) {
-    let parsed = Number.parseInt(credits);
-    if (!isNaN(parsed)) {
-      query["versions.credits"] = parsed;
-    }
-  }
+  // if (credits != null) {
+  //   let parsed = Number.parseInt(credits);
+  //   if (!isNaN(parsed)) {
+  //     query["versions.credits"] = parsed;
+  //   }
+  // }
   if (wi != null) {
     if (wi === "1" || wi === "true") {
       query["versions.wi"] = true;
@@ -99,9 +110,9 @@ function constructQuery(params) {
       query["versions.wi"] = false;
     }
   }
-  if (tags != null) {
-    query["versions.tags"] = { $in: tags.toUpperCase() };
-  }
+  // if (tags != null) {
+  //   query["versions.tags"] = { $in: tags.toUpperCase() };
+  // }
   return query;
 }
 
