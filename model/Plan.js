@@ -11,6 +11,7 @@ const planSchema = new Schema({
   year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
+  reviewers: { type: [String], default: [] },
   expireAt: { type: Date },
 });
 
