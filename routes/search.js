@@ -37,9 +37,10 @@ router.get("/api/search", (req, res) => {
       SISCV.find({ ...query, ["versions.credits"]: Number.parseInt(c) })
         .then((results) => {
           results = results.filter((result) => {
-            if (result.areas.includes("None")) {
+            if (req.query.areas && result.areas.includes("None")) {
               return false;
             }
+            return true;
 
             // if (result)
           });
@@ -52,11 +53,11 @@ router.get("/api/search", (req, res) => {
       .then((results) => {
         results = results.filter((result) => {
           for (let version of result.versions) {
-            if (version.areas.includes("None")) {
+            if (req.query.areas && version.areas.includes("None")) {
               return false;
             }
           }
-
+          return true;
           // if (result)
         });
         returnData(results, res);
