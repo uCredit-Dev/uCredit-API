@@ -43,11 +43,13 @@ router.get("/api/search", (req, res) => {
           if (
             version.term === queryTerm &&
             req.query.areas &&
-            version.areas === "None"
+            version.areas !== "None"
           ) {
-            return false;
+            return true;
+          } else if (!req.query.areas) {
+            return true;
           }
-          return true;
+          return false;
         }
       });
       returnData(results, res);
@@ -99,10 +101,9 @@ function constructQuery(params) {
     "versions.term": { $regex: term, $options: "i" },
     "versions.level": { $regex: level, $options: "i" },
   };
-
   if (areas !== "") {
     query["versions.areas"] = {
-      $in: areas.split("").map((area) => new RegExp(area)),
+      $in: areas.split("|").map((area) => new RegExp(area)),
     };
   }
 
@@ -114,7 +115,7 @@ function constructQuery(params) {
 
   if (credits !== "") {
     query["versions.credits"] = {
-      $in: credits.split(""),
+      $in: credits.split("|"),
     };
   }
 
