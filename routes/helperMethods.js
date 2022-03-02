@@ -9,6 +9,9 @@ function returnData(data, res) {
 
 //set status code of the response and send error info to the user in json
 function errorHandler(res, status, err) {
+  // console.log("TESTESTTEST");
+  // console.log(res);
+
   res.status(status).json({
     errors: [
       {

@@ -9,7 +9,7 @@ router.post("/api/planReview/addReviewer", (req, res) => {
   const plan_id = req.body.plan_id;
   const reviewer_id = req.body.reviewer_id;
   if (!plan_id || !reviewer_id) {
-    errorHandler(res, 400, {
+    errorHandler(res, 405, {
       message: "Missing plan_id or reviewer_id in the request body.",
     });
   }
