@@ -35,7 +35,7 @@ router.post("/api/planReview/addReviewer", (req, res) => {
       }
       returnData(plan, res);
     })
-    .catch((err) => errorHandler(err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 router.delete("/api/planReview/removeReviewer", (req, res) => {
