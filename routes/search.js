@@ -22,9 +22,11 @@ router.get("/api/search/skip/:num", (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/search", (req, res) => {
-  const queryTerm = req.query.year
-    ? req.query.term + " " + req.query.year
-    : req.query.term;
+  let queryTerm =
+    req.query.term === "All" || !req.query.term ? "" : req.query.term;
+  if (queryTerm.length > 0) queryTerm += " ";
+  queryTerm +=
+    req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
   const query = constructQuery({
     userQuery: req.query.query,
     school: req.query.school,
