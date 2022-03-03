@@ -56,7 +56,7 @@ router.post("/api/plans", (req, res) => {
         )
         .exec();
       const yearName = [
-        "AP Equivalents",
+        "AP/Transfer",
         "Freshman",
         "Sophomore",
         "Junior",

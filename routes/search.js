@@ -41,12 +41,11 @@ router.get("/api/search", (req, res) => {
       results = results.filter((result) => {
         for (let version of result.versions) {
           if (
-            version.term === queryTerm &&
-            req.query.areas &&
-            version.areas !== "None"
+            (version.term === queryTerm &&
+              req.query.areas &&
+              version.areas !== "None") ||
+            !req.query.areas
           ) {
-            return true;
-          } else if (!req.query.areas) {
             return true;
           }
           return false;
