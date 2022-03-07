@@ -16,14 +16,22 @@ async function update() {
         for (let dbCourse of allCourses) {
           try {
             const number = dbCourse.number.replace(regex, "");
-            let res1 = await axios.get(`https://sis.jhu.edu/api/classes/${number}?key=${key}`)
+            let res1 = await axios.get(
+              `https://sis.jhu.edu/api/classes/${number}?key=${key}`
+            );
+            if (res1.data == undefined) console.log(res1);
             //last element in array is the most up to date course
             const section = res1.data[res1.data.length - 1].SectionName;
             const numberWithSec = number + section;
             console.log("axios for", numberWithSec);
-            let res2 = await axios.get(`https://sis.jhu.edu/api/classes/${numberWithSec}?key=${key}`)
+            let res2 = await axios.get(
+              `https://sis.jhu.edu/api/classes/${numberWithSec}?key=${key}`
+            );
+            if (res2.data == undefined) console.log(res1);
             addProperty(dbCourse, res2.data[res2.data.length - 1]);
-          } catch (err) { console.log(err); }
+          } catch (err) {
+            console.log(err);
+          }
         }
       });
     })
