@@ -14,7 +14,10 @@ router.get("/api/plans/:plan_id", (req, res) => {
   const p_id = req.params.plan_id;
   plans
     .findById(p_id)
-    .then((plan) => returnData(plan, res))
+    .populate("reviewers.user_id", "name email affiliation school grade")
+    .then((plan) => {
+      returnData(plan, res);
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -23,10 +26,7 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
   const user_id = req.params.user_id;
   users
     .findById(user_id)
-    .populate({ path: "plan_ids" })
-    .then((user) => {
-      returnData(user.plan_ids, res);
-    })
+    .then((user) => returnData(user.plan_ids, res))
     .catch((err) => errorHandler(res, 400, err));
 });
 

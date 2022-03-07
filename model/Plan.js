@@ -11,7 +11,14 @@ const planSchema = new Schema({
   year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
-  reviewers: { type: [String], default: [] },
+  reviewers: [
+    {
+      user_id: { type: String, ref: "User" },
+      pending: { type: Boolean },
+      sentTime: { type: Date },
+      default: [],
+    },
+  ],
   expireAt: { type: Date },
 });
 
