@@ -56,7 +56,7 @@ router.post("/api/plans", (req, res) => {
         )
         .exec();
       const yearName = [
-        "AP Equivalents",
+        "AP/Transfer",
         "Freshman",
         "Sophomore",
         "Junior",
@@ -69,7 +69,7 @@ router.post("/api/plans", (req, res) => {
           name: yearName[i],
           plan_id: retrievedPlan._id,
           user_id: retrievedPlan.user_id,
-          year: startYear + i,
+          year: i === 0 ? 0 : startYear + i,
           expireAt:
             retrievedPlan.user_id === "guestUser"
               ? Date.now() + 60 * 60 * 24 * 1000

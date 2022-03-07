@@ -105,20 +105,21 @@ router.post(
       user.save();
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
-    await sessions
-      .findByIdAndUpdate(
-        id,
-        { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
-        { upsert: true, new: true }
-      )
-      try {
-        res.redirect(`https://ucredit.me/login/${hash}`);
-      } catch (err) { errorHandler(res, 500, err); }
+    await sessions.findByIdAndUpdate(
+      id,
+      { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
+      { upsert: true, new: true }
+    );
+    try {
+      res.redirect(`https://ucredit.me/login/${hash}`);
+    } catch (err) {
+      errorHandler(res, 500, err);
+    }
   }
 );
 
 //retrieve user object from db
-router.get("/api/retrieveUser/:hash", (req, res) => {
+router.get("/api/verifyLogin/:hash", (req, res) => {
   const hash = req.params.hash;
   sessions.findOne({ hash }).then((user) => {
     if (user === null) {
@@ -132,7 +133,15 @@ router.get("/api/retrieveUser/:hash", (req, res) => {
   });
 });
 
-router.delete("/api/retrieveUser/:hash", (req, res) => {
+router.get("/api/backdoor/verification/:id", (req, res) => {
+  const id = req.params.id;
+  users
+    .findById(id)
+    .then((retrievedUser) => returnData(retrievedUser, res))
+    .catch((err) => errorHandler(res, 500, res));
+});
+
+router.delete("/api/verifyLogin/:hash", (req, res) => {
   const hash = req.params.hash;
   sessions
     .remove({ hash })
