@@ -16,12 +16,10 @@ router.get("/api/plans/:plan_id", (req, res) => {
     .findById(p_id)
     .populate("reviewers.user_id", "name email affiliation school grade")
     .populate("year_ids")
-    //.populate("year_ids.courses")
     .then((plan) => {
       plan.populate("year_ids.courses", () => {
         returnData(plan, res);
       });
-      //returnData(plan, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });

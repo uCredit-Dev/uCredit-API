@@ -38,7 +38,7 @@ router.post("/api/planReview/request", (req, res) => {
         plan.save();
         returnData(plan.reviewers, res);
       } else {
-        errorHandler(res, 400, {
+        errorHandler(res, 409, {
           message: "Reviewer already added for this plan.",
         });
       }
@@ -58,8 +58,12 @@ router.post("/api/planReview/confirm", (req, res) => {
   users
     .findById(reviewer_id)
     .then((reviewer) => {
-      reviewer.whitelisted_plan_ids.push(plan_id);
-      reviewer.save();
+      if (reviewer.whitelisted_plan_ids.indexOf(plan_id) < 0) {
+        errorHandler(res, 409, { message: "Reviewer already confirmed." });
+      } else {
+        reviewer.whitelisted_plan_ids.push(plan_id);
+        reviewer.save();
+      }
     })
     .catch((err) => errorHandler(res, 500, err));
   //change the pending status of the request
