@@ -4,13 +4,15 @@ services:
       image: mongo:5.0.6
       ports:
         - "27017:27017"
-      volumes:
-        - db:/testdb
     web:
-      depends_on:
-        - db
+      environment:
+        - DEBUG=True
       build: .
+      volumes:
+        - .:/code
       ports:
         - "4567:4567"
+      depends_on:
+        - db
 volumes:
   db:
