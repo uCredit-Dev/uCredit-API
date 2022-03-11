@@ -16,7 +16,6 @@ const planSchema = new Schema({
       user_id: { type: String, ref: "User" },
       pending: { type: Boolean },
       sentTime: { type: Date },
-      default: [],
     },
   ],
   expireAt: { type: Date },

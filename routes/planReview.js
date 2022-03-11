@@ -5,38 +5,6 @@ const plans = require("../model/Plan.js");
 const express = require("express");
 const router = express.Router();
 
-//reviewer confirms the request, adding the plan id to the whitelisted_plan_ids array, changing the pending status
-router.post("/api/planReview/confirm", (req, res) => {
-  const plan_id = req.body.plan_id;
-  const reviewer_id = req.body.reviewer_id;
-  if (!plan_id || !reviewer_id) {
-    errorHandler(res, 400, {
-      message: "Missing plan_id or reviewer_id in the request body.",
-    });
-  }
-  users
-    .findById(reviewer_id)
-    .then((reviewer) => {
-      reviewer.whitelisted_plan_ids.push(plan_id);
-      reviewer.save();
-    })
-    .catch((err) => errorHandler(res, 500, err));
-  //change the pending status of the request
-  plans
-    .findById(plan_id)
-    .then((plan) => {
-      plan.reviewers = plan.reviewers.map((r) => {
-        if (r.user_id === reviewer_id) {
-          r.pending = false;
-        }
-        return r;
-      });
-      plan.save();
-      returnData("Reviewer confirmed.", res);
-    })
-    .catch((err) => errorHandler(res, 500, err));
-});
-
 router.post("/api/planReview/request", (req, res) => {
   const plan_id = req.body.plan_id;
   const reviewer_id = req.body.reviewer_id;
@@ -74,13 +42,12 @@ router.post("/api/planReview/request", (req, res) => {
           message: "Reviewer already added for this plan.",
         });
       }
-      //plan.reviewers.push(reviewer_id);
-      //plan.populate("reviewers", "name email affiliation school grade", () => {});
     })
     .catch((err) => errorHandler(res, 400, err));
 });
 
-router.post("/api/planReview/addReviewer", (req, res) => {
+//reviewer confirms the request, adding the plan id to the whitelisted_plan_ids array, changing the pending status
+router.post("/api/planReview/confirm", (req, res) => {
   const plan_id = req.body.plan_id;
   const reviewer_id = req.body.reviewer_id;
   if (!plan_id || !reviewer_id) {
@@ -88,39 +55,27 @@ router.post("/api/planReview/addReviewer", (req, res) => {
       message: "Missing plan_id or reviewer_id in the request body.",
     });
   }
+  users
+    .findById(reviewer_id)
+    .then((reviewer) => {
+      reviewer.whitelisted_plan_ids.push(plan_id);
+      reviewer.save();
+    })
+    .catch((err) => errorHandler(res, 500, err));
+  //change the pending status of the request
   plans
     .findById(plan_id)
-    .then(async (plan) => {
-      /*
-      if (plan.reviewers.indexOf(reviewer_id) < 0) {
-        //add plan_id to reviewer's doc
-        await users
-          .findById(reviewer_id)
-          .then((user) => {
-            if (!user) {
-              errorHandler(res, 404, {
-                message: "Reviewer is not registered.",
-              });
-            } else {
-              user.whitelisted_plan_ids.push(plan_id);
-              user.save();
-            }
-          })
-          .catch((err) => errorHandler(res, 500, err));
-        plan.save();
-      } else {
-        errorHandler(res, 400, {
-          message: "Reviewer already added for this plan.",
-        });
-      }
-      //add reviwer_id to the plan
-      plan.reviewers.push(reviewer_id);
-      */
-      plan.populate("reviewers", "name email affiliation school grade", () => {
-        returnData(plan.reviewers, res);
+    .then((plan) => {
+      plan.reviewers = plan.reviewers.map((r) => {
+        if (r.user_id === reviewer_id) {
+          r.pending = false;
+        }
+        return r;
       });
+      plan.save();
+      returnData("Reviewer confirmed.", res);
     })
-    .catch((err) => errorHandler(res, 400, err));
+    .catch((err) => errorHandler(res, 500, err));
 });
 
 router.delete("/api/planReview/removeReviewer", (req, res) => {
@@ -129,7 +84,9 @@ router.delete("/api/planReview/removeReviewer", (req, res) => {
   plans
     .findById(plan_id)
     .then((plan) => {
-      const reviewer_index = plan.reviewers.indexOf(reviewer_id);
+      const reviewer_index = plan.reviewers.findIndex(
+        (r) => r.user_id === reviewer_id
+      );
       if (reviewer_index >= 0) {
         //remove reviwer_id from the plan
         plan.reviewers.splice(reviewer_index, 1);
