@@ -102,7 +102,9 @@ router.post("/api/courses", async (req, res) => {
       query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(retrievedCourse.plan_id, { $push: query }).exec();
       years
-        .findByIdAndUpdate(retrievedCourse.year_id, { $push: { courses: retrievedCourse._id } })
+        .findByIdAndUpdate(retrievedCourse.year_id, {
+          $push: { courses: retrievedCourse._id },
+        })
         .exec();
       returnData(retrievedCourse, res);
     })
@@ -155,44 +157,39 @@ router.patch("/api/courses/dragged", (req, res) => {
         newTerm,
     });
   } else {
-    if (newYear_id !== oldYear_id) {
-      years
-        .findByIdAndUpdate(
-          oldYear_id,
-          { $pull: { courses: c_id } },
-          { new: true, runValidators: true }
-        )
-        .then((y) => console.log("course_id deleted from old year."))
-        .catch((err) => errorHandler(res, 500, err));
-      years
-        .findByIdAndUpdate(
-          newYear_id,
-          { $push: { courses: c_id } },
-          { new: true, runValidators: true }
-        )
-        .then((y) => {
-          console.log("course_id added to new year.");
-          courses
-            .findByIdAndUpdate(
-              c_id,
-              { year: y.name, year_id: y._id, term: newTerm.toLowerCase() },
-              { new: true, runValidators: true }
-            )
-            .then((c) => returnData(c, res))
-            .catch((err) => errorHandler(res, 500, err));
-        })
-        .catch((err) => errorHandler(res, 500, err));
-    } else {
-      //only changing the term
-      courses
-        .findByIdAndUpdate(
-          c_id,
-          { term: newTerm.toLowerCase() },
-          { new: true, runValidators: true }
-        )
-        .then((c) => returnData(c, res))
-        .catch((err) => errorHandler(res, 500, err));
-    }
+    years
+      .findByIdAndUpdate(
+        oldYear_id,
+        { $pull: { courses: c_id } },
+        { new: true, runValidators: true }
+      )
+      .then(() => console.log("course_id deleted from old year."))
+      .catch((err) => errorHandler(res, 500, err));
+
+    years
+      .findByIdAndUpdate(
+        newYear_id,
+        { $push: { courses: c_id } },
+        { new: true, runValidators: true }
+      )
+      .then((y) => {
+        console.log("course_id added to new year.");
+        courses
+          .findByIdAndUpdate(
+            c_id,
+            {
+              year: y.name,
+              year_id: y._id,
+              term: newTerm.toLowerCase(),
+              version:
+                newTerm + " " + (newTerm === "Fall" ? y.year : y.year + 1),
+            },
+            { new: true, runValidators: true }
+          )
+          .then((c) => returnData(c, res))
+          .catch((err) => errorHandler(res, 500, err));
+      })
+      .catch((err) => errorHandler(res, 500, err));
   }
 });
 
