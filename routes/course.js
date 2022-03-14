@@ -13,6 +13,8 @@ const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 
+const helpers = require("./helpers.js")
+
 const express = require("express");
 const router = express.Router();
 /*
@@ -70,45 +72,8 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
 //distribution field is also updated
 router.post("/api/courses", async (req, res) => {
   const course = req.body;
-  await plans
-    .findById(course.plan_id)
-    .then((plan) => {
-      course.distribution_ids.forEach((id) => {
-        if (!plan.distribution_ids.includes(id)) {
-          errorHandler(res, 400, {
-            message: "Invalid combination of plan_id and distribution_ids.",
-          });
-        }
-      });
-    })
-    .catch((err) => errorHandler(res, 500, err));
-  courses
-    .create(course)
-    .then((retrievedCourse) => {
-      retrievedCourse.distribution_ids.forEach((id) => {
-        distributions
-          .findByIdAndUpdate(
-            id,
-            { $push: { courses: retrievedCourse._id } },
-            { new: true, runValidators: true }
-          )
-          .then((distribution) =>
-            distributionCreditUpdate(distribution, retrievedCourse, true)
-          )
-          .catch((err) => errorHandler(res, 500, err));
-      });
-      //add course id to user plan's year array
-      let query = {};
-      query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
-      plans.findByIdAndUpdate(retrievedCourse.plan_id, { $push: query }).exec();
-      years
-        .findByIdAndUpdate(retrievedCourse.year_id, {
-          $push: { courses: retrievedCourse._id },
-        })
-        .exec();
-      returnData(retrievedCourse, res);
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  const retrieved = await helpers.addCourse(course);
+  returnData(retrieved, res);
 });
 
 //switch the "taken" status of a course, need to provide status in req body
@@ -260,4 +225,4 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-module.exports = router;
+module.exports = router

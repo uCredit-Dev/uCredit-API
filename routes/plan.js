@@ -6,8 +6,12 @@ const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 
+const helpers = require("./helpers.js")
+
 const express = require("express");
 const router = express.Router();
+
+
 
 //get plan by plan id
 router.get("/api/plans/:plan_id", (req, res) => {
@@ -156,6 +160,58 @@ router.patch("/api/plans/update", (req, res) => {
       .then((plan) => returnData(plan, res))
       .catch((err) => errorHandler(res, 400, err));
   }
+});
+
+router.post("/api/plans/share", async (req, res) => {
+  const template = await plans.findById(req.body.plan_id)
+  const copy = {
+    name: "Copy of " + template.name,
+    user_id: req.body.user_id,
+    majors: template.majors,
+    expireAt: template.expireAt,
+  };
+  const created = await plans.create(copy)
+  for (const id of template.year_ids) {
+    const templateYear = await years.findById(id)
+    const newYear = {
+      name: templateYear.name,
+      plan_id: copy._id,
+      user_id: req.body.user_id,
+      year: templateYear.year,
+    }
+    const createdNewYear = await years.create(newYear)
+    await created.update(
+      { $push: { year_ids: createdNewYear._id } },
+      { new: true, runValidators: true }
+    );
+    for (const courseID of templateYear.courses) {
+      const curCourse = await courses.findById(courseID)
+      const courseBody = {
+        title: curCourse.title,
+        term: curCourse.term,
+        year: curCourse.year,
+        credits: curCourse.credits,
+        distributions_id: [],
+        plan_id: created._id,
+        user_id: req.body.user_id,
+        year_id: createdNewYear.id,
+      }
+      await helpers.addCourse(courseBody)
+    }
+  }
+  const retUser = await users.findByIdAndUpdate(
+    req.body.user_id, 
+    { $push: { plan_ids: created._id }},
+    { new: true, runValidators: true })
+    .exec();
+  const retPlan = await plans.findById(created._id);
+  const retYears = await plans.findById(created._id).populate({ path: "year_ids" })
+  const ret = {
+    user: retUser, 
+    plan: retPlan,
+    years: retYears,
+  }
+  returnData(ret, res);
 });
 
 module.exports = router;
