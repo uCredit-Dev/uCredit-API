@@ -58,7 +58,7 @@ router.post("/api/planReview/confirm", (req, res) => {
   users
     .findById(reviewer_id)
     .then((reviewer) => {
-      if (reviewer.whitelisted_plan_ids.indexOf(plan_id) < 0) {
+      if (reviewer.whitelisted_plan_ids.indexOf(plan_id) >= 0) {
         errorHandler(res, 409, { message: "Reviewer already confirmed." });
       } else {
         reviewer.whitelisted_plan_ids.push(plan_id);
