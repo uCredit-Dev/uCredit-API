@@ -14,7 +14,6 @@ router.get("/api/plans/:plan_id", (req, res) => {
   const p_id = req.params.plan_id;
   plans
     .findById(p_id)
-    .populate("reviewers.user_id", "name email affiliation school grade")
     .populate("year_ids")
     .then((plan) => {
       plan.populate("year_ids.courses", () => {
@@ -31,11 +30,9 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
   users
     .findById(user_id)
     .then(async (user) => {
-      console.log(user.plan_ids);
       for (let plan_id of user.plan_ids) {
         plans
           .findById(plan_id)
-          .populate("reviewers.user_id", "name email affiliation school grade")
           .populate("year_ids")
           .then((plan) => {
             plan.populate("year_ids.courses", () => {
