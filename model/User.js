@@ -9,9 +9,6 @@ const userSchema = new Schema({
   school: { type: String },
   grade: { type: String }, //AE UG Sophomore
   plan_ids: [{ type: Schema.Types.ObjectId, ref: "Plan", default: [] }],
-  whitelisted_plan_ids: [
-    { type: Schema.Types.ObjectId, ref: "Plan", default: [] },
-  ],
 });
 
 const User = mongoose.model("User", userSchema);
