@@ -1,9 +1,12 @@
 # uCredit-API
 
 To run program:
-Step 1)npm i  
-Step 2)node .
-If run locally the default port is 4567.
+
+```
+docker-compose build && docker-compose up
+```
+
+If run locally, the default port is 4567 and Mongodb port is 27017.
 
 API routes saved in ./routes
 Mongoose Schema saved in ./model
