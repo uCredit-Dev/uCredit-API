@@ -9,7 +9,7 @@ router.post("/api/planReview/addReviewer", (req, res) => {
   const plan_id = req.body.plan_id;
   const reviewer_id = req.body.reviewer_id;
   if (!plan_id || !reviewer_id) {
-    errorHandler(res, 400, {
+    errorHandler(res, 401, {
       message: "Missing plan_id or reviewer_id in the request body.",
     });
   }
@@ -26,16 +26,16 @@ router.post("/api/planReview/addReviewer", (req, res) => {
             user.whitelisted_plan_ids.push(plan_id);
             user.save();
           })
-          .catch((err) => errorHandler);
+          .catch((err) => errorHandler(res, 400, err));
         plan.save();
       } else {
-        errorHandler(res, 400, {
+        errorHandler(res, 402, {
           message: "Reviewer already added for this plan.",
         });
       }
       returnData(plan, res);
     })
-    .catch((err) => errorHandler(err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 router.delete("/api/planReview/removeReviewer", (req, res) => {
@@ -56,16 +56,16 @@ router.delete("/api/planReview/removeReviewer", (req, res) => {
             user.whitelisted_plan_ids.splice(plan_index, 1);
             user.save();
           })
-          .catch((err) => errorHandler(err));
+          .catch((err) => errorHandler(res, 400, err));
         plan.save();
       } else {
-        errorHandler(res, 404, {
+        errorHandler(res, 402, {
           message: "Reviewer does not exist for this plan.",
         });
       }
       returnData(plan, res);
     })
-    .catch((err) => errorHandler(err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 module.exports = router;
