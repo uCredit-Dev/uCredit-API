@@ -42,7 +42,6 @@
   "devDependencies": {
     "@shelf/jest-mongodb": "^2.2.0",
     "@types/jest": "^27.4.0",
-    "jest": "^27.5.1",
     "supertest": "^6.1.6"
   }
 }

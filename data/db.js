@@ -4,8 +4,7 @@ const mongoose = require("mongoose");
 //set up db connection link
 const password = process.env.DB_ADMIN_PASSWORD;
 const dbname = "ucredit-db";
-const debug = process.env.DEBUG === "True";
-const URI = debug ? "mongodb://db:27017/debug" : `mongodb+srv://ucredit-admin:${password}@cluster0.ccsle.mongodb.net/${dbname}?retryWrites=true&w=majority`;
+const URI = `mongodb+srv://ucredit-admin:${password}@cluster0.ccsle.mongodb.net/${dbname}?retryWrites=true&w=majority`;
 //config connect options
 const option = {
   useNewUrlParser: true,

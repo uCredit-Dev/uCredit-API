@@ -16,6 +16,9 @@ router.get("/api/plans/:plan_id", (req, res) => {
     .findById(p_id)
     .populate("year_ids")
     .then((plan) => {
+      if (!plan) return;
+      plan = { ...plan, years: [...year_ids] };
+      delete plan.year_ids;
       plan.populate("year_ids.courses", () => {
         returnData(plan, res);
       });
@@ -35,7 +38,10 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
           .findById(plan_id)
           .populate("year_ids")
           .then((plan) => {
+            if (!plan) return;
             plan.populate("year_ids.courses", () => {
+              plan = { ...plan, years: [...year_ids] };
+              delete plan.year_ids;
               plansTotal.push(plan);
               if (plansTotal.length === user.plan_ids.length) {
                 returnData(plansTotal, res);
