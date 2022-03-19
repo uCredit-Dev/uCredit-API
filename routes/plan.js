@@ -17,7 +17,7 @@ router.get("/api/plans/:plan_id", (req, res) => {
     .populate("year_ids")
     .then((plan) => {
       plan.populate("year_ids.courses", () => {
-        plan = { ...plan, years: plan.year_ids };
+        plan = { ...plan._doc, years: plan.year_ids };
         delete plan.year_ids;
         returnData(plan, res);
       });
@@ -38,7 +38,7 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
           .populate("year_ids")
           .then((plan) => {
             plan.populate("year_ids.courses", () => {
-              plan = { ...plan, years: plan.year_ids };
+              plan = { ...plan._doc, years: plan.year_ids };
               delete plan.year_ids;
               plansTotal.push(plan);
               if (plansTotal.length === user.plan_ids.length) {
@@ -84,6 +84,7 @@ router.post("/api/plans", (req, res) => {
         "Senior",
       ];
       const startYear = getStartYear(year);
+      const yearObjs = [];
       //create default year documents according to numYears
       for (let i = 0; i < numYears; i++) {
         const retrievedYear = {
@@ -97,10 +98,13 @@ router.post("/api/plans", (req, res) => {
               : undefined,
         };
         const newYear = await years.create(retrievedYear);
+        yearObjs.push(newYear);
         retrievedPlan.year_ids.push(newYear._id);
       }
       retrievedPlan.save();
-      returnData(retrievedPlan, res);
+      const resp = { ...retrievedPlan, years: yearObjs };
+      delete resp.year_ids;
+      returnData(resp, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });
