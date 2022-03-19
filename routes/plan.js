@@ -14,18 +14,35 @@ router.get("/api/plans/:plan_id", (req, res) => {
   const p_id = req.params.plan_id;
   plans
     .findById(p_id)
-    .then((plan) => returnData(plan, res))
+    .populate("year_ids")
+    .then((plan) => {
+      plan.populate("year_ids.courses", () => {
+        returnData(plan, res);
+      });
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
 //get all plans of a user
 router.get("/api/plansByUser/:user_id", (req, res) => {
   const user_id = req.params.user_id;
+  const plansTotal = [];
   users
     .findById(user_id)
-    .populate({ path: "plan_ids" })
-    .then((user) => {
-      returnData(user.plan_ids, res);
+    .then(async (user) => {
+      for (let plan_id of user.plan_ids) {
+        plans
+          .findById(plan_id)
+          .populate("year_ids")
+          .then((plan) => {
+            plan.populate("year_ids.courses", () => {
+              plansTotal.push(plan);
+              if (plansTotal.length === user.plan_ids.length) {
+                returnData(plansTotal, res);
+              }
+            });
+          });
+      }
     })
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -126,7 +143,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
       users
         .findByIdAndUpdate(
           //delete plan_id from user
-          plan._id,
+          plan.user_id,
           { $pull: { plan_ids: plan._id } },
           { new: true, runValidators: true }
         )
