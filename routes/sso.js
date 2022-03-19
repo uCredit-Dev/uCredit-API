@@ -15,7 +15,6 @@ const router = express.Router();
 const secret = process.env.SESSION_SECRET;
 const PbK = process.env.PUBLIC_KEY;
 const PvK = process.env.PRIVATE_KEY;
-const DEBUG = process.env.DEBUG === "True";
 
 const JHU_SSO_URL = "https://idp.jh.edu/idp/profile/SAML2/Redirect/SSO";
 const SP_NAME = "https://ucredit-api.herokuapp.com";
@@ -134,30 +133,13 @@ router.get("/api/verifyLogin/:hash", (req, res) => {
   });
 });
 
-if (DEBUG) {
-  router.get("/api/backdoor/verification/:id", (req, res) => {
-    const id = req.params.id;
-    users
-      .findById(id)
-      .then(async (user) => {
-        if (user) {
-          returnData(user, res);
-        } else {
-          user = {
-            _id: id,
-            name: id,
-            email: `${id}@fakeemail.com`,
-            affiliation: "STAFF",
-            grade: "AE UG Freshman",
-            school: "jooby hooby",
-          };
-          user = await users.create(user);
-          console.log(user);
-          returnData(user, res);
-        }
-      })
-  });
-}
+router.get("/api/backdoor/verification/:id", (req, res) => {
+  const id = req.params.id;
+  users
+    .findById(id)
+    .then((retrievedUser) => returnData(retrievedUser, res))
+    .catch((err) => errorHandler(res, 500, res));
+});
 
 router.delete("/api/verifyLogin/:hash", (req, res) => {
   const hash = req.params.hash;
