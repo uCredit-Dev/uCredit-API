@@ -102,7 +102,7 @@ router.post("/api/plans", (req, res) => {
         retrievedPlan.year_ids.push(newYear._id);
       }
       retrievedPlan.save();
-      const resp = { ...retrievedPlan, years: yearObjs };
+      const resp = { ...retrievedPlan._doc, years: yearObjs };
       delete resp.year_ids;
       returnData(resp, res);
     })
