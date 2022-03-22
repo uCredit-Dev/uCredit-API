@@ -50,7 +50,7 @@ router.get("/api/courses/:course_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//get courses in a plan by term. provide plan id, year, and term
+// get courses in a plan by term. provide plan id, year, and term
 router.get("/api/coursesByTerm/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   const year = req.query.year;
