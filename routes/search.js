@@ -26,6 +26,7 @@ router.get("/api/search/skip/:num", (req, res) => {
 // version 2
 
 // smart search route migrated from frontend
+// single API endpoint, computs ALL substrings of EVERY length
 router.get("/api/search/smart", async (req, res) => {
   // this is the logic to perform a single search
   // break up string, find all substrings nto subqueries
@@ -85,9 +86,11 @@ router.get("/api/search/smart", async (req, res) => {
   returnData(results, res);
 });
 
+// computes all substrings for a single length 
 router.get("/api/search/smart/multi", async (req, res) => {
   let fullQuery = req.query.query;
-  let substringLength = parseInt(req.query.queryLength, 10);
+  let substringLength = parseInt(req.query.queryLength, 10); // length parsed from body
+  // add some protection here maybe for longer queries? since it's an expensive call
   console.log(req.query);
 
   let substrings = [];
@@ -120,6 +123,20 @@ router.get("/api/search/smart/multi", async (req, res) => {
       //   SISCVSet.add(result._id);
       //   return true;
       // });
+
+    // This filtering needs to be done because backend returns courses with incorrect term and year matching. This needs to be fixed.
+    // ^ copied comment from frontend
+      results = results.filter((course) => { // moved from frontend processedRetrievedData function
+        for (let version of course.versions) {
+          if (
+            version.term === req.query.term + ' ' + req.query.year ||
+            req.query.term === 'All' ||
+            req.query.year === 'All'
+          )
+            return true;
+        }
+        return false;
+      });
       resolve(results);
     });
   }
@@ -127,8 +144,6 @@ router.get("/api/search/smart/multi", async (req, res) => {
   let findQueryPromises = substrings.map(substring => findQueryPromise(substring));
   let results = (await Promise.all(findQueryPromises)).flat(1);
   // console.log(results.map(result => result.title));
-  let uniques = new Set(results);
-  // returnData(results.map(result => result.title), res);
   returnData(results, res);
 });
 
