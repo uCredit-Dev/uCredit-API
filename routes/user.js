@@ -17,7 +17,18 @@ router.get("/api/user", (req, res) => {
   users
     .find(query)
     .then((users) => {
-      returnData(users, res);
+      returnData(
+        users.map((user) => ({
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          affiliation: user.affiliation,
+          school: user.school,
+          grade: user.grade,
+          whitelisted_plan_ids: user.whitelisted_plan_ids,
+        })),
+        res
+      );
     })
     .catch((err) => errorHandler(err));
 });
