@@ -1,0 +1,22 @@
+version: '3.8'
+services: 
+    db:
+      image: mongo:5.0.6
+      ports:
+        - "27017:27017"
+      # Uncomment if you want db logs; most devs will probably find these annoying
+      logging:
+        driver: "none"
+    web:
+      environment:
+        - DEBUG=True
+      build: .
+      command: nodemon .
+      volumes:
+        - .:/code
+      ports:
+        - "4567:4567"
+      depends_on:
+        - db
+volumes:
+  db:

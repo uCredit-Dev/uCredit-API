@@ -23,6 +23,7 @@ function createApp() {
       "https://ucredit.herokuapp.com",
       "https://ucredit.me",
       "http://127.0.0.1",
+      "https://ucredit-frontend-typescript-local.vercel.app",
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: true,
