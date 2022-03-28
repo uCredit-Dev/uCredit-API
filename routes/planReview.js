@@ -48,10 +48,10 @@ router.post("/api/planReview/confirm", (req, res) => {
   planReviews.findById(review_id).then((review) => {
     if (!review) {
       errorHandler(res, 404, { message: "planReview not found." });
-    } else if (review.status === "ACCEPTED") {
+    } else if (review.status === "UNDERREVIEW") {
       errorHandler(res, 400, { message: "Reviewer already confirmed." });
     } else {
-      review.status = "ACCEPTED";
+      review.status = "UNDERREVIEW";
       review.save();
       returnData(review, res);
     }

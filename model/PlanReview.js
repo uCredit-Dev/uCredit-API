@@ -11,7 +11,7 @@ const planReviewSchema = new Schema({
   status: {
     type: String,
     required: true,
-    enum: ["PENDING", "ACCEPTED", "REJECTED"],
+    enum: ["PENDING", "UNDERREVIEW", "APPROVED", "REJECTED"],
   },
   requestTime: { type: Date },
 });
