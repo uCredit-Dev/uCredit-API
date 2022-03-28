@@ -23,7 +23,6 @@ router.get("/api/addSamples", (req, res) => {
   );
   addSampleCourses(courses).catch((err) => errorHandler(res, 500, err));
 });*/
-
 //return all courses of the user's plan
 router.get("/api/coursesByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
@@ -60,10 +59,6 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
     .populate({ path: "courses", match: term })
     .then((retrievedYear) => returnData(retrievedYear.courses, res))
     .catch((err) => errorHandler(res, 400, err));
-  // plans
-  //   .findCoursesByTerm(plan_id, year, term)
-  //   .then((courses) => returnData(courses, res))
-  //   .catch((err) => errorHandler(res, 400, err));
 });
 
 //add course, need to provide course info as json object in request body
