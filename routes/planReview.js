@@ -82,6 +82,25 @@ router.get("/api/planReview/plansToReview", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
+router.post("/api/planReview/repeatReview", (req, res) => {
+  const id = req.body.review_id;
+  planReviews.findById(id).then((review) => {
+    if (!review) {
+      errorHandler(res, 404, { message: "Review not found." });
+    } else {
+      if (review.status === "PENDING") {
+        review.status = "UNDERREVIEW";
+        review.requestTime = Date.now();
+        review.save();
+        // TODO: Create a new notification when this occurs
+        returnData(review, res);
+      } else {
+        errorHandler(res, 404, { message: "Review currently pending." });
+      }
+    }
+  });
+});
+
 router.delete("/api/planReview/removeReview", (req, res) => {
   const review_id = req.query.review_id;
   planReviews
