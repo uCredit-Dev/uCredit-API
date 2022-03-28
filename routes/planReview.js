@@ -88,17 +88,38 @@ router.post("/api/planReview/repeatReview", (req, res) => {
     if (!review) {
       errorHandler(res, 404, { message: "Review not found." });
     } else {
-      if (review.status === "PENDING") {
+      if (review.status !== "PENDING") {
         review.status = "UNDERREVIEW";
         review.requestTime = Date.now();
         review.save();
         // TODO: Create a new notification when this occurs
         returnData(review, res);
       } else {
-        errorHandler(res, 404, { message: "Review currently pending." });
+        errorHandler(res, 400, { message: "Review currently pending." });
       }
     }
   });
+});
+
+/*
+  Return a list of reviewrs for the plan with populated reviewer info
+*/
+router.post("/api/planReview/changeStatus", (req, res) => {
+  const planReview_id = req.query.planReview_id;
+  const status = req.query.status;
+  if (status != "REJECTED" || status != "APPROVED") {
+    errorHandler(res, 400, {
+      message: "Invalid status. Must be APPROVED or REJECTED.",
+    });
+  }
+  planReviews
+    .findById({ planReview_id })
+    .then((review) => {
+      review.status = status;
+      review.save();
+      returnData(review, res);
+    })
+    .catch((err) => errorHandler(res, 500, err));
 });
 
 router.delete("/api/planReview/removeReview", (req, res) => {
