@@ -71,7 +71,7 @@ router.get("/api/planReview/getReviewers", (req, res) => {
 });
 
 /*
-  Return a list of reviews of the reviewer with populated reviewee info
+  Return a list of reviewrs for the plan with populated reviewer info
 */
 router.get("/api/planReview/plansToReview", (req, res) => {
   const reviewer_id = req.query.reviewer_id;
