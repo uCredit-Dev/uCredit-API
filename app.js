@@ -8,6 +8,7 @@ const distributionRouter = require("./routes/distribution.js");
 const yearRouter = require("./routes/year.js");
 const planRouter = require("./routes/plan.js");
 const planReviwerRouter = require("./routes/planReview.js");
+const notificationRouter = require("./routes/notification.js");
 const userRouter = require("./routes/user.js");
 const majorRouter = require("./routes/major.js");
 const searchRouter = require("./routes/search.js");
@@ -41,6 +42,7 @@ function createApp() {
   app.use(yearRouter);
   app.use(planRouter);
   app.use(planReviwerRouter);
+  app.use(notificationRouter);
   app.use(ssoRouter);
   app.use(userRouter);
   app.use(majorRouter);
