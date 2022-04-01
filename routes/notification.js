@@ -44,8 +44,8 @@ router.post("/api/notifications/read/:notification_id", (req, res) => {
 });
 
 /* Delete a notification */
-router.delete("/api/notifications", (req, res) => {
-  const notification_id = req.query.notification_id;
+router.delete("/api/notifications/:notification_id", (req, res) => {
+  const notification_id = req.params.notification_id;
   if (!notification_id) {
     errorHandler(res, 400, { message: "Must provide notification_id." });
   }
