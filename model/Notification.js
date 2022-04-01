@@ -7,8 +7,8 @@ const Schema = mongoose.Schema;
 const notificationSchema = new Schema({
   user_id: { type: String, required: true },
   message: { type: String, required: true },
-  quick_link_id: { type: String },
-  link_type: { type: String, enum: ["PLAN", "REVIEW", "USER"] },
+  quick_link_id: { type: Schema.Types.ObjectId },
+  link_type: { type: String, enum: ["PLAN", "REVIEW", "USER", "DISTRIBUTION"] },
   read: { type: Boolean },
   date: { type: Date, default: Date.now() },
 });
