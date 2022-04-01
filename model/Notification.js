@@ -13,6 +13,6 @@ const notificationSchema = new Schema({
   date: { type: Date, default: Date.now() },
 });
 
-const Notification = mongoose.model("Plan", notificationSchema);
+const Notification = mongoose.model("Notification", notificationSchema);
 
 module.exports = Notification;
