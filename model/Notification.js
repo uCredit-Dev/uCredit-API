@@ -9,6 +9,7 @@ const notificationSchema = new Schema({
   message: { type: String, required: true },
   quick_link_id: { type: String },
   link_type: { type: String, enum: ["PLAN", "REVIEW", "USER"] },
+  read: { type: Boolean },
   date: { type: Date, default: Date.now() },
 });
 

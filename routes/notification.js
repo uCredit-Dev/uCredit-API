@@ -27,6 +27,22 @@ router.post("/api/notifications", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+/* Read a notification */
+router.post("/api/notifications/read/:notification_id", (req, res) => {
+  const notification_id = req.params.notification_id;
+  Notifications.findById(notification_id)
+    .then((notification) => {
+      if (!notification) {
+        errorHandler(res, 404, { message: "Notification not found." });
+      } else {
+        notification.read = true;
+        notification.save();
+        returnData(notification, res);
+      }
+    })
+    .catch((err) => errorHandler(res, 400, err));
+});
+
 /* Delete a notification */
 router.delete("/api/notifications", (req, res) => {
   const notification_id = req.query.notification_id;
