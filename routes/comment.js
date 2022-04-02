@@ -27,8 +27,18 @@ router.get("/api/comment/getByPlan/:plan_id", (req, res) => {
 /*
   Create a new comment
 */
-router.post("/api/comment", (req, res) => {
+router.post("/api/comment", async (req, res) => {
   const comment = req.body.comment;
+  //a new comment
+  if (!comment.thread_id) {
+    const plan_id = comment.plan_id;
+    if (!plan_id) {
+      errorHandler(res, 400, { message: "Missing plan_id for a new comment." });
+    } else {
+      const t = await Threads.create({ plan_id }).exec();
+      comment.thread_id = t._id;
+    }
+  }
   Comments.create(comment)
     .then((c) => returnData(c, res))
     .catch((err) => errorHandler(res, 400, err));
