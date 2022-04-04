@@ -55,7 +55,7 @@ async function cleanDup(term) {
   const filteredCourses = [];
   await axios
     .get(
-      `https://sis.jhu.edu/api/classes/?key=c6DTXIBAujqzphi1T19D8pn3qajbp8BX&term=${term}&school=Krieger School of Arts and Sciences&school=Whiting School of Engineering`
+      `https://sis.jhu.edu/api/classes/?key=${key}&term=${term}&school=Krieger School of Arts and Sciences&school=Whiting School of Engineering`
     )
     .then((res) => {
       const data = res.data;
@@ -90,32 +90,17 @@ async function extractProperty(courses, term) {
         title: course.Title,
       }).exec();
       if (courseFromDB == null) {
-        pushNewCourse(
-          course.OfferingName,
-          course.SectionName,
-          briefCourses,
-          term
-        );
+        pushNewCourse(course.OfferingName, course.SectionName, briefCourses, term);
       } else {
         //update terms offered and add version
         //console.log("-----found dup in db: ", courseFromDB.title);
         //courseFromDB.terms.splice(0, 1);
         courseFromDB.terms.unshift(course.Term);
-        pushNewVersion(
-          course.OfferingName,
-          course.SectionName,
-          courseFromDB,
-          term
-        );
+        pushNewVersion(course.OfferingName, course.SectionName, courseFromDB, term);
         dupCount++;
       }
     } else {
-      console.log(
-        "******bypassed ",
-        course.Title,
-        course.OfferingName,
-        course.Credits
-      );
+      console.log("******bypassed ", course.Title, course.OfferingName, course.Credits);
       bp++;
     }
   }
@@ -145,9 +130,7 @@ async function pushNewCourse(offeringName, section, briefCourses, TERM) {
   const regex = /\./g;
   const number = offeringName.replace(regex, "") + section;
   await axios
-    .get(
-      `https://sis.jhu.edu/api/classes/${number}/${TERM}?key=c6DTXIBAujqzphi1T19D8pn3qajbp8BX`
-    )
+    .get(`https://sis.jhu.edu/api/classes/${number}/${TERM}?key=${key}`)
     .then((res) => {
       const course = res.data[res.data.length - 1];
       const details = course.SectionDetails[0];
@@ -169,10 +152,7 @@ async function pushNewCourse(offeringName, section, briefCourses, TERM) {
             preReq: details.Prerequisites,
             coReq: details.CoRequisites,
             restrictions: details.Restrictions,
-            tags:
-              details.PosTags.length == 0
-                ? []
-                : getField(details.PosTags, "Tag"),
+            tags: details.PosTags.length == 0 ? [] : getField(details.PosTags, "Tag"),
           },
         ],
       };
@@ -188,9 +168,7 @@ async function pushNewVersion(offeringName, section, courseFromDB, TERM) {
   const regex = /\./g;
   const number = offeringName.replace(regex, "") + section;
   await axios
-    .get(
-      `https://sis.jhu.edu/api/classes/${number}/${TERM}?key=c6DTXIBAujqzphi1T19D8pn3qajbp8BX`
-    )
+    .get(`https://sis.jhu.edu/api/classes/${number}/${TERM}?key=${key}`)
     .then((res) => {
       const course = res.data[res.data.length - 1];
       const details = course.SectionDetails[0];
@@ -207,8 +185,7 @@ async function pushNewVersion(offeringName, section, courseFromDB, TERM) {
         preReq: details.Prerequisites,
         coReq: details.CoRequisites,
         restrictions: details.Restrictions,
-        tags:
-          details.PosTags.length == 0 ? [] : getField(details.PosTags, "Tag"),
+        tags: details.PosTags.length == 0 ? [] : getField(details.PosTags, "Tag"),
       };
       if (version.wi != undefined) {
         courseFromDB.versions.unshift(version);
