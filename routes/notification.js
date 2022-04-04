@@ -10,7 +10,7 @@ router.get("/api/notifications/:user_id", (req, res) => {
   if (!user_id) {
     errorHandler(res, 400, { message: "Must provide user_id." });
   }
-  Notifications.find({ user_id })
+  Notifications.find({ user_id: { $elemMatch: user_id } })
     .then((notifications) => {
       returnData(notifications, res);
     })
