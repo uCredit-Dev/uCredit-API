@@ -8,8 +8,6 @@ services:
       logging:
         driver: "none"
     web:
-      environment:
-        - DEBUG=True
       build: .
       command: nodemon .
       volumes:
