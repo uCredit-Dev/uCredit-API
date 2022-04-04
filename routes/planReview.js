@@ -122,7 +122,7 @@ router.post("/api/planReview/changeStatus", (req, res) => {
     });
   }
   planReviews
-    .findById({ review_id })
+    .findById(review_id)
     .then((review) => {
       if (!review) {
         errorHandler(res, 404, { message: "planReview not found." });
