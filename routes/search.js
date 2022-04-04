@@ -155,4 +155,20 @@ function sendCourseVersion(query, version, res) {
     .catch((err) => errorHandler(res, 400, err));
 }
 
+router.get("/api/getYearRange", (req, res) => {
+  SISCV.find().then((resp) => {
+    let years = { min: Infinity, max: -Infinity };
+    resp.forEach((course) => {
+      course.terms.forEach((term) => {
+        if (parseInt(term.substring(term.length - 4, term.length)) < years.min)
+          years.min = parseInt(term.substring(term.length - 4, term.length));
+        if (parseInt(term.substring(term.length - 4, term.length)) > years.max)
+          years.max = parseInt(term.substring(term.length - 4, term.length));
+      });
+    });
+
+    returnData(years, res);
+  });
+});
+
 module.exports = router;
