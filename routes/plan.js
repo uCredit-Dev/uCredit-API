@@ -32,20 +32,22 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
   users
     .findById(user_id)
     .then(async (user) => {
+      let total = user.plan_ids.length;
+      if (!user) errorHandler(res, 404, `${user} of ${user_id} User not found`);
       for (let plan_id of user.plan_ids) {
-        plans
-          .findById(plan_id)
-          .populate("year_ids")
-          .then((plan) => {
-            plan.populate("year_ids.courses", () => {
-              plan = { ...plan._doc, years: plan.year_ids };
-              delete plan.year_ids;
-              plansTotal.push(plan);
-              if (plansTotal.length === user.plan_ids.length) {
-                returnData(plansTotal, res);
-              }
-            });
-          });
+        let plan = await plans.findById(plan_id).populate("year_ids");
+        if (!plan) {
+          total--;
+          continue;
+        }
+        await plan.populate("year_ids.courses", () => {
+          plan = { ...plan._doc, years: plan.year_ids };
+          delete plan.year_ids;
+          plansTotal.push(plan);
+          if (plansTotal.length === total) {
+            returnData(plansTotal, res);
+          }
+        });
       }
     })
     .catch((err) => errorHandler(res, 400, err));
