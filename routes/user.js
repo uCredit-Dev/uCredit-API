@@ -4,6 +4,8 @@ const users = require("../model/User.js");
 const express = require("express");
 const router = express.Router();
 
+const DEBUG = process.env.DEBUG === "True";
+
 router.get("/api/user", (req, res) => {
   const username = req.query.username || "";
   const affiliation = req.query.affiliation || "";
@@ -32,5 +34,19 @@ router.get("/api/user", (req, res) => {
     })
     .catch((err) => errorHandler(err));
 });
+
+if (DEBUG) {
+  router.delete("/api/user/:id", (req, res) => {
+    const id = req.params.id;
+    users.findByIdAndDelete(id).then((user) => {
+      if (user) {
+        plans.deleteMany({ user_id: id }).exec();
+        res.status(204);
+      } else {
+        errorHandler(res, 404, "User not found.");
+      }
+    });
+  });
+}
 
 module.exports = router;
