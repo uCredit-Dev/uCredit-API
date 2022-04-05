@@ -1,4 +1,8 @@
-const { returnData, errorHandler } = require("./helperMethods.js");
+const {
+  returnData,
+  errorHandler,
+  postNotification,
+} = require("./helperMethods.js");
 const planReviews = require("../model/PlanReview.js");
 
 const express = require("express");
@@ -7,6 +11,7 @@ const router = express.Router();
 router.post("/api/planReview/request", async (req, res) => {
   const plan_id = req.body.plan_id;
   const reviewee_id = req.body.reviewee_id;
+  const reviewee_name = req.body.reviewee_id;
   const reviewer_id = req.body.reviewer_id;
   if (!plan_id || !reviewer_id || !reviewee_id) {
     errorHandler(res, 400, {
@@ -31,7 +36,15 @@ router.post("/api/planReview/request", async (req, res) => {
       };
       planReviews
         .create(planReview)
-        .then((review) => returnData(review, res))
+        .then((review) => {
+          postNotification(
+            `${reviewee_name} has requested you to review a plan.`,
+            [reviewer_id],
+            review._id,
+            "planReview"
+          );
+          returnData(review, res);
+        })
         .catch((err) => errorHandler(res, 500, err));
     }
   }
@@ -45,17 +58,26 @@ router.post("/api/planReview/confirm", (req, res) => {
       message: "Missing review_id in request body.",
     });
   }
-  planReviews.findById(review_id).then((review) => {
-    if (!review) {
-      errorHandler(res, 404, { message: "planReview not found." });
-    } else if (review.status === "UNDERREVIEW") {
-      errorHandler(res, 400, { message: "Reviewer already confirmed." });
-    } else {
-      review.status = "UNDERREVIEW";
-      review.save();
-      returnData(review, res);
-    }
-  });
+  planReviews
+    .findById(review_id)
+    .populate("reviewer_id", "name")
+    .then((review) => {
+      if (!review) {
+        errorHandler(res, 404, { message: "planReview not found." });
+      } else if (review.status === "UNDERREVIEW") {
+        errorHandler(res, 400, { message: "Reviewer already confirmed." });
+      } else {
+        review.status = "UNDERREVIEW";
+        review.save();
+        postNotification(
+          `${review.reviewer_id.name} has accepted your plan review request.`,
+          [review.reviewee_id],
+          review_id,
+          "planReview"
+        );
+        returnData(review, res);
+      }
+    });
 });
 
 /*
@@ -82,42 +104,41 @@ router.get("/api/planReview/plansToReview", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-router.post("/api/planReview/repeatReview", (req, res) => {
-  const id = req.body.review_id;
-  planReviews.findById(id).then((review) => {
-    if (!review) {
-      errorHandler(res, 404, { message: "Review not found." });
-    } else {
-      if (review.status !== "PENDING") {
-        review.status = "UNDERREVIEW";
-        review.requestTime = Date.now();
-        review.save();
-        // TODO: Create a new notification when this occurs
-        returnData(review, res);
-      } else {
-        errorHandler(res, 400, { message: "Review currently pending." });
-      }
-    }
-  });
-});
-
 /*
   Return a list of reviewrs for the plan with populated reviewer info
 */
 router.post("/api/planReview/changeStatus", (req, res) => {
-  const planReview_id = req.query.planReview_id;
-  const status = req.query.status;
-  if (status != "REJECTED" || status != "APPROVED") {
+  const review_id = req.body.review_id;
+  const status = req.body.status;
+  if (
+    !(
+      status === "REJECTED" ||
+      status === "APPROVED" ||
+      status === "UNDERREVIEW"
+    )
+  ) {
     errorHandler(res, 400, {
-      message: "Invalid status. Must be APPROVED or REJECTED.",
+      message: "Invalid status. Must be APPROVED, REJECTED, or UNDERREVIEW.",
     });
   }
   planReviews
-    .findById({ planReview_id })
+    .findById(review_id)
     .then((review) => {
-      review.status = status;
-      review.save();
-      returnData(review, res);
+      if (!review) {
+        errorHandler(res, 404, { message: "planReview not found." });
+      } else if (review.status === "PENDING") {
+        errorHandler(res, 400, { message: "Review currently pending." });
+      } else {
+        review.status = status;
+        review.save();
+        postNotification(
+          `A plan review status has changed to ${status}.`,
+          [review.reviewee_id],
+          review_id,
+          "planReview"
+        );
+        returnData(review, res);
+      }
     })
     .catch((err) => errorHandler(res, 500, err));
 });
@@ -126,7 +147,15 @@ router.delete("/api/planReview/removeReview", (req, res) => {
   const review_id = req.query.review_id;
   planReviews
     .findByIdAndDelete(review_id)
-    .then((review) => returnData(review, res))
+    .then((review) => {
+      postNotification(
+        `A plan review request has been removed.`,
+        [review.reviewee_id, review.reviewer_id],
+        review_id,
+        "planReview"
+      );
+      returnData(review, res);
+    })
     .catch((err) => errorHandler(res, 500, err));
 });
 
