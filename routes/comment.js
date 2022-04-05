@@ -61,7 +61,7 @@ router.patch("/api/thread/resolve", (req, res) => {
 /*
   Edit a comment
 */
-router.patch("/api/comemnt", (req, res) => {
+router.patch("/api/comment", (req, res) => {
   const comment_id = req.body.comment_id;
   const message = req.body.message;
   Comments.findByIdAndUpdate(
