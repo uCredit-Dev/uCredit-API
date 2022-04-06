@@ -110,13 +110,7 @@ router.get("/api/planReview/plansToReview", (req, res) => {
 router.post("/api/planReview/changeStatus", (req, res) => {
   const review_id = req.body.review_id;
   const status = req.body.status;
-  if (
-    !(
-      status === "REJECTED" ||
-      status === "APPROVED" ||
-      status === "UNDERREVIEW"
-    )
-  ) {
+  if (!(status === "REJECTED" || status === "APPROVED")) {
     errorHandler(res, 400, {
       message: "Invalid status. Must be APPROVED, REJECTED, or UNDERREVIEW.",
     });
@@ -130,6 +124,7 @@ router.post("/api/planReview/changeStatus", (req, res) => {
         errorHandler(res, 400, { message: "Review currently pending." });
       } else {
         review.status = status;
+        if (status === "UNDERREVIEW") review.requestTime = Date.now();
         review.save();
         postNotification(
           `A plan review status has changed to ${status}.`,
