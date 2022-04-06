@@ -11,6 +11,7 @@ const router = express.Router();
 */
 router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
+  console.log(plan_id)
   Threads.find({ plan_id })
     .then((threads) => {
       threads = threads.map(async (t) => {
@@ -30,16 +31,24 @@ router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
 router.post("/api/thread/new", async (req, res) => {
   const thread = req.body.thread;
   const comment = req.body.comment;
-  Threads.create({
+  console.log(thread, comment)
+  Threads.create(
     thread,
-  })
+  )
     .then((t) => {
       comment.thread_id = t._id;
+      console.log(t)
       Comments.create(comment)
         .then((c) => returnData(c, res))
-        .catch((err) => errorHandler(res, 400, err));
+        .catch((err) => {
+          console.log(err)
+          errorHandler(res, 400, err)
+        });
     })
-    .catch((err) => errorHandler(res, 400, err));
+    .catch((err) => { 
+      console.log(err);
+      errorHandler(res, 400, err);
+    });
 });
 
 /*
