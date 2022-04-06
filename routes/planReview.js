@@ -105,12 +105,12 @@ router.get("/api/planReview/plansToReview", (req, res) => {
 });
 
 /*
-  Return a list of reviewrs for the plan with populated reviewer info
+  Return a list of reviewers for the plan with populated reviewer info
 */
 router.post("/api/planReview/changeStatus", (req, res) => {
   const review_id = req.body.review_id;
   const status = req.body.status;
-  if (!(status === "REJECTED" || status === "APPROVED")) {
+  if (!(status === "REJECTED" || status === "APPROVED" || status === "UNDERREVIEW")) {
     errorHandler(res, 400, {
       message: "Invalid status. Must be APPROVED, REJECTED, or UNDERREVIEW.",
     });
