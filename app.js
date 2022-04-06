@@ -16,6 +16,7 @@ const ssoRouter = require("./routes/sso.js");
 const evalRouter = require("./routes/evaluation.js");
 const sisRouter = require("./routes/sisData.js");
 const experimentsRouter = require("./routes/experiments.js");
+const commentRouter = require("./routes/comment.js");
 
 function createApp() {
   const corsOptions = {
@@ -50,6 +51,7 @@ function createApp() {
   app.use(evalRouter);
   app.use(sisRouter);
   app.use(experimentsRouter);
+  app.use(commentRouter);
 
   return app;
 }
