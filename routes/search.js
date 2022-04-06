@@ -49,15 +49,16 @@ router.get("/api/search/smart/multi", async (req, res) => {
       });
       let results = await SISCV.find(query);
 
-    // This filtering needs to be done because backend returns courses with incorrect term and year matching.
-    // This needs to be fixed.
-    // ^ copied comment from frontend
-      results = results.filter((course) => { // moved from frontend processedRetrievedData function
+      // This filtering needs to be done because backend returns courses with incorrect term and year matching.
+      // This needs to be fixed.
+      // ^ copied comment from frontend
+      results = results.filter((course) => {
+        // moved from frontend processedRetrievedData function
         for (let version of course.versions) {
           if (
-            version.term === req.query.term + ' ' + req.query.year ||
-            req.query.term === 'All' ||
-            req.query.year === 'All'
+            version.term === req.query.term + " " + req.query.year ||
+            req.query.term === "All" ||
+            req.query.year === "All"
           )
             return true;
         }
@@ -65,9 +66,11 @@ router.get("/api/search/smart/multi", async (req, res) => {
       });
       resolve(results);
     });
-  }
+  };
 
-  let findQueryPromises = substrings.map(substring => findQueryPromise(substring));
+  let findQueryPromises = substrings.map((substring) =>
+    findQueryPromise(substring)
+  );
   let results = (await Promise.all(findQueryPromises)).flat(1);
   returnData(results, res);
 });
