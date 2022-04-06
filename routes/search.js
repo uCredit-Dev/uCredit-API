@@ -20,7 +20,7 @@ router.get("/api/search/skip/:num", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-// computes all substrings for a single length 
+// computes all substrings and conducts searches for a single length
 router.get("/api/search/smart/multi", async (req, res) => {
   let fullQuery = req.query.query;
   let substringLength = parseInt(req.query.queryLength, 10); // length parsed from body
