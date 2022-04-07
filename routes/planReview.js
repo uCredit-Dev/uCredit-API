@@ -41,7 +41,7 @@ router.post("/api/planReview/request", async (req, res) => {
             `${reviewee_name} has requested you to review a plan.`,
             [reviewer_id],
             review._id,
-            "planReview"
+            "PLANREVIEW"
           );
           returnData(review, res);
         })
@@ -73,7 +73,7 @@ router.post("/api/planReview/confirm", (req, res) => {
           `${review.reviewer_id.name} has accepted your plan review request.`,
           [review.reviewee_id],
           review_id,
-          "planReview"
+          "PLANREVIEW"
         );
         returnData(review, res);
       }
@@ -135,7 +135,7 @@ router.post("/api/planReview/changeStatus", (req, res) => {
           `A plan review status has changed to ${status}.`,
           [review.reviewee_id],
           review_id,
-          "planReview"
+          "PLANREVIEW"
         );
         returnData(review, res);
       }
@@ -152,7 +152,7 @@ router.delete("/api/planReview/removeReview", (req, res) => {
         `A plan review request has been removed.`,
         [review.reviewee_id, review.reviewer_id],
         review_id,
-        "planReview"
+        "PLANREVIEW"
       );
       returnData(review, res);
     })
