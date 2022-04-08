@@ -11,14 +11,18 @@ const router = express.Router();
 */
 router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
+  console.log(plan_id)
   Threads.find({ plan_id })
-    .then((threads) => {
-      threads = threads.map(async (t) => {
-        t.comments = await Comments.find({ thread_id: t._id })
-          .populate("commenter_id", "name")
-          .sort({ date: 1 })
-          .exec();
-      });
+    .then(async (threads) => {
+      for (let i = 0; i < threads.length; i++) {
+        threads[i]= {
+          ...threads[i]._doc, 
+          comments: await Comments.find({ thread_id: threads[i]._id })
+            .populate("commenter_id", "name")
+            .sort({ date: 1 })
+            .exec()
+        }
+      }
       returnData(threads, res);
     })
     .catch((err) => errorHandler(res, 500, err));
@@ -30,16 +34,24 @@ router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
 router.post("/api/thread/new", async (req, res) => {
   const thread = req.body.thread;
   const comment = req.body.comment;
-  Threads.create({
+  console.log(thread, comment)
+  Threads.create(
     thread,
-  })
+  )
     .then((t) => {
       comment.thread_id = t._id;
+      console.log(t)
       Comments.create(comment)
         .then((c) => returnData(c, res))
-        .catch((err) => errorHandler(res, 400, err));
+        .catch((err) => {
+          console.log(err)
+          errorHandler(res, 400, err)
+        });
     })
-    .catch((err) => errorHandler(res, 400, err));
+    .catch((err) => { 
+      console.log(err);
+      errorHandler(res, 400, err);
+    });
 });
 
 /*
@@ -69,7 +81,7 @@ router.patch("/api/thread/resolve", (req, res) => {
 /*
   Edit a comment
 */
-router.patch("/api/comemnt", (req, res) => {
+router.patch("/api/comment", (req, res) => {
   const comment_id = req.body.comment_id;
   const message = req.body.message;
   Comments.findByIdAndUpdate(
