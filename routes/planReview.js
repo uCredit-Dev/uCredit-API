@@ -124,7 +124,7 @@ router.post("/api/planReview/changeStatus", (req, res) => {
         errorHandler(res, 400, { message: "Review currently pending." });
       } else {
         review.status = status;
-        if (status === "UNDERREVIEW") review.requestTime = Date().now();
+        if (status === "UNDERREVIEW") review.requestTime = Date.now();
         review.save();
         postNotification(
           `A plan review status has changed to ${status}.`,
