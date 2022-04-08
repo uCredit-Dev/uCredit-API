@@ -137,29 +137,6 @@ router.get("/api/verifyLogin/:hash", (req, res) => {
   });
 });
 
-// if (DEBUG) { // COMMENTED OUT UNTIL WE FULLY ONBOARD WITH DOCKER
-router.get("/api/backdoor/verification/:id", (req, res) => {
-  const id = req.params.id;
-  users.findById(id).then(async (user) => {
-    if (user) {
-      returnData(user, res);
-    } else {
-      user = {
-        _id: id,
-        name: id,
-        email: `${id}@fakeemail.com`,
-        affiliation: "STAFF",
-        grade: "AE UG Freshman",
-        school: "jooby hooby",
-      };
-      user = await users.create(user);
-      console.log(user);
-      returnData(user, res);
-    }
-  });
-});
-// }
-
 router.delete("/api/verifyLogin/:hash", (req, res) => {
   const hash = req.params.hash;
   sessions
