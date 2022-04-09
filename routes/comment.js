@@ -11,17 +11,17 @@ const router = express.Router();
 */
 router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
-  console.log(plan_id)
+  console.log(plan_id);
   Threads.find({ plan_id })
     .then(async (threads) => {
       for (let i = 0; i < threads.length; i++) {
-        threads[i]= {
-          ...threads[i]._doc, 
+        threads[i] = {
+          ...threads[i]._doc,
           comments: await Comments.find({ thread_id: threads[i]._id })
             .populate("commenter_id", "name")
             .sort({ date: 1 })
-            .exec()
-        }
+            .exec(),
+        };
       }
       returnData(threads, res);
     })
@@ -34,21 +34,19 @@ router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
 router.post("/api/thread/new", async (req, res) => {
   const thread = req.body.thread;
   const comment = req.body.comment;
-  console.log(thread, comment)
-  Threads.create(
-    thread,
-  )
+  console.log(thread, comment);
+  Threads.create(thread)
     .then((t) => {
       comment.thread_id = t._id;
-      console.log(t)
+      console.log(t);
       Comments.create(comment)
-        .then((c) => returnData(c, res))
+        .then((c) => returnData({ ...t._doc, comments: [c] }, res))
         .catch((err) => {
-          console.log(err)
-          errorHandler(res, 400, err)
+          console.log(err);
+          errorHandler(res, 400, err);
         });
     })
-    .catch((err) => { 
+    .catch((err) => {
       console.log(err);
       errorHandler(res, 400, err);
     });
