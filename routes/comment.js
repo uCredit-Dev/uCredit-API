@@ -9,36 +9,54 @@ const router = express.Router();
   Returns all threads of a plan with comments populated
   Comments of a thread are sorted by timestamp in ascending order
 */
-router.get("/api/comment/getByPlan/:plan_id", (req, res) => {
+router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
+  console.log(plan_id);
   Threads.find({ plan_id })
-    .then((threads) => {
-      threads = threads.map(async (t) => {
-        t.comments = await Comments.find({ thread_id: t._id })
-          .populate("commenter_id", "name")
-          .sort({ date: 1 })
-          .exec();
-      });
+    .then(async (threads) => {
+      for (let i = 0; i < threads.length; i++) {
+        threads[i] = {
+          ...threads[i]._doc,
+          comments: await Comments.find({ thread_id: threads[i]._id })
+            .populate("commenter_id", "name")
+            .sort({ date: 1 })
+            .exec(),
+        };
+      }
       returnData(threads, res);
     })
     .catch((err) => errorHandler(res, 500, err));
 });
 
 /*
-  Create a new comment
+  Create a new comment(which results in creating a new thread)
 */
-router.post("/api/comment", async (req, res) => {
+router.post("/api/thread/new", async (req, res) => {
+  const thread = req.body.thread;
   const comment = req.body.comment;
-  //a new comment
-  if (!comment.thread_id) {
-    const plan_id = comment.plan_id;
-    if (!plan_id) {
-      errorHandler(res, 400, { message: "Missing plan_id for a new comment." });
-    } else {
-      const t = await Threads.create({ plan_id }).exec();
+  console.log(thread, comment);
+  Threads.create(thread)
+    .then((t) => {
       comment.thread_id = t._id;
-    }
-  }
+      console.log(t);
+      Comments.create(comment)
+        .then((c) => returnData({ ...t._doc, comments: [c] }, res))
+        .catch((err) => {
+          console.log(err);
+          errorHandler(res, 400, err);
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      errorHandler(res, 400, err);
+    });
+});
+
+/*
+  Add a reply to a thread
+*/
+router.post("/api/thread/reply", async (req, res) => {
+  const comment = req.body.comment;
   Comments.create(comment)
     .then((c) => returnData(c, res))
     .catch((err) => errorHandler(res, 400, err));
@@ -78,9 +96,26 @@ router.patch("/api/comment", (req, res) => {
 */
 router.delete("/api/comment", (req, res) => {
   const comment_id = req.body.comment_id;
+  if (!comment_id) {
+    errorHandler(res, 400, { message: "Missing comment_id." });
+  }
   Comments.findByIdAndDelete(comment_id)
     .then((c) => returnData(c, res))
     .catch((err) => errorHandler(res, 500, err));
+});
+
+/*
+  Delete a thread and its comments
+*/
+router.delete("/api/thread", (req, res) => {
+  const thread_id = req.body.thread_id;
+  if (!thread_id) {
+    errorHandler(res, 400, { message: "Missing thread_id." });
+  }
+  Threads.findByIdAndDelete(thread_id)
+    .then((c) => returnData(c, res))
+    .catch((err) => errorHandler(res, 500, err));
+  Comments.deleteMany({ thread_id }).exec();
 });
 
 module.exports = router;
