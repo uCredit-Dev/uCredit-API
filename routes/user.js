@@ -36,38 +36,39 @@ router.get("/api/user", (req, res) => {
     .catch((err) => errorHandler(err));
 });
 
-if (DEBUG) {
-  router.get("/api/backdoor/verification/:id", (req, res) => {
-    const id = req.params.id;
-    users.findById(id).then(async (user) => {
-      if (user) {
-        returnData(user, res);
-      } else {
-        user = {
-          _id: id,
-          name: id,
-          email: `${id}@fakeemail.com`,
-          affiliation: "STAFF",
-          grade: "AE UG Freshman",
-          school: "jooby hooby",
-        };
-        user = await users.create(user);
-        returnData(user, res);
-      }
-    });
+// TODO: Temporarily disabled for OOSE dev deployment
+// if (DEBUG) {
+router.get("/api/backdoor/verification/:id", (req, res) => {
+  const id = req.params.id;
+  users.findById(id).then(async (user) => {
+    if (user) {
+      returnData(user, res);
+    } else {
+      user = {
+        _id: id,
+        name: id,
+        email: `${id}@fakeemail.com`,
+        affiliation: "STAFF",
+        grade: "AE UG Freshman",
+        school: "jooby hooby",
+      };
+      user = await users.create(user);
+      returnData(user, res);
+    }
   });
+});
 
-  router.delete("/api/user/:id", (req, res) => {
-    const id = req.params.id;
-    users.findByIdAndDelete(id).then((user) => {
-      if (user) {
-        plans.deleteMany({ user_id: id }).exec();
-        res.status(204).json({});
-      } else {
-        errorHandler(res, 404, "User not found.");
-      }
-    });
+router.delete("/api/user/:id", (req, res) => {
+  const id = req.params.id;
+  users.findByIdAndDelete(id).then((user) => {
+    if (user) {
+      plans.deleteMany({ user_id: id }).exec();
+      res.status(204).json({});
+    } else {
+      errorHandler(res, 404, "User not found.");
+    }
   });
-}
+});
+// }
 
 module.exports = router;
