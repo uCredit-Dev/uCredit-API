@@ -7,6 +7,7 @@ const planReviews = require("../model/PlanReview.js");
 
 const express = require("express");
 const router = express.Router();
+const DEBUG = process.env.DEBUG === "True";
 
 router.post("/api/planReview/request", async (req, res) => {
   const plan_id = req.body.plan_id;
@@ -50,16 +51,8 @@ router.post("/api/planReview/request", async (req, res) => {
   }
 });
 
-//reviewer confirms the request, adding the plan id to the whitelisted_plan_ids array, changing the pending status
-router.post("/api/planReview/confirm", (req, res) => {
-  const review_id = req.body.review_id;
-  if (!review_id) {
-    errorHandler(res, 400, {
-      message: "Missing review_id in request body.",
-    });
-  }
-  planReviews
-    .findById(review_id)
+const confirmPlanReview = (review, res) => {
+  review
     .populate("reviewer_id", "name")
     .then((review) => {
       if (!review) {
@@ -78,7 +71,30 @@ router.post("/api/planReview/confirm", (req, res) => {
         returnData(review, res);
       }
     });
+};
+
+//reviewer confirms the request, adding the plan id to the whitelisted_plan_ids array, changing the pending status
+router.post("/api/planReview/confirm", (req, res) => {
+  const review_id = req.body.review_id;
+  if (!review_id) {
+    errorHandler(res, 400, {
+      message: "Missing review_id in request body.",
+    });
+  }
+  const review = await planReviews.findById(review_id)
+  confirmPlanReview(review, res);
 });
+
+if (DEBUG) {
+  router.post("/api/backdoor/planReview/confirm", (req, res) => {
+    const reviewer_id = req.body.reviewer_id;
+    planReview
+      .findOne({ reviewer_id })
+      .then((review) => {
+        confirmPlanReview(review, res);
+      });
+  });
+}
 
 /*
   Return a list of reviewrs for the plan with populated reviewer info
