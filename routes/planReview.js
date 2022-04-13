@@ -47,23 +47,21 @@ router.post("/api/planReview/request", async (req, res) => {
 });
 
 const confirmPlanReview = (review, res) => {
-  review.populate("reviewer_id", "name").then((review) => {
-    if (!review) {
-      errorHandler(res, 404, { message: "planReview not found." });
-    } else if (review.status === "UNDERREVIEW") {
-      errorHandler(res, 400, { message: "Reviewer already confirmed." });
-    } else {
-      review.status = "UNDERREVIEW";
-      review.save();
-      postNotification(
-        `${review.reviewer_id.name} has accepted your plan review request.`,
-        [review.reviewee_id],
-        review_id,
-        "PLANREVIEW"
-      );
-      returnData(review, res);
-    }
-  });
+  if (!review) {
+    errorHandler(res, 404, { message: "planReview not found." });
+  } else if (review.status === "UNDERREVIEW") {
+    errorHandler(res, 400, { message: "Reviewer already confirmed." });
+  } else {
+    review.status = "UNDERREVIEW";
+    review.save();
+    postNotification(
+      `${review.reviewer_id.name} has accepted your plan review request.`,
+      [review.reviewee_id],
+      review._id,
+      "PLANREVIEW"
+    );
+    returnData(review, res);
+  }
 };
 
 //reviewer confirms the request, adding the plan id to the whitelisted_plan_ids array, changing the pending status
@@ -76,6 +74,7 @@ router.post("/api/planReview/confirm", (req, res) => {
   }
   planReviews
     .findById(review_id)
+    .populate("reviewer_id", "name")
     .then((review) => {
       confirmPlanReview(review, res);
     })
@@ -87,6 +86,7 @@ if (DEBUG) {
     const reviewer_id = req.body.reviewer_id;
     planReviews
       .findOne({ reviewer_id })
+      .populate("reviewer_id", "name")
       .then((review) => {
         confirmPlanReview(review, res);
       })
