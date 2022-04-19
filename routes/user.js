@@ -1,13 +1,14 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
+const { createToken, auth } = require("../util/token");
 
 const express = require("express");
 const router = express.Router();
 
 const DEBUG = process.env.DEBUG === "True";
 
-router.get("/api/user", (req, res) => {
+router.get("/api/user", auth, (req, res) => {
   const username = req.query.username || "";
   const affiliation = req.query.affiliation || "";
   const query = {
@@ -40,35 +41,40 @@ router.get("/api/user", (req, res) => {
 // if (DEBUG) {
 router.get("/api/backdoor/verification/:id", (req, res) => {
   const id = req.params.id;
-  users.findById(id).then(async (user) => {
-    if (user) {
-      returnData(user, res);
-    } else {
-      user = {
-        _id: id,
-        name: id,
-        email: `${id}@fakeemail.com`,
-        affiliation: "STAFF",
-        grade: "AE UG Freshman",
-        school: "jooby hooby",
-      };
-      user = await users.create(user);
-      returnData(user, res);
-    }
-  });
+  users
+    .findById(id)
+    .then(async (user) => {
+      if (!user) {
+        user = {
+          _id: id,
+          name: id,
+          email: `${id}@fakeemail.com`,
+          affiliation: "ADMIN",
+          grade: "AE UG Freshman",
+          school: "jooby hooby",
+        };
+        user = await users.create(user);
+      }
+      const token = createToken(user);
+      returnData({ user, token }, res);
+    })
+    .catch((err) => errorHandler(res, 500, err));
 });
 
-router.delete("/api/user/:id", (req, res) => {
-  const id = req.params.id;
-  users.findByIdAndDelete(id).then((user) => {
-    if (user) {
-      plans.deleteMany({ user_id: id }).exec();
-      res.status(204).json({});
-    } else {
-      errorHandler(res, 404, "User not found.");
-    }
-  });
+router.delete("/api/user/:id", auth, (req, res) => {
+  if (req.user.affiliation != "ADMIN") {
+    errorHandler(res, 403, "Only Admin can access this route.");
+  } else {
+    const id = req.params.id;
+    users.findByIdAndDelete(id).then((user) => {
+      if (user) {
+        plans.deleteMany({ user_id: id }).exec();
+        returnData(user, res);
+      } else {
+        errorHandler(res, 404, "User not found.");
+      }
+    });
+  }
 });
-// }
 
 module.exports = router;

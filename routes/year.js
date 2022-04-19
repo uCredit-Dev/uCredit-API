@@ -4,6 +4,7 @@ const {
   errorHandler,
   distributionCreditUpdate,
 } = require("./helperMethods.js");
+const { auth } = require("../util/token");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const plans = require("../model/Plan.js");
@@ -13,7 +14,7 @@ const express = require("express");
 const router = express.Router();
 
 //get years by plan id
-router.get("/api/years/:plan_id", (req, res) => {
+router.get("/api/years/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findById(plan_id)
@@ -23,7 +24,7 @@ router.get("/api/years/:plan_id", (req, res) => {
 });
 
 //create a new year and add year id to the end of plan's year array
-router.post("/api/years", async (req, res) => {
+router.post("/api/years", auth, async (req, res) => {
   let newYear = {
     name: req.body.name,
     plan_id: req.body.plan_id,
@@ -46,7 +47,7 @@ router.post("/api/years", async (req, res) => {
 });
 
 //change the order of the year ids in plan object
-router.patch("/api/years/changeOrder", async (req, res) => {
+router.patch("/api/years/changeOrder", auth, async (req, res) => {
   const year_ids = req.body.year_ids;
   const plan_id = req.body.plan_id;
   plans
@@ -60,7 +61,7 @@ router.patch("/api/years/changeOrder", async (req, res) => {
 });
 
 //update the name of the year
-router.patch("/api/years/updateName", (req, res) => {
+router.patch("/api/years/updateName", auth, (req, res) => {
   const name = req.body.name;
   const year_id = req.body.year_id;
   if (!name) {
@@ -76,7 +77,7 @@ router.patch("/api/years/updateName", (req, res) => {
 });
 
 //update the year
-router.patch("/api/years/updateYear", (req, res) => {
+router.patch("/api/years/updateYear", auth, (req, res) => {
   const year = req.body.year;
   const year_id = req.body.year_id;
   if (!year) {
@@ -92,7 +93,7 @@ router.patch("/api/years/updateYear", (req, res) => {
 });
 
 //delete plan and its associated courses, remove year_id from the associated plan document
-router.delete("/api/years/:year_id", (req, res) => {
+router.delete("/api/years/:year_id", auth, (req, res) => {
   const year_id = req.params.year_id;
   years.findByIdAndDelete(year_id).then(async (year) => {
     year.courses.forEach((c_id) => {
@@ -125,16 +126,6 @@ router.delete("/api/years/:year_id", (req, res) => {
     plan.save();
     returnData(year, res);
   });
-});
-
-router.post("/api/spc-login", (req, res) => {
-  const pw = req.body.pw;
-  console.log(pw);
-  if (pw === "5cf37e783327fe0ca9fc5972ae7ed331") {
-    returnData("ok", res);
-  } else {
-    errorHandler(res, 400, "invalid user");
-  }
 });
 
 module.exports = router;

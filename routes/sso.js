@@ -5,10 +5,10 @@ const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const cryptoRandomString = require("crypto-random-string");
+const { createToken, auth } = require("../util/token");
 
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
-const sessions = require("../model/Session.js");
 
 const router = express.Router();
 
@@ -108,14 +108,9 @@ router.post(
       user.school = req.user[school];
       user.save();
     }
-    const hash = cryptoRandomString({ length: 20, type: "url-safe" });
-    await sessions.findByIdAndUpdate(
-      id,
-      { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
-      { upsert: true, new: true }
-    );
+    const token = createToken(user);
     try {
-      res.redirect(`https://ucredit.me/login/${hash}`);
+      res.redirect(`https://ucredit.me/login/${token}`);
     } catch (err) {
       errorHandler(res, 500, err);
     }
@@ -123,25 +118,10 @@ router.post(
 );
 
 //retrieve user object from db
-router.get("/api/verifyLogin/:hash", (req, res) => {
-  const hash = req.params.hash;
-  sessions.findOne({ hash }).then((user) => {
-    if (user === null) {
-      errorHandler(res, 401, "User not logged in.");
-    } else {
-      users
-        .findById(user._id)
-        .then((retrievedUser) => returnData(retrievedUser, res))
-        .catch((err) => errorHandler(res, 500, res));
-    }
-  });
-});
-
-router.delete("/api/verifyLogin/:hash", (req, res) => {
-  const hash = req.params.hash;
-  sessions
-    .remove({ hash })
-    .then((user) => returnData(user, res))
+router.get("/api/verifyLogin", auth, (req, res) => {
+  users
+    .findById(req.user._id)
+    .then((retrievedUser) => returnData(retrievedUser, res))
     .catch((err) => errorHandler(res, 500, err));
 });
 

@@ -3,12 +3,37 @@ const {
   errorHandler,
   postNotification,
 } = require("./helperMethods.js");
+const { auth } = require("../util/token");
 const planReviews = require("../model/PlanReview.js");
 
 const express = require("express");
 const router = express.Router();
 
-router.post("/api/planReview/request", async (req, res) => {
+/*
+  Return a list of reviewrs for the plan with populated reviewer info
+*/
+router.get("/api/planReview/getReviewers", auth, (req, res) => {
+  const plan_id = req.query.plan_id;
+  planReviews
+    .find({ plan_id })
+    .populate("reviewer_id", "name email affiliation school grade")
+    .then((reviews) => returnData(reviews, res))
+    .catch((err) => errorHandler(res, 500, err));
+});
+
+/*
+  Return a list of reviewrs for the plan with populated reviewer info
+*/
+router.get("/api/planReview/plansToReview", auth, (req, res) => {
+  const reviewer_id = req.query.reviewer_id;
+  planReviews
+    .find({ reviewer_id })
+    .populate("reviewee_id", "name email affiliation school grade")
+    .then((reviews) => returnData(reviews, res))
+    .catch((err) => errorHandler(res, 500, err));
+});
+
+router.post("/api/planReview/request", auth, async (req, res) => {
   const plan_id = req.body.plan_id;
   const reviewee_id = req.body.reviewee_id;
   const reviewee_name = req.body.reviewee_id;
@@ -51,7 +76,7 @@ router.post("/api/planReview/request", async (req, res) => {
 });
 
 //reviewer confirms the request, adding the plan id to the whitelisted_plan_ids array, changing the pending status
-router.post("/api/planReview/confirm", (req, res) => {
+router.post("/api/planReview/confirm", auth, (req, res) => {
   const review_id = req.body.review_id;
   if (!review_id) {
     errorHandler(res, 400, {
@@ -81,36 +106,18 @@ router.post("/api/planReview/confirm", (req, res) => {
 });
 
 /*
-  Return a list of reviewrs for the plan with populated reviewer info
-*/
-router.get("/api/planReview/getReviewers", (req, res) => {
-  const plan_id = req.query.plan_id;
-  planReviews
-    .find({ plan_id })
-    .populate("reviewer_id", "name email affiliation school grade")
-    .then((reviews) => returnData(reviews, res))
-    .catch((err) => errorHandler(res, 500, err));
-});
-
-/*
-  Return a list of reviewrs for the plan with populated reviewer info
-*/
-router.get("/api/planReview/plansToReview", (req, res) => {
-  const reviewer_id = req.query.reviewer_id;
-  planReviews
-    .find({ reviewer_id })
-    .populate("reviewee_id", "name email affiliation school grade")
-    .then((reviews) => returnData(reviews, res))
-    .catch((err) => errorHandler(res, 500, err));
-});
-
-/*
   Return a list of reviewers for the plan with populated reviewer info
 */
-router.post("/api/planReview/changeStatus", (req, res) => {
+router.post("/api/planReview/changeStatus", auth, (req, res) => {
   const review_id = req.body.review_id;
   const status = req.body.status;
-  if (!(status === "REJECTED" || status === "APPROVED" || status === "UNDERREVIEW")) {
+  if (
+    !(
+      status === "REJECTED" ||
+      status === "APPROVED" ||
+      status === "UNDERREVIEW"
+    )
+  ) {
     errorHandler(res, 400, {
       message: "Invalid status. Must be APPROVED, REJECTED, or UNDERREVIEW.",
     });
@@ -138,7 +145,7 @@ router.post("/api/planReview/changeStatus", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-router.delete("/api/planReview/removeReview", (req, res) => {
+router.delete("/api/planReview/removeReview", auth, (req, res) => {
   const review_id = req.query.review_id;
   planReviews
     .findByIdAndDelete(review_id)
