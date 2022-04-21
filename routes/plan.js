@@ -51,7 +51,6 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
             plan = { ...plan, reviewers: revs };
             plansTotal.push(plan);
             if (plansTotal.length === total) {
-              console.log(plansTotal);
               returnData(plansTotal, res);
             }
           });
