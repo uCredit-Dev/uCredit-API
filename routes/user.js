@@ -1,6 +1,7 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
+const planReviews = require("../model/PlanReview.js");
 
 const express = require("express");
 const router = express.Router();
@@ -63,6 +64,7 @@ router.delete("/api/user/:id", (req, res) => {
   users.findByIdAndDelete(id).then((user) => {
     if (user) {
       plans.deleteMany({ user_id: id }).exec();
+      planReviews.deleteMany({ reviewee_id: id }).exec();
       res.status(204).json({});
     } else {
       errorHandler(res, 404, "User not found.");
