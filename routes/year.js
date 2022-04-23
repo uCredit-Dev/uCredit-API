@@ -17,8 +17,12 @@ router.get("/api/years/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findById(plan_id)
-    .populate({ path: "year_ids" })
-    .then((plan) => returnData(plan.year_ids, res))
+    .populate("year_ids")
+    .then((plan) => {
+      plan.populate("year_ids.courses", () => {
+        returnData(plan.year_ids, res);
+      });
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
