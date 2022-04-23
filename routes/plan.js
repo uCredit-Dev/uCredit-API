@@ -20,10 +20,13 @@ router.get("/api/plans/:plan_id", (req, res) => {
       plan.populate("year_ids.courses", () => {
         plan = { ...plan._doc, years: plan.year_ids };
         delete plan.year_ids;
-        reviews.find({ plan_id: p_id }).then((revs) => {
-          plan = { ...plan, reviewers: revs };
-          returnData(plan, res);
-        });
+        reviews
+          .find({ plan_id: p_id })
+          .populate("reviewer_id")
+          .then((revs) => {
+            plan = { ...plan.doc, reviewers: revs };
+            returnData(plan, res);
+          });
       });
     })
     .catch((err) => errorHandler(res, 400, err));
@@ -47,13 +50,16 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
         await plan.populate("year_ids.courses", () => {
           plan = { ...plan._doc, years: plan.year_ids };
           delete plan.year_ids;
-          reviews.find({ plan_id: plan_id }).then((revs) => {
-            plan = { ...plan, reviewers: revs };
-            plansTotal.push(plan);
-            if (plansTotal.length === total) {
-              returnData(plansTotal, res);
-            }
-          });
+          reviews
+            .find({ plan_id: plan_id })
+            .populate("reviewer_id")
+            .then((revs) => {
+              plan = { ...plan, reviewers: revs };
+              plansTotal.push(plan);
+              if (plansTotal.length === total) {
+                returnData(plansTotal, res);
+              }
+            });
         });
       }
     })
@@ -189,10 +195,13 @@ router.patch("/api/plans/update", (req, res) => {
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
-        reviews.find({ plan_id: id }).then((revs) => {
-          plan = { ...plan, reviewers: revs };
-          returnData(plan, res);
-        });
+        reviews
+          .find({ plan_id: id })
+          .populate("reviewer_id")
+          .then((revs) => {
+            plan = { ...plan, reviewers: revs };
+            returnData(plan, res);
+          });
       })
       .catch((err) => errorHandler(res, 400, err));
   }
