@@ -5,6 +5,7 @@ const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
+const reviews = require("../model/PlanReview.js");
 
 const express = require("express");
 const router = express.Router();
@@ -19,7 +20,10 @@ router.get("/api/plans/:plan_id", (req, res) => {
       plan.populate("year_ids.courses", () => {
         plan = { ...plan._doc, years: plan.year_ids };
         delete plan.year_ids;
-        returnData(plan, res);
+        reviews.find({ plan_id: p_id }).then((revs) => {
+          plan = { ...plan, reviewers: revs };
+          returnData(plan, res);
+        });
       });
     })
     .catch((err) => errorHandler(res, 400, err));
@@ -43,10 +47,13 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
         await plan.populate("year_ids.courses", () => {
           plan = { ...plan._doc, years: plan.year_ids };
           delete plan.year_ids;
-          plansTotal.push(plan);
-          if (plansTotal.length === total) {
-            returnData(plansTotal, res);
-          }
+          reviews.find({ plan_id: plan_id }).then((revs) => {
+            plan = { ...plan, reviewers: revs };
+            plansTotal.push(plan);
+            if (plansTotal.length === total) {
+              returnData(plansTotal, res);
+            }
+          });
         });
       }
     })
@@ -104,7 +111,7 @@ router.post("/api/plans", (req, res) => {
         retrievedPlan.year_ids.push(newYear._id);
       }
       retrievedPlan.save();
-      const resp = { ...retrievedPlan._doc, years: yearObjs };
+      const resp = { ...retrievedPlan._doc, years: yearObjs, reviewers: [] };
       delete resp.year_ids;
       returnData(resp, res);
     })
@@ -150,6 +157,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
       distributions.deleteMany({ plan_id: plan._id }).exec();
       courses.deleteMany({ plan_id: plan._id }).exec();
       years.deleteMany({ plan_id: plan._id }).exec();
+      // TODO: delete reviews
       users
         .findByIdAndUpdate(
           //delete plan_id from user
@@ -180,7 +188,12 @@ router.patch("/api/plans/update", (req, res) => {
     }
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
-      .then((plan) => returnData(plan, res))
+      .then((plan) => {
+        reviews.find({ plan_id: id }).then((revs) => {
+          plan = { ...plan, reviewers: revs };
+          returnData(plan, res);
+        });
+      })
       .catch((err) => errorHandler(res, 400, err));
   }
 });
