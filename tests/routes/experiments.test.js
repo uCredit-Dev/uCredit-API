@@ -19,9 +19,11 @@ describe("Test experiments endpoints", () => {
     const EXPERIMENT_THREE = "Home Button";
     const MARK_ACTIVE = [EXPERIMENT_ONE, EXPERIMENT_THREE];
     const WILL_ACTIVE = [EXPERIMENT_ONE, EXPERIMENT_TWO];
-    beforeEach(async () => {
+    beforeEach(async (done) => {
       //This will be slow, usually beforeAll, but need to reset experiments because post routes would affect other tests
-      await mongoose.connect(global.__MONGO_URI__);
+      await mongoose.connect("mongodb://localhost:27017/majors", {
+        useNewUrlParser: true,
+      });
       await experiments.create({
         name: EXPERIMENT_ONE,
         blacklist: [],
@@ -52,6 +54,13 @@ describe("Test experiments endpoints", () => {
           if (count === 0) User.insertMany(samples);
         }
       });
+      done();
+    });
+
+    afterEach(async (done) => {
+      mongoose.connection.db.dropDatabase(() => {
+        mongoose.connection.close(() => done());
+      });
     });
 
     describe(`Test GET ${endpoint}/allExperiments`, () => {
@@ -80,6 +89,12 @@ describe("Test experiments endpoints", () => {
 
         test("Return empty array for user with no experiments", async () => {
           const response = await request.get(`${endpoint}/${JUNK_JHED}`);
+          expect(response.status).toBe(200);
+          expect(response.body.data.length).toBe(0);
+        });
+
+        test("Return empty array for invalid JHED", async () => {
+          const response = await request.get(`${endpoint}/asdf`);
           expect(response.status).toBe(200);
           expect(response.body.data.length).toBe(0);
         });
@@ -142,14 +157,23 @@ describe("Test experiments endpoints", () => {
     describe(`Test GET ${endpoint}/percent/:experiment_name`, () => {
       describe("Return 200 and percentage of users participating in an experiment", () => {
         test("Return initial percentage of an experiment (0%)", async () => {
+          const allExperiments = await request.get(
+            `${endpoint}/allExperiments`
+          );
+          console.log(allExperiments.body.data);
           const response = await request.get(
             `${endpoint}/percent/${EXPERIMENT_ONE}`
           );
+          console.log(response);
           expect(response.status).toBe(200);
           expect(response.body).toBe(2);
         });
 
         test("Return 0% when using an experiment that does not exist", async () => {
+          const allExperiments = await request.get(
+            `${endpoint}/allExperiments`
+          );
+          console.log(allExperiments.body.data);
           const response = await request.get(
             `${endpoint}/percent/${JUNK_JHED}`
           );
@@ -158,6 +182,10 @@ describe("Test experiments endpoints", () => {
         });
 
         test("Return percentage of an experiment after a post (must pass post tests first)", async () => {
+          const allExperiments = await request.get(
+            `${endpoint}/allExperiments`
+          );
+          console.log(allExperiments.body.data);
           const response = await request
             .post(`${endpoint}/${EXPERIMENT_ONE}`)
             .send({ percent_participating: 10 });
@@ -291,8 +319,9 @@ describe("Test experiments endpoints", () => {
     describe(`Test DELETE ${endpoint}/:experiment_name`, () => {
       describe("Return 200 and deleted experiment", () => {
         test("Delete Experiment", async () => {
-          const response = await request
-            .delete(`${endpoint}/${EXPERIMENT_ONE}`);
+          const response = await request.delete(
+            `${endpoint}/${EXPERIMENT_ONE}`
+          );
           expect(response.status).toBe(200);
           expect(response.body.data.experimentName).toBe(`${EXPERIMENT_ONE}`);
           expect(response.body.data.blacklist.length).toBe(0);
@@ -302,15 +331,14 @@ describe("Test experiments endpoints", () => {
 
       describe("Return 400 when given invalid parameters", () => {
         test("Attempting to delete expeirment name that does not exist", async () => {
-          const response = await request
-            .delete(`${endpoint}/${JUNK_JHED}`);
+          const allExperiments = await request.get(
+            `${endpoint}/allExperiments`
+          );
+          console.log(allExperiments.body.data);
+          const response = await request.delete(`${endpoint}/${JUNK_JHED}`);
           expect(response.status).toBe(400);
         });
       });
-    });
-
-    afterEach(async () => {
-      await mongoose.connection.close();
     });
   });
 });
