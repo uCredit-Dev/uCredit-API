@@ -19,7 +19,7 @@ describe("Test experiments endpoints", () => {
     const EXPERIMENT_THREE = "Home Button";
     const MARK_ACTIVE = [EXPERIMENT_ONE, EXPERIMENT_THREE];
     const WILL_ACTIVE = [EXPERIMENT_ONE, EXPERIMENT_TWO];
-    beforeEach(async (done) => {
+    beforeEach(async () => {
       //This will be slow, usually beforeAll, but need to reset experiments because post routes would affect other tests
       await mongoose.connect("mongodb://localhost:27017/majors", {
         useNewUrlParser: true,
@@ -54,13 +54,11 @@ describe("Test experiments endpoints", () => {
           if (count === 0) User.insertMany(samples);
         }
       });
-      done();
     });
 
-    afterEach(async (done) => {
-      mongoose.connection.db.dropDatabase(() => {
-        mongoose.connection.close(() => done());
-      });
+    afterEach(async () => {
+      await mongoose.connection.db.dropDatabase();
+      await mongoose.connection.close();
     });
 
     describe(`Test GET ${endpoint}/allExperiments`, () => {
