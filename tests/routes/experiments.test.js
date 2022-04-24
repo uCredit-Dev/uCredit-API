@@ -57,7 +57,7 @@ describe("Test experiments endpoints", () => {
     });
 
     afterEach(async () => {
-      await mongoose.connection.db.dropDatabase();
+      //await mongoose.connection.db.dropDatabase();
       await mongoose.connection.close();
     });
 
@@ -162,7 +162,7 @@ describe("Test experiments endpoints", () => {
           const response = await request.get(
             `${endpoint}/percent/${EXPERIMENT_ONE}`
           );
-          console.log(response);
+          console.log(response.body);
           expect(response.status).toBe(200);
           expect(response.body).toBe(2);
         });
