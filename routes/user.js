@@ -30,7 +30,7 @@ router.get("/api/user", (req, res) => {
         res
       );
     })
-    .catch((err) => errorHandler(err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 module.exports = router;

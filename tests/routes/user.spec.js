@@ -1,14 +1,36 @@
 const mongoose = require("mongoose");
 const supertest = require("supertest");
-const { returnData } = require("../../routes/helperMethods");
-const majors = require("../../model/Major");
+const users = require("../../model/User");
 const createApp = require("../../app");
-const { allMajors } = require("../../data/majors");
+
+const SOPHOMORE = "AE UG SOPHOMORE";
+const FRESHMAN = "AE UG FRESHMAN";
+const JUNIOR = "AE UG JUNIOR";
+const SENIOR = "AE UG SENIOR";
 
 beforeEach((done) => {
+  const samples = [];
   mongoose
     .connect("mongodb://localhost:27017/user", { useNewUrlParser: true })
-    .then(() => done());
+    .then(async () => {
+      for (let i = 1; i <= 98; i++) {
+        const userObj = { _id: `User${i}`, name: `User${i}` };
+        if (i % 4 === 0) {
+          userObj.affiliation = FRESHMAN;
+        } else if (i % 4 === 1) {
+          userObj.affiliation = SOPHOMORE;
+        } else if (i % 4 === 2) {
+          userObj.affiliation = JUNIOR;
+        } else {
+          userObj.affiliation = SENIOR;
+        }
+        samples.push(userObj);
+      }
+      samples.push({ _id: `mtiavis1`, name: `mtiavis1`, affiliation: JUNIOR });
+      samples.push({ _id: `wtong10`, name: `wtong10`, affiliation: SOPHOMORE });
+      await users.insertMany(samples);
+      done();
+    });
 });
 
 afterEach((done) => {
@@ -20,52 +42,98 @@ afterEach((done) => {
 const request = supertest(createApp());
 
 describe("GET user route", () => {
-  it("should select a list of users for affiliation and username filters", async () => {
-    await request
-      .post("/api/majors")
-      .send(allMajors[0])
-      .then(async () => {
-        const major = await majors.findOne({
-          department: "EN Computer Science",
-        });
-        expect(major).toBeTruthy();
-      });
+  it("should select a list of users for username number filters", async () => {
+    const userResp = await request.get("/api/user?username=1");
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(21);
+    for (let user of userResp.body.data) {
+      expect(user.name).toContain("1");
+    }
   });
 
-  it("should throw error on invalid major data", async () => {
-    const response = await request.post("/api/majors").send({});
-    expect(response.status).toBe(400);
+  it("should select a list of users for username word filters", async () => {
+    const userResp = await request.get("/api/user?username=User");
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(98);
+    for (let user of userResp.body.data) {
+      expect(user.name).toContain("User");
+    }
   });
 
-  it("should return a major after posting", async () => {
-    await request
-      .post("/api/majors")
-      .send(allMajors[0])
-      .then(async (res) => {
-        const data = res.body.data;
-        expect(data).toMatchObject(allMajors[0]);
-      });
+  it("should select all users for empty username word filters", async () => {
+    const userResp = await request.get("/api/user?username=");
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(100);
   });
 
-  it("should return 0 majors when calling all majors initially", async () => {
-    const resp = await request.get("/api/majors/all");
-    expect(resp.body.data.length).toBe(0);
+  it("should select all users for freshman affiliation filters", async () => {
+    const userResp = await request.get("/api/user?affiliation=" + FRESHMAN);
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(24);
+    for (let user of userResp.body.data) {
+      expect(user.affiliation).toBe(FRESHMAN);
+    }
   });
 
-  it("should return one major when calling all majors after one post", async () => {
-    await request.post("/api/majors").send(allMajors[0]);
-    const resp = await request.get("/api/majors/all");
-    expect(resp.body.data.length).toBe(1);
-    expect(resp.body.data[0]).toMatchObject(allMajors[0]);
+  it("should select all users for sophomore affiliation filters", async () => {
+    const userResp = await request.get("/api/user?affiliation=" + SOPHOMORE);
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(26);
+    for (let user of userResp.body.data) {
+      expect(user.affiliation).toBe(SOPHOMORE);
+    }
   });
 
-  it("should return 2 majors when calling all majors after two posts", async () => {
-    await request.post("/api/majors").send(allMajors[0]);
-    await request.post("/api/majors").send(allMajors[1]);
-    const resp = await request.get("/api/majors/all");
-    expect(resp.body.data.length).toBe(2);
-    expect(resp.body.data[0]).toMatchObject(allMajors[0]);
-    expect(resp.body.data[1]).toMatchObject(allMajors[1]);
+  it("should select all users for junior affiliation filters", async () => {
+    const userResp = await request.get("/api/user?affiliation=" + JUNIOR);
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(26);
+    for (let user of userResp.body.data) {
+      expect(user.affiliation).toBe(JUNIOR);
+    }
+  });
+
+  it("should select all users for senior affiliation filters", async () => {
+    const userResp = await request.get("/api/user?affiliation=" + SENIOR);
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(24);
+    for (let user of userResp.body.data) {
+      expect(user.affiliation).toBe(SENIOR);
+    }
+  });
+
+  it("should select all users for empty affiliation word filters", async () => {
+    const userResp = await request.get("/api/user?affiliation=");
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(100);
+  });
+
+  it("should select all users for empty affiliation and user filters", async () => {
+    const userResp = await request.get("/api/user");
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(100);
+  });
+
+  it("should select all users for nonempty affiliation and user filters", async () => {
+    const userResp = await request.get(
+      "/api/user?username=1&affiliation=" + FRESHMAN
+    );
+    expect(userResp).toBeTruthy();
+    expect(userResp.status).toBe(200);
+    expect(userResp.body.data.length).toBe(2);
+    for (let user of userResp.body.data) {
+      expect(user.name).toContain("1");
+      expect(user.affiliation).toBe(FRESHMAN);
+    }
   });
 });
 

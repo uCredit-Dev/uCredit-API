@@ -117,7 +117,6 @@ router.delete("/api/years/:year_id", (req, res) => {
   years
     .findByIdAndDelete(year_id)
     .then(async (year) => {
-      console.log(year.courses);
       year.courses.forEach((c_id) => {
         courses.findByIdAndDelete(c_id).then((course) => {
           course.distribution_ids.forEach((id) => {
@@ -144,10 +143,7 @@ router.delete("/api/years/:year_id", (req, res) => {
       plan.save();
       returnData(year, res);
     })
-    .catch((err) => {
-      console.log(err);
-      errorHandler(res, 500, err);
-    }); // fault: One catch for all
+    .catch((err) => errorHandler(res, 500, err)); // fault: One catch for all
 });
 
 router.post("/api/spc-login", (req, res) => {

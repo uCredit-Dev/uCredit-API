@@ -257,7 +257,6 @@ describe("year DELETE /api/years/:year_id route", () => {
       expect(JSON.stringify(year_id)).not.toBe(JSON.stringify(id));
     }
     const courseList = await courses.find({ year_id: id });
-    console.log(courseList);
     expect(courseList.length).toBe(0);
   });
 
@@ -268,12 +267,10 @@ describe("year DELETE /api/years/:year_id route", () => {
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data._id)).toBe(JSON.stringify(id));
     const planListAfter = await plans.find({ name: TEST_PLAN_NAME_1 });
-    console.log(planListAfter);
     for (let year_id of planListAfter[0]._doc.year_ids) {
       expect(JSON.stringify(year_id)).not.toBe(JSON.stringify(id));
     }
     const courseList = await courses.find({ year_id: id });
-    console.log(courseList);
     expect(courseList.length).toBe(0);
   });
 
