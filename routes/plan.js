@@ -24,7 +24,7 @@ router.get("/api/plans/:plan_id", (req, res) => {
           .find({ plan_id: p_id })
           .populate("reviewer_id")
           .then((revs) => {
-            plan = { ...plan.doc, reviewers: revs };
+            plan = { ...plan, reviewers: revs };
             returnData(plan, res);
           });
       });
