@@ -3,8 +3,6 @@ const supertest = require("supertest");
 const createApp = require("../../app");
 const ExperimentDao = require("../../data/ExperimentDao");
 const User = require("../../model/User");
-const { addSampleUsers } = require("../../data/userSamples.js");
-const ExperimentModel = require("../../model/Experiment");
 
 const experiments = new ExperimentDao();
 const request = supertest(createApp());
