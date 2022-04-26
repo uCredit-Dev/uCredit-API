@@ -34,10 +34,9 @@ afterEach((done) => {
 describe("Plan Routes", () => {
   it("Should return plan with the given _id", async () => {
     const id = plan1._id;
-    await request.get(`/api/plans/${id}`).then((res) => {
-      expect(res.status).toBe(200);
-      expect(res.body.data._id).toBe(id);
-    });
+    const res = await request.get(`/api/plans/${id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data._id).toBe(id);
   });
 
   //Broken but why? Is this endpoint not working? I dont think this is an endpoint anymore
@@ -58,36 +57,27 @@ describe("Plan Routes", () => {
       expireAt: new Date(),
       year: "Junior",
     };
-    await request
-      .post(`/api/plans`)
-      .send(plan)
-      .then((res) => {
-        expect(res.status).toBe(200);
-        const data = res.body.data;
-        expect(data.name).toBe(plan.name);
-      });
+    const res = await request.post(`/api/plans`).send(plan);
+    expect(res.status).toBe(200);
+    const data = res.body.data;
+    expect(data.name).toBe(plan.name);
   });
 
   it("Should return updated plan ", async () => {
-    await request
-      .patch(`/api/plans/update`)
-      .send({
-        plan_id: plan1._id,
-        name: "testPlan2",
-      })
-      .then((res) => {
-        expect(res.status).toBe(200);
-        const data = res.body.data;
-        expect(data.name).toBe("testPlan2");
-      });
+    const res = await request.patch(`/api/plans/update`).send({
+      plan_id: plan1._id,
+      name: "testPlan2",
+    });
+    expect(res.status).toBe(200);
+    const data = res.body.data;
+    expect(data.name).toBe("testPlan2");
   });
 
   it("Should return deleted plan ", async () => {
     const planId = plan1._id;
-    await request.delete(`/api/plans/${planId}`).then((res) => {
-      expect(res.status).toBe(200);
-      const data = res.body.data;
-      expect(data._id).toBe(planId);
-    });
+    const res = await request.delete(`/api/plans/${planId}`);
+    expect(res.status).toBe(200);
+    const data = res.body.data;
+    expect(data._id).toBe(planId);
   });
 });

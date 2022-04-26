@@ -6,6 +6,7 @@ const createApp = require("../../app");
 const planName = "testPlan";
 const userName = "User1";
 const years = require("../../model/Year");
+const plans = require("../../model/Plan");
 const distributions = require("../../model/Distribution");
 const samples = [
   {
@@ -88,14 +89,14 @@ beforeEach((done) => {
       await course.insertMany(addedCourses);
       let courses = await course.find({});
       yearArray = plan1.year_ids;
-      courses.forEach(async (course) => {
+      for (let course of courses) {
         await years.findByIdAndUpdate(plan1.year_ids[3], {
           $push: { courses: course._id },
         });
         await distributions.findByIdAndUpdate(course.distribution_ids[0], {
           $push: { courses: course._id },
         });
-      });
+      }
       done();
     });
 });
@@ -113,12 +114,11 @@ describe("Course Routes", () => {
     coursesWithIds = await course.find({});
     const id = coursesWithIds[0]._id;
     const name = coursesWithIds[0].name;
-    await request.get(`/api/courses/${id}`).then((res) => {
-      expect(res.status).toBe(200);
-      const data = res.body.data;
-      expect(JSON.stringify(data._id)).toBe(JSON.stringify(id));
-      expect(data.name).toBe(name);
-    });
+    const res = await request.get(`/api/courses/${id}`);
+    expect(res.status).toBe(200);
+    const data = res.body.data;
+    expect(JSON.stringify(data._id)).toBe(JSON.stringify(id));
+    expect(data.name).toBe(name);
   });
 
   it("Should return all courses with the distribution id", async () => {
@@ -126,30 +126,28 @@ describe("Course Routes", () => {
     const distributionId = coursesWithIds[0].distribution_ids[0];
     const name = coursesWithIds[0].name;
 
-    await request
-      .get(`/api/coursesByDistribution/${distributionId}`)
-      .then((res) => {
-        expect(res.status).toBe(200);
-        const data = res.body.data[0];
-        expect(JSON.stringify(data.distribution_ids[0])).toBe(
-          JSON.stringify(distributionId)
-        );
-        expect(data.name).toBe(name);
-      });
+    const res = await request.get(
+      `/api/coursesByDistribution/${distributionId}`
+    );
+    expect(res.status).toBe(200);
+    const data = res.body.data[0];
+    expect(JSON.stringify(data.distribution_ids[0])).toBe(
+      JSON.stringify(distributionId)
+    );
+    expect(data.name).toBe(name);
   });
 
   it("Should return all courses associated with the plan id", async () => {
     coursesWithIds = await course.find({});
     const planId = coursesWithIds[0].plan_id;
 
-    await request.get(`/api/coursesByPlan/${planId}`).then((res) => {
-      expect(res.status).toBe(200);
-      expect(res.body.data.length).toBe(coursesWithIds.length);
-      coursesWithIds.forEach((course) => {
-        expect(
-          res.body.data.find((course) => course._id === course._id).name
-        ).toBe(course.name);
-      });
+    const res = await request.get(`/api/coursesByPlan/${planId}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBe(coursesWithIds.length);
+    coursesWithIds.forEach((course) => {
+      expect(
+        res.body.data.find((course) => course._id === course._id).name
+      ).toBe(course.name);
     });
   });
 
@@ -157,26 +155,25 @@ describe("Course Routes", () => {
     coursesWithIds = await course.find({});
     const planId = coursesWithIds[0].plan_id;
 
-    await request
-      .get(`/api/coursesByTerm/${planId}?year=Junior&term=fall`)
-      .then((res) => {
-        expect(res.status).toBe(200);
-        expect(res.body.data.length).toBeGreaterThan(0);
-        coursesWithIds.forEach((course) => {
-          expect(
-            res.body.data.find((course) => course._id === course._id).term
-          ).toBe("fall");
-          expect(
-            res.body.data.find((course) => course._id === course._id).year
-          ).toBe("Junior");
-        });
-      });
+    const res = await request.get(
+      `/api/coursesByTerm/${planId}?year=Junior&term=fall`
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBeGreaterThan(0);
+    coursesWithIds.forEach((course) => {
+      expect(
+        res.body.data.find((course) => course._id === course._id).term
+      ).toBe("fall");
+      expect(
+        res.body.data.find((course) => course._id === course._id).year
+      ).toBe("Junior");
+    });
   });
   //NEED DISTRIBUTION IDS FOR PLAN, NOT SURE HOW TO ADD
   it("Should return created course via post request", async () => {
-    coursesWithIds = await course.find({});
-    const planId = coursesWithIds[0].plan_id;
-    const courses = {
+    const planResp = await plans.find({});
+    const planId = planResp[0]._id;
+    const course = {
       user_id: "TESTUSER",
       distribution_ids: ["6001b745e5fd0d8124251e51"],
       title: "Test Course",
@@ -186,60 +183,45 @@ describe("Course Routes", () => {
       year_id: yearArray[3],
       plan_id: planId,
     };
-    await planDAO.findByIdAndUpdate(planId, {
-      distribution_ids: [coursesWithIds[0].distribution_ids[0]],
-    });
-    await request
-      .post(`/api/courses/`)
-      .send(courses)
-      .then((res) => {
-        expect(res.status).toBe(200);
-        expect(res.body.data.title).toBe(courses.title);
-        expect(res.body.data.term).toBe(courses.term);
-        expect(res.body.data.number).toBe(courses.number);
-      });
+
+    const res = await request.post(`/api/courses/`).send(course);
+    expect(res.status).toBe(200);
+    expect(res.body.data.title).toBe(course.title);
+    expect(res.body.data.term).toBe(course.term);
+    expect(res.body.data.number).toBe(course.number);
   });
 
   it("Should return course with changed status", async () => {
-    coursesWithIds = await course.find({});
-    const id = coursesWithIds[0]._id;
-    await planDAO.findByIdAndUpdate(coursesWithIds[0].plan_id, {
-      distribution_ids: [coursesWithIds[0].distribution_ids[0]],
-    });
+    // coursesWithIds = await course.find({});
+    const planResp = await plans.find({});
+    const id = planResp[0]._id;
 
-    await request
+    const res = await request
       .patch(`/api/courses/changeStatus/${id}`)
-      .send({ taken: false })
-      .then((res) => {
-        expect(res.status).toBe(200);
-        expect(res.body.data.taken).toBe(false);
-      });
+      .send({ taken: false });
+    expect(res.status).toBe(200);
+    expect(res.body.data.taken).toBe(false);
   });
 
-  //ENDPOINT IS COMMENTED OUT
   // it("Should return course with updated distribution", async () => {
-  //   coursesWithIds = await course.find({});
-  //   const id = coursesWithIds[0]._id;
+  //   const planResp = await plans.find({});
+  //   const id = planResp[0]._id;
   //   const oldDistribution = coursesWithIds[0].distribution_ids[0];
   //   const newDistribution = "6001b745e5fd0d8124251e50";
 
-  //   await request
+  //   const res = await request
   //     .patch(`/api/courses/changeDistribution/${id}`)
-  //     .send({ distribution_ids: [newDistribution] })
-  //     .then((res) => {
-  //       console.log(res);
-  //       expect(res.status).toBe(200);
-  //       expect(res.body.data.distribution_ids[0]).toBe(newDistribution);
-  //     });
+  //     .send({ distribution_ids: [newDistribution] });
+  //   expect(res.status).toBe(200);
+  //   expect(res.body.data.distribution_ids[0]).toBe(newDistribution);
   // });
 
   it("Should return deleted course", async () => {
-    coursesWithIds = await course.find({});
-    const id = coursesWithIds[0]._id;
+    const planResp = await plans.find({});
+    const id = planResp[0]._id;
 
-    await request.delete(`/api/courses/${id}`).then((res) => {
-      expect(res.status).toBe(200);
-      expect(JSON.stringify(res.body.data._id)).toBe(JSON.stringify(id));
-    });
+    const res = await request.delete(`/api/courses/${id}`);
+    expect(res.status).toBe(200);
+    expect(JSON.stringify(res.body.data._id)).toBe(JSON.stringify(id));
   });
 });
