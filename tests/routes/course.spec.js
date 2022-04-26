@@ -3,7 +3,7 @@ const supertest = require("supertest");
 const { returnData } = require("../../routes/helperMethods");
 const course = require("../../model/Course");
 const createApp = require("../../app");
-import { addSampleCourses } from "../../data/courseSamples";
+const { addSampleCourses } = require("../../data/courseSamples");
 
 //INCOMPLETE
 beforeEach((done) => {
