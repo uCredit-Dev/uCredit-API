@@ -173,11 +173,10 @@ describe("Course Routes", () => {
       user_id: "TESTUSER",
       distribution_ids: ["6001b745e5fd0d8124251e51"],
       title: "Test Course",
-      number: "420.690",
       term: "spring",
       credits: 4,
-      year: "Senior",
-      year_id: yearArray[4],
+      year: "Junior",
+      year_id: yearArray[3],
       plan_id: planId,
     };
 
