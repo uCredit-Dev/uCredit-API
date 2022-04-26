@@ -11,7 +11,7 @@ const users = require("../../model/User");
 //INCOMPLETE
 beforeEach((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/majors", { useNewUrlParser: true })
+    .connect("mongodb://localhost:27017/plans", { useNewUrlParser: true })
     .then(async () => {
       const response = await request.post("/api/plans").send({
         name: planName,

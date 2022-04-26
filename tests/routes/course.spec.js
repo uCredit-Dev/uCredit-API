@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const supertest = require("supertest");
-const { returnData } = require("../../routes/helperMethods");
 const course = require("../../model/Course");
+const planDAO = require("../../model/Plan");
 const createApp = require("../../app");
 const planName = "testPlan";
 const userName = "User1";
@@ -60,7 +60,6 @@ let addedCourses = [];
 let coursesWithIds = [];
 
 let yearArray = [];
-const { addSampleCourses } = require("../../data/courseSamples");
 
 //INCOMPLETE
 beforeEach((done) => {
@@ -75,8 +74,15 @@ beforeEach((done) => {
         year: "Junior",
       });
       let plan1 = response.body.data;
+      const sampleDistribution = await request.post("/api/distributions").send({
+        plan_id: plan1._id,
+        user_id: userName,
+        name: "testDistribution",
+        required: 1,
+      });
       samples.forEach(async (sample) => {
         sample.plan_id = plan1._id;
+        sample.distribution_ids = [sampleDistribution.body.data._id];
         addedCourses.push(sample);
       });
       await course.insertMany(addedCourses);
@@ -166,10 +172,11 @@ describe("Course Routes", () => {
         });
       });
   });
-
+  //NEED DISTRIBUTION IDS FOR PLAN, NOT SURE HOW TO ADD
   it("Should return created course via post request", async () => {
+    coursesWithIds = await course.find({});
     const planId = coursesWithIds[0].plan_id;
-    const course = {
+    const courses = {
       user_id: "TESTUSER",
       distribution_ids: ["6001b745e5fd0d8124251e51"],
       title: "Test Course",
@@ -179,21 +186,26 @@ describe("Course Routes", () => {
       year_id: yearArray[3],
       plan_id: planId,
     };
-
+    await planDAO.findByIdAndUpdate(planId, {
+      distribution_ids: [coursesWithIds[0].distribution_ids[0]],
+    });
     await request
       .post(`/api/courses/`)
-      .send(course)
+      .send(courses)
       .then((res) => {
         expect(res.status).toBe(200);
-        expect(res.body.data.title).toBe(course.title);
-        expect(res.body.data.term).toBe(course.term);
-        expect(res.body.data.number).toBe(course.number);
+        expect(res.body.data.title).toBe(courses.title);
+        expect(res.body.data.term).toBe(courses.term);
+        expect(res.body.data.number).toBe(courses.number);
       });
   });
 
   it("Should return course with changed status", async () => {
     coursesWithIds = await course.find({});
     const id = coursesWithIds[0]._id;
+    await planDAO.findByIdAndUpdate(coursesWithIds[0].plan_id, {
+      distribution_ids: [coursesWithIds[0].distribution_ids[0]],
+    });
 
     await request
       .patch(`/api/courses/changeStatus/${id}`)
@@ -204,20 +216,22 @@ describe("Course Routes", () => {
       });
   });
 
-  it("Should return course with updated distribution", async () => {
-    coursesWithIds = await course.find({});
-    const id = coursesWithIds[0]._id;
-    const oldDistribution = coursesWithIds[0].distribution_ids[0];
-    const newDistribution = "6001b745e5fd0d8124251e50";
+  //ENDPOINT IS COMMENTED OUT
+  // it("Should return course with updated distribution", async () => {
+  //   coursesWithIds = await course.find({});
+  //   const id = coursesWithIds[0]._id;
+  //   const oldDistribution = coursesWithIds[0].distribution_ids[0];
+  //   const newDistribution = "6001b745e5fd0d8124251e50";
 
-    await request
-      .patch(`/api/courses/changeDistribution/${id}`)
-      .send({ distribution_ids: [newDistribution] })
-      .then((res) => {
-        expect(res.status).toBe(200);
-        expect(res.body.data.distribution_ids[0]).toBe(newDistribution);
-      });
-  });
+  //   await request
+  //     .patch(`/api/courses/changeDistribution/${id}`)
+  //     .send({ distribution_ids: [newDistribution] })
+  //     .then((res) => {
+  //       console.log(res);
+  //       expect(res.status).toBe(200);
+  //       expect(res.body.data.distribution_ids[0]).toBe(newDistribution);
+  //     });
+  // });
 
   it("Should return deleted course", async () => {
     coursesWithIds = await course.find({});
