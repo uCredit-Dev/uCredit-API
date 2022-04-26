@@ -162,7 +162,6 @@ describe("Test experiments endpoints", () => {
     describe(`Test GET ${endpoint}/percent/:experiment_name`, () => {
       describe("Return 200 and percentage of users participating in an experiment", () => {
         test("Return initial percentage of an experiment (0%)", async () => {
-          // FOUND FAULT
           const response = await request.get(
             `${endpoint}/percent/${EXPERIMENT_ONE}`
           );
@@ -274,7 +273,7 @@ describe("Test experiments endpoints", () => {
         });
         test("Deleting User with invalid JHED", async () => {
           const response = await request
-            .put(`${endpoint}/delete/$%00`) // FAULT
+            .put(`${endpoint}/delete/$%00`)
             .send({ user_id: null });
           expect(response.status).toBe(400);
         });

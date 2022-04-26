@@ -168,7 +168,7 @@ describe("year PATCH /api/years/changeOrder route", () => {
   it("should throw 400 for missing plan id", async () => {
     const resp = await request
       .patch("/api/years/changeOrder")
-      .send({ year_ids: [] }); // FAULT
+      .send({ year_ids: [] });
     expect(resp.status).toBe(400);
   });
 });
