@@ -4,6 +4,7 @@ const createApp = require("../../app");
 const plan = require("../../models/plan");
 const request = supertest(createApp());
 
+//INCOMPLETE
 beforeEach((done) => {
   mongoose
     .connect("mongodb://localhost:27017/majors", { useNewUrlParser: true })
