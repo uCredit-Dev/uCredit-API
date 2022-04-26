@@ -50,7 +50,7 @@ router.patch("/api/years/changeOrder", async (req, res) => {
   const year_ids = req.body.year_ids;
   const plan_id = req.body.plan_id;
   if (!year_ids || !plan_id) {
-    errorHandler(res, 400, "Missing required fields"); // FAULT
+    errorHandler(res, 400, "Missing required fields");
     return;
   }
   plans
@@ -68,7 +68,6 @@ router.patch("/api/years/updateName", (req, res) => {
   const name = req.body.name;
   const year_id = req.body.year_id;
   if (!name) {
-    // FAULT
     errorHandler(res, 400, "must specify a new name");
     return;
   }
@@ -94,7 +93,6 @@ router.patch("/api/years/updateYear", (req, res) => {
     return;
   }
   if (!year_id) {
-    // FAULT
     errorHandler(res, 400, "must specify a year_id");
     return;
   }
@@ -107,7 +105,7 @@ router.patch("/api/years/updateYear", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//delete plan and its associated courses, remove year_id from the associated plan document
+// delete plan and its associated courses, remove year_id from the associated plan document
 router.delete("/api/years/:year_id", (req, res) => {
   const year_id = req.params.year_id;
   if (!year_id || year_id.length < 2) {
@@ -143,7 +141,7 @@ router.delete("/api/years/:year_id", (req, res) => {
       plan.save();
       returnData(year, res);
     })
-    .catch((err) => errorHandler(res, 500, err)); // fault: One catch for all
+    .catch((err) => errorHandler(res, 500, err));
 });
 
 router.post("/api/spc-login", (req, res) => {

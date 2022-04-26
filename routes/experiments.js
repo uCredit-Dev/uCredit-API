@@ -127,7 +127,6 @@ router.delete("/api/experiments/:experiment_name", async (req, res, next) => {
   try {
     const { experiment_name } = req.params;
     if (!experiment_name || experiment_name.length < 2) {
-      // FAULT
       throw new ApiError(400, "You must provide experiment_name attribute!");
     }
     const data = await experiments.deleteExperiment(experiment_name);

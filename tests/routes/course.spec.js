@@ -60,6 +60,7 @@ let addedCourses = [];
 let coursesWithIds = [];
 
 let yearArray = [];
+const { addSampleCourses } = require("../../data/courseSamples");
 
 //INCOMPLETE
 beforeEach((done) => {

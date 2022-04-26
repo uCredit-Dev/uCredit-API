@@ -5,8 +5,7 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 
 router.post("/api/sis/studentRecords", (req, res) => {
   const data = req.body;
-  if (!data) {
-    // FAULT
+  if (!data || Object.keys(data).length === 0) {
     errorHandler(res, 400, "Missing required fields");
     return;
   }

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const supertest = require("supertest");
 const createApp = require("../../app");
-const plan = require("../../models/plan");
+const plan = require("../../model/Plan");
 const request = supertest(createApp());
 
 //INCOMPLETE
