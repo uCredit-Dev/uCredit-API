@@ -249,7 +249,6 @@ describe("year DELETE /api/years/:year_id route", () => {
   it("should return deleted first year", async () => {
     const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
     const id = planList[0]._doc.year_ids[0];
-    console.log(planList[0]._doc.year_ids[0]);
     const resp = await request.delete("/api/years/" + id);
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data._id)).toBe(JSON.stringify(id));

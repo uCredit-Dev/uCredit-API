@@ -24,7 +24,6 @@ describe("POST /api/sis/studentRecords student records", () => {
       .post("/api/sis/studentRecords")
       .send({ name: TEST_NAME });
     expect(resp.status).toBe(200);
-    console.log(resp.body.data);
     expect(resp.body.data.name).toBe(TEST_NAME);
   });
 
