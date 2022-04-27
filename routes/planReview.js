@@ -1,12 +1,9 @@
-const {
-  returnData,
-  errorHandler,
-  postNotification,
-} = require("./helperMethods.js");
+const { returnData, errorHandler, postNotification } = require("./helperMethods.js");
 const planReviews = require("../model/PlanReview.js");
 
 const express = require("express");
 const router = express.Router();
+const DEBUG = process.env.DEBUG === "True";
 
 router.post("/api/planReview/request", async (req, res) => {
   const plan_id = req.body.plan_id;
@@ -15,8 +12,7 @@ router.post("/api/planReview/request", async (req, res) => {
   const reviewer_id = req.body.reviewer_id;
   if (!plan_id || !reviewer_id || !reviewee_id) {
     errorHandler(res, 400, {
-      message:
-        "Missing plan_id, reviewee_id or reviewer_id in the request body.",
+      message: "Missing plan_id, reviewee_id or reviewer_id in the request body.",
     });
   } else {
     const review = await planReviews
@@ -50,6 +46,24 @@ router.post("/api/planReview/request", async (req, res) => {
   }
 });
 
+const confirmPlanReview = (review, res) => {
+  if (!review) {
+    errorHandler(res, 404, { message: "planReview not found." });
+  } else if (review.status === "UNDERREVIEW") {
+    errorHandler(res, 400, { message: "Reviewer already confirmed." });
+  } else {
+    review.status = "UNDERREVIEW";
+    review.save();
+    postNotification(
+      `${review.reviewer_id.name} has accepted your plan review request.`,
+      [review.reviewee_id],
+      review._id,
+      "PLANREVIEW"
+    );
+    returnData(review, res);
+  }
+};
+
 //reviewer confirms the request, adding the plan id to the whitelisted_plan_ids array, changing the pending status
 router.post("/api/planReview/confirm", (req, res) => {
   const review_id = req.body.review_id;
@@ -62,23 +76,23 @@ router.post("/api/planReview/confirm", (req, res) => {
     .findById(review_id)
     .populate("reviewer_id", "name")
     .then((review) => {
-      if (!review) {
-        errorHandler(res, 404, { message: "planReview not found." });
-      } else if (review.status === "UNDERREVIEW") {
-        errorHandler(res, 400, { message: "Reviewer already confirmed." });
-      } else {
-        review.status = "UNDERREVIEW";
-        review.save();
-        postNotification(
-          `${review.reviewer_id.name} has accepted your plan review request.`,
-          [review.reviewee_id],
-          review_id,
-          "PLANREVIEW"
-        );
-        returnData(review, res);
-      }
-    });
+      confirmPlanReview(review, res);
+    })
+    .catch((err) => errorHandler(res, 500, err));
 });
+
+if (DEBUG) {
+  router.post("/api/backdoor/planReview/confirm", (req, res) => {
+    const reviewer_id = req.body.reviewer_id;
+    planReviews
+      .findOne({ reviewer_id })
+      .populate("reviewer_id", "name")
+      .then((review) => {
+        confirmPlanReview(review, res);
+      })
+      .catch((err) => errorHandler(res, 500, err));
+  });
+}
 
 /*
   Return a list of reviewrs for the plan with populated reviewer info
