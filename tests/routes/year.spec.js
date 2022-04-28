@@ -33,7 +33,7 @@ const postBody2 = {
 
 beforeEach((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/plans", { useNewUrlParser: true })
+    .connect("mongodb://localhost:27017/years", { useNewUrlParser: true })
     .then(async () => {
       await users.create({ _id: TEST_USER_1 });
       await users.create({ _id: TEST_USER_2 });

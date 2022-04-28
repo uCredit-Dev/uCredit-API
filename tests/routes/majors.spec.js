@@ -12,7 +12,7 @@ beforeEach((done) => {
 });
 
 afterEach((done) => {
-  mongoose.connection.db.dropDatabase(() => {
+  mongoose.connection.db.collection("majors").drop(() => {
     mongoose.connection.close(() => done());
   });
 });

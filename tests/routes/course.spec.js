@@ -102,7 +102,7 @@ beforeEach((done) => {
 });
 
 afterEach((done) => {
-  mongoose.connection.db.dropDatabase(() => {
+  mongoose.connection.db.collection("courses").drop(() => {
     mongoose.connection.close(() => done());
   });
 });
@@ -169,18 +169,18 @@ describe("Course Routes", () => {
       ).toBe("Junior");
     });
   });
-  //NEED DISTRIBUTION IDS FOR PLAN, NOT SURE HOW TO ADD
+
   it("Should return created course via post request", async () => {
     const planResp = await plans.find({});
     const planId = planResp[0]._id;
     const course = {
       user_id: "TESTUSER",
-      distribution_ids: ["6001b745e5fd0d8124251e51"],
+      distribution_ids: planResp[0].distribution_ids,
       title: "Test Course",
       term: "spring",
       credits: 4,
       year: "Junior",
-      year_id: yearArray[3],
+      year_id: "" + yearArray[3],
       plan_id: planId,
     };
 
@@ -192,9 +192,9 @@ describe("Course Routes", () => {
   });
 
   it("Should return course with changed status", async () => {
-    // coursesWithIds = await course.find({});
+    const tempCourse = await course.find({});
     const planResp = await plans.find({});
-    const id = planResp[0]._id;
+    const id = tempCourse[0]._id;
 
     const res = await request
       .patch(`/api/courses/changeStatus/${id}`)
@@ -217,8 +217,9 @@ describe("Course Routes", () => {
   // });
 
   it("Should return deleted course", async () => {
+    const tempCourse = await course.find({});
     const planResp = await plans.find({});
-    const id = planResp[0]._id;
+    const id = tempCourse[0]._id;
 
     const res = await request.delete(`/api/courses/${id}`);
     expect(res.status).toBe(200);
