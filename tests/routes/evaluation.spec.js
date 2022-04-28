@@ -28,4 +28,8 @@ describe("Evaluation Routes", () => {
     expect(req.status).toBe(200);
     expect(req.body.data.num).toBe(num);
   });
+  it("Should return 404 for non existent evaluation", async () => {
+    let req = await request.get(`/api/evals/AS.874.234`);
+    expect(req.status).toBe(404);
+  });
 });

@@ -31,23 +31,13 @@ afterEach((done) => {
   });
 });
 
-describe("Plan Routes", () => {
+describe("Plan routes", () => {
   it("Should return plan with the given _id", async () => {
     const id = plan1._id;
     const res = await request.get(`/api/plans/${id}`);
     expect(res.status).toBe(200);
     expect(res.body.data._id).toBe(id);
   });
-
-  //Broken but why? Is this endpoint not working? I dont think this is an endpoint anymore
-  // it("Should return all plans of a user", async () => {
-  //   const test = await plan.find({});
-  //   const userId = test[0].user_id;
-  //   await request.get(`/api/plansByUser/${userId}`).then((res) => {
-  //     expect(res.status).toBe(200);
-  //     expect(res.body.data.userId).toBe(userId);
-  //   });
-  // });
 
   it("Should return created plan ", async () => {
     const plan = {
