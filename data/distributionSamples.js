@@ -28,7 +28,7 @@ const samples = [
   {
     user_id: "bioStudent",
     name: "core",
-    required: 42,
+    required: 42, // FAULT: Required field not created correctly
   },
 ];
 
