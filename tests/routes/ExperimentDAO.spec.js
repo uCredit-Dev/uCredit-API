@@ -37,12 +37,51 @@ describe("ExperimentDAO CRUD Operations", () => {
     expect(ex._id).toBeDefined();
   });
 
-  it("Test create INVALID", async () => {
+  it("Test create INVALID EMPTY EXPERIMENT", async () => {
     try {
       const ex = await DAO.createExperiment({});
       fail(
         "Should have errored when invalid experiment was attempted to delete"
       );
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+  });
+
+  it("Test create INVALID NO NAME", async () => {
+    const experiment = {
+      blacklist: [],
+      active: [],
+    };
+    try {
+      const ex = await DAO.createExperiment(experiment);
+      fail("Should have errored when no name was provided");
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+  });
+
+  it("Test create INVALID NO BLACKLIST", async () => {
+    const experiment = {
+      name: "testExperiment",
+      active: [],
+    };
+    try {
+      const ex = await DAO.createExperiment(experiment);
+      fail("Should have errored when no blacklist was provided");
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+  });
+
+  it("Test create INVALID NO ACTIVE", async () => {
+    const experiment = {
+      name: "testExperiment",
+      blacklist: [],
+    };
+    try {
+      const ex = await DAO.createExperiment(experiment);
+      fail("Should have errored when no active was provided");
     } catch (err) {
       expect(err).toBeDefined();
     }
@@ -64,10 +103,19 @@ describe("ExperimentDAO CRUD Operations", () => {
     expect(ex2.active.length).toEqual(experiment.active.length + 1);
   });
 
-  it("Test updateAdd INVALID", async () => {
+  it("Test updateAdd INVALID NAME", async () => {
     try {
       const ex = await DAO.updateAdd("InVALIDNAME!", "testUser");
-      fail("Should have errored when invalid experiment was attempted to add");
+      fail("Should have errored when invalid name was provided");
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+  });
+
+  it("Test updateAdd INVALID NO USER", async () => {
+    try {
+      const ex = await DAO.updateAdd(experiment.name, "");
+      fail("Should have errored when invalid user was provided");
     } catch (err) {
       expect(err).toBeDefined();
     }
@@ -99,6 +147,15 @@ describe("ExperimentDAO CRUD Operations", () => {
     }
   });
 
+  it("Test updateDelete INVALID NO USER", async () => {
+    try {
+      const ex = await DAO.updateDelete(experiment.name, "");
+      fail("Should have errored when invalid user was attempted to delete");
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+  });
+
   it("Test updateName", async () => {
     const experiment = {
       name: "testExperiment",
@@ -118,6 +175,15 @@ describe("ExperimentDAO CRUD Operations", () => {
   it("Test updateName INVALID", async () => {
     try {
       const ex = await DAO.updateName("InVALIDNAME!", "testExperiment2");
+      fail("Should have errored when invalid name was attempted to update");
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+  });
+
+  it("Test updateName INVALID NO NAME", async () => {
+    try {
+      const ex = await DAO.updateName(experiment.name, "");
       fail(
         "Should have errored when invalid experiment was attempted to update"
       );
