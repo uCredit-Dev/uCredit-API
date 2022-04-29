@@ -81,18 +81,18 @@ router.post("/api/planReview/confirm", (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-if (DEBUG) {
-  router.post("/api/backdoor/planReview/confirm", (req, res) => {
-    const reviewer_id = req.body.reviewer_id;
-    planReviews
-      .findOne({ reviewer_id })
-      .populate("reviewer_id", "name")
-      .then((review) => {
-        confirmPlanReview(review, res);
-      })
-      .catch((err) => errorHandler(res, 500, err));
-  });
-}
+// if (DEBUG) {
+router.post("/api/backdoor/planReview/confirm", (req, res) => {
+  const reviewer_id = req.body.reviewer_id;
+  planReviews
+    .findOne({ reviewer_id })
+    .populate("reviewer_id", "name")
+    .then((review) => {
+      confirmPlanReview(review, res);
+    })
+    .catch((err) => errorHandler(res, 500, err));
+});
+// }
 
 /*
   Return a list of reviewrs for the plan with populated reviewer info
