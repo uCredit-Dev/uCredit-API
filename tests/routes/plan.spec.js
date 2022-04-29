@@ -8,7 +8,6 @@ const planName = "testPlan";
 const userName = "User1";
 const users = require("../../model/User");
 
-//INCOMPLETE
 beforeEach((done) => {
   mongoose
     .connect("mongodb://localhost:27017/plans", { useNewUrlParser: true })

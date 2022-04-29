@@ -168,7 +168,7 @@ describe("ExperimentDAO CRUD Operations", () => {
     expect(ex._id).toBeDefined();
   });
 
-  it("Test updateParticipation INVALID", async () => {
+  it("Test updateParticipation INVALID NAME", async () => {
     //BAD NAME
     try {
       const ex = await DAO.updateParticipation("White List", 0);
@@ -188,6 +188,29 @@ describe("ExperimentDAO CRUD Operations", () => {
       expect(err).toBeDefined();
     }
 
+    try {
+      const ex = await DAO.updateParticipation("test", NaN);
+      fail(
+        "Should have errored when invalid experiment was attempted to update"
+      );
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+  });
+
+  it("Test updateParticipation INVALID NUMBER", async () => {
+    //BAD NUMBER
+    try {
+      const ex = await DAO.updateParticipation("test", -1);
+      fail(
+        "Should have errored when invalid experiment was attempted to update"
+      );
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+  });
+
+  it("Test updateParticipation NO NUMBER", async () => {
     try {
       const ex = await DAO.updateParticipation("test", NaN);
       fail(
