@@ -62,7 +62,6 @@ let coursesWithIds = [];
 
 let yearArray = [];
 
-//INCOMPLETE
 beforeEach((done) => {
   mongoose
     .connect("mongodb://localhost:27017/courses", { useNewUrlParser: true })
