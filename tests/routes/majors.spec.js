@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const supertest = require("supertest");
-const { returnData } = require("../../routes/helperMethods");
 const majors = require("../../model/Major");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
