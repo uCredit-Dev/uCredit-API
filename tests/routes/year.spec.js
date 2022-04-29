@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 const supertest = require("supertest");
 const plans = require("../../model/Plan");
 const createApp = require("../../app");
+const users = require("../../model/User");
+const courses = require("../../model/Course");
+const distributions = require("../../model/Distribution");
+const years = require("../../model/Year");
 const TEST_PLAN_NAME_1 = "testPlan1";
 const TEST_USER_1 = "User1";
 const TEST_MAJOR_1 = "Computer Science";
@@ -11,10 +15,6 @@ const TEST_YEAR_1 = "AE UG Freshman";
 const TEST_PLAN_NAME_2 = "testPlan2";
 const TEST_USER_2 = "User2";
 const TEST_YEAR_2 = "AE UG Sophomore";
-const users = require("../../model/User");
-const courses = require("../../model/Course");
-const distributions = require("../../model/Distribution");
-const years = require("../../model/Year");
 const postBody1 = {
   name: TEST_PLAN_NAME_1,
   user_id: TEST_USER_1,
