@@ -10,7 +10,6 @@ const TEST_YEAR_2 = "AE UG Sophomore";
 const COURSE_1 = { credits: 2, taken: true };
 const COURSE_2 = { credits: 1, taken: true };
 const COURSE_3 = { credits: 2, taken: false };
-const COURSE_4 = { credits: 1, taken: false };
 const SAMPLES = [
   {
     plan_id: "61ccac7bfd08a30004b04181",

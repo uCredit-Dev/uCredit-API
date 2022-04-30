@@ -119,7 +119,6 @@ describe("distributionsamples should create new sample distributions", () => {
 
   it("first distribution required credit count should match first sample required credit count", async () => {
     const distributionList = await distributions.find({});
-    console.log(distributionList);
     expect(distributionList[0].required).toBe(SAMPLES[0].required);
   });
 
