@@ -19,7 +19,7 @@ function errorHandler(res, status, err) {
   });
 }
 
-function distributionCreditUpdate(distribution, course, add) {
+async function distributionCreditUpdate(distribution, course, add) {
   if (add) {
     distribution.planned += course.credits;
     if (course.taken) {
@@ -33,6 +33,6 @@ function distributionCreditUpdate(distribution, course, add) {
   }
   distribution.satisfied =
     distribution.planned >= distribution.required ? true : false;
-  distribution.save();
+  await distribution.save();
 }
 module.exports = { returnData, errorHandler, distributionCreditUpdate };

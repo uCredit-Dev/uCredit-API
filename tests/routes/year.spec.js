@@ -62,7 +62,7 @@ beforeEach((done) => {
           year: TEST_YEAR_1,
           term: "fall",
           name: i,
-          required: true,
+          required: 0,
           year_id: plan.year_ids[0],
         });
         await distributions.findByIdAndUpdate(distributionResp._id, {

@@ -59,7 +59,6 @@ describe("distributionsamples should create new sample distributions", () => {
 
   it("first distribution id should match first sample id", async () => {
     const distributionList = await distributions.find({});
-    console.log(distributionList);
     expect(distributionList[0].user_id).toBe(SAMPLES[0].user_id);
   });
 
