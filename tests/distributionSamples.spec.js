@@ -46,7 +46,7 @@ beforeAll((done) => {
 });
 
 afterAll((done) => {
-  mongoose.connection.db.dropDatabase(() => {
+  mongoose.connection.db.collection("distributionSamples").drop(() => {
     mongoose.connection.close(() => done());
   });
 });

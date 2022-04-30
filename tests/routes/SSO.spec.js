@@ -26,7 +26,7 @@ describe("GET SSO Routes", () => {
 
   it("GET /api/backdoor/verification/:id: Should return dev login for a user", async () => {
     const userID = "wtong10";
-    await User.create({ name: userID });
+    await User.create({ name: userID, _id: userID });
     const res = await request.get("/api/backdoor/verification/" + userID);
     expect(res.status).toBe(200);
     expect(res.body.data._id).toBe(userID);

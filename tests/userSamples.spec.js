@@ -26,7 +26,7 @@ beforeEach((done) => {
 });
 
 afterEach((done) => {
-  mongoose.connection.db.dropDatabase(() => {
+  mongoose.connection.db.collection("userSamples").drop(() => {
     mongoose.connection.close(() => done());
   });
 });
