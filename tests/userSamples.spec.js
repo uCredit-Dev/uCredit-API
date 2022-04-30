@@ -16,7 +16,7 @@ const SAMPLES = [
   },
 ];
 
-beforeAll((done) => {
+beforeEach((done) => {
   mongoose
     .connect("mongodb://localhost:27017/userSamples", { useNewUrlParser: true })
     .then(() => {
@@ -25,7 +25,7 @@ beforeAll((done) => {
     });
 });
 
-afterAll((done) => {
+afterEach((done) => {
   mongoose.connection.db.dropDatabase(() => {
     mongoose.connection.close(() => done());
   });
