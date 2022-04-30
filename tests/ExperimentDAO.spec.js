@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
+const supertest = require("supertest");
+const createApp = require("../app");
 const experimentDAO = require("../data/ExperimentDAO");
 const DAO = new experimentDAO();
 
+const JUNIOR = "AE UG JUNIOR";
 beforeEach((done) => {
   mongoose
     .connect("mongodb://localhost:27017/experimentDAO", {
