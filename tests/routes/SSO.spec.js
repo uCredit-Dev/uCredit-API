@@ -12,7 +12,7 @@ beforeEach((done) => {
 });
 
 afterEach((done) => {
-  mongoose.connection.db.collection("SSO").drop(() => {
+  mongoose.connection.db.dropDatabase(() => {
     mongoose.connection.close(() => done());
   });
 });
@@ -26,6 +26,7 @@ describe("GET SSO Routes", () => {
 
   it("GET /api/backdoor/verification/:id: Should return dev login for a user", async () => {
     const userID = "wtong10";
+    await User.create({ name: userID });
     const res = await request.get("/api/backdoor/verification/" + userID);
     expect(res.status).toBe(200);
     expect(res.body.data._id).toBe(userID);
