@@ -51,4 +51,13 @@ describe("userSamples should create new sample users", () => {
     const userList = await users.find({});
     expect(userList[2]._id).toBe(SAMPLES[2]._id);
   });
+
+  it("should throw error for invalid parameter", async () => {
+    try {
+      addSampleUsers(null);
+      fail("should throw error");
+    } catch (err) {
+      expect(err).toBeTruthy();
+    }
+  });
 });

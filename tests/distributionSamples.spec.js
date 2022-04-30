@@ -146,4 +146,13 @@ describe("distributionsamples should create new sample distributions", () => {
     const distributionList = await distributions.find({});
     expect(distributionList[5].required).toBe(SAMPLES[5].required);
   });
+
+  it("should throw error for invalid parameter", async () => {
+    try {
+      addSampleDistributions(null);
+      fail("should throw error");
+    } catch (err) {
+      expect(err).toBeTruthy();
+    }
+  });
 });
