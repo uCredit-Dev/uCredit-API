@@ -48,7 +48,7 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
       user = {
         _id: id,
         name: id,
-        email: `${id}@fakeemail.com`,
+        email: `ucredittest@gmail.com`,
         affiliation: "STAFF",
         grade: "AE UG Freshman",
         school: "jooby hooby",
