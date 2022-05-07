@@ -10,7 +10,7 @@ const samples = [
   },
   {
     _id: "bioStudent",
-    major: "bio",
+    major: "bio", // FAULT: unneeded
   },
 ];
 

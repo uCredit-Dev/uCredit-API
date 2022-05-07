@@ -17,9 +17,9 @@ class ExperimentDao {
 
     const allUsers = await User.find({}).lean().select("-__v");
     const percentConverterToInt = 100;
-    const percentageOfParticipants = Math.round(
-      (active.length / allUsers.length) * percentConverterToInt
-    );
+    const percentageOfParticipants = allUsers.length
+      ? Math.round((active.length / allUsers.length) * percentConverterToInt)
+      : 0; // fix
 
     const experiment = await Experiment.create({
       experimentName: name,
@@ -254,7 +254,9 @@ class ExperimentDao {
 
   async retrieveAll() {
     let data = await Experiment.find({}).lean().select("-__v");
-    data = data.filter(experiment => experiment.experimentName !== "White List");
+    data = data.filter(
+      (experiment) => experiment.experimentName !== "White List"
+    );
     return data;
   }
 
@@ -272,6 +274,10 @@ class ExperimentDao {
   }
 
   async readAll({ user_id }) {
+    const user = await User.findById(user_id);
+    if (!user) {
+      throw new ApiError(400, "User does not exist");
+    }
     const experiments = await Experiment.find({}).lean().select("-__v");
     let filteredExperiment = [];
     if (user_id) {
