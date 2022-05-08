@@ -1,4 +1,5 @@
 //some helper methods for routing
+const Notifications = require("../model/Notification.js");
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
@@ -35,4 +36,22 @@ async function distributionCreditUpdate(distribution, course, add) {
     distribution.planned >= distribution.required ? true : false;
   await distribution.save();
 }
-module.exports = { returnData, errorHandler, distributionCreditUpdate };
+
+async function postNotification(message, user_id, quick_link_id, link_type) {
+  if (!message || !user_id) {
+    return 400;
+  }
+  let notification = { message, user_id };
+  if (quick_link_id && link_type) {
+    notification.quick_link_id = quick_link_id;
+    notification.link_type = link_type;
+  }
+  const n = await Notifications.create(notification);
+  return n;
+}
+module.exports = {
+  returnData,
+  errorHandler,
+  distributionCreditUpdate,
+  postNotification,
+};

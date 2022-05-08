@@ -8,10 +8,7 @@ const userSchema = new Schema({
   affiliation: { type: String }, //STUDENT, FACULTY or STAFF
   school: { type: String },
   grade: { type: String }, //AE UG Sophomore
-  plan_ids: [{ type: Schema.Types.ObjectId, ref: "Plan" }],
-  whitelisted_plan_ids: [
-    { type: Schema.Types.ObjectId, ref: "Plan", default: [] },
-  ],
+  plan_ids: [{ type: Schema.Types.ObjectId, ref: "Plan", default: [] }],
 });
 
 const User = mongoose.model("User", userSchema);

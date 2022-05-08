@@ -8,6 +8,7 @@ const distributionRouter = require("./routes/distribution.js");
 const yearRouter = require("./routes/year.js");
 const planRouter = require("./routes/plan.js");
 const planReviwerRouter = require("./routes/planReview.js");
+const notificationRouter = require("./routes/notification.js");
 const userRouter = require("./routes/user.js");
 const majorRouter = require("./routes/major.js");
 const searchRouter = require("./routes/search.js");
@@ -15,6 +16,7 @@ const ssoRouter = require("./routes/sso.js");
 const evalRouter = require("./routes/evaluation.js");
 const sisRouter = require("./routes/sisData.js");
 const experimentsRouter = require("./routes/experiments.js");
+const commentRouter = require("./routes/comment.js");
 
 function createApp() {
   const corsOptions = {
@@ -23,6 +25,7 @@ function createApp() {
       "https://ucredit.herokuapp.com",
       "https://ucredit.me",
       "http://127.0.0.1",
+      "https://ucredit-frontend-typescript-local.vercel.app",
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: true,
@@ -40,6 +43,7 @@ function createApp() {
   app.use(yearRouter);
   app.use(planRouter);
   app.use(planReviwerRouter);
+  app.use(notificationRouter);
   app.use(ssoRouter);
   app.use(userRouter);
   app.use(majorRouter);
@@ -47,6 +51,7 @@ function createApp() {
   app.use(evalRouter);
   app.use(sisRouter);
   app.use(experimentsRouter);
+  app.use(commentRouter);
 
   return app;
 }
