@@ -1,6 +1,7 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
+const years = require("../model/Plan.js");
 const planReviews = require("../model/PlanReview.js");
 
 const express = require("express");
@@ -59,17 +60,20 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
   });
 });
 
-router.delete("/api/user/:id", (req, res) => {
+router.delete("/api/user/:id", async (req, res) => {
   const id = req.params.id;
-  users.findByIdAndDelete(id).then((user) => {
-    if (user) {
-      plans.deleteMany({ user_id: id }).exec();
-      planReviews.deleteMany({ reviewee_id: id }).exec();
-      res.status(204).json({});
-    } else {
-      errorHandler(res, 404, "User not found.");
-    }
-  });
+  const user = users.findByIdAndDelete(id);
+  if (user) {
+    // TODO: FIX CLEANUP NOT HAPPENING PROPERLY
+    await courses.deleteMany({ user_id: id });
+    await distributions.deleteMany({ user_id: id });
+    await years.deleteMany({ user_id: id });
+    await plans.deleteMany({ user_id: id });
+    await planReviews.deleteMany({ reviewee_id: id });
+    res.status(204).json({});
+  } else {
+    errorHandler(res, 404, "User not found.");
+  }
 });
 // }
 
