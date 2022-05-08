@@ -3,6 +3,8 @@ const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Plan.js");
 const planReviews = require("../model/PlanReview.js");
+const distributions = require("../model/Distribution.js");
+const courses = require("../model/Course.js");
 
 const express = require("express");
 const router = express.Router();
@@ -62,9 +64,8 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
 
 router.delete("/api/user/:id", async (req, res) => {
   const id = req.params.id;
-  const user = users.findByIdAndDelete(id);
+  const user = await users.findByIdAndDelete(id);
   if (user) {
-    // TODO: FIX CLEANUP NOT HAPPENING PROPERLY
     await courses.deleteMany({ user_id: id });
     await distributions.deleteMany({ user_id: id });
     await years.deleteMany({ user_id: id });
