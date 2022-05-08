@@ -62,6 +62,13 @@ describe("Test experiments endpoints", () => {
       mongoose.connection.db.dropDatabase(() => {
         mongoose.connection.close(() => done());
       });
+      done();
+    });
+
+    afterEach(async (done) => {
+      mongoose.connection.db.dropDatabase(() => {
+        mongoose.connection.close(() => done());
+      });
     });
 
     describe(`Test GET ${endpoint}/allExperiments`, () => {
@@ -162,9 +169,14 @@ describe("Test experiments endpoints", () => {
     describe(`Test GET ${endpoint}/percent/:experiment_name`, () => {
       describe("Return 200 and percentage of users participating in an experiment", () => {
         test("Return initial percentage of an experiment (0%)", async () => {
+          const allExperiments = await request.get(
+            `${endpoint}/allExperiments`
+          );
+          console.log(allExperiments.body.data);
           const response = await request.get(
             `${endpoint}/percent/${EXPERIMENT_ONE}`
           );
+          console.log(response);
           expect(response.status).toBe(200);
           expect(response.body).toBe(2);
         });
@@ -177,6 +189,10 @@ describe("Test experiments endpoints", () => {
         });
 
         test("Return percentage of an experiment after a post (must pass post tests first)", async () => {
+          const allExperiments = await request.get(
+            `${endpoint}/allExperiments`
+          );
+          console.log(allExperiments.body.data);
           const response = await request
             .post(`${endpoint}/${EXPERIMENT_ONE}`)
             .send({ percent_participating: 10 });
