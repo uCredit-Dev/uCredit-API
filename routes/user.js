@@ -5,8 +5,6 @@ const years = require("../model/Plan.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const planReviews = require("../model/PlanReview.js");
-const distributions = require("../model/Distribution.js");
-const courses = require("../model/Course.js");
 
 const express = require("express");
 const router = express.Router();
