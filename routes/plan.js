@@ -5,6 +5,7 @@ const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
+const reviews = require("../model/PlanReview.js");
 
 const express = require("express");
 const router = express.Router();
@@ -14,18 +15,53 @@ router.get("/api/plans/:plan_id", (req, res) => {
   const p_id = req.params.plan_id;
   plans
     .findById(p_id)
-    .then((plan) => returnData(plan, res))
+    .populate("year_ids")
+    .then((plan) => {
+      plan.populate("year_ids.courses", () => {
+        plan = { ...plan._doc, years: plan.year_ids };
+        delete plan.year_ids;
+        reviews
+          .find({ plan_id: p_id })
+          .populate("reviewer_id")
+          .then((revs) => {
+            plan = { ...plan, reviewers: revs };
+            returnData(plan, res);
+          });
+      });
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
 //get all plans of a user
 router.get("/api/plansByUser/:user_id", (req, res) => {
   const user_id = req.params.user_id;
+  const plansTotal = [];
   users
     .findById(user_id)
-    .populate({ path: "plan_ids" })
-    .then((user) => {
-      returnData(user.plan_ids, res);
+    .then(async (user) => {
+      let total = user.plan_ids.length;
+      if (!user) errorHandler(res, 404, `${user} of ${user_id} User not found`);
+      for (let plan_id of user.plan_ids) {
+        let plan = await plans.findById(plan_id).populate("year_ids");
+        if (!plan) {
+          total--;
+          continue;
+        }
+        await plan.populate("year_ids.courses", () => {
+          plan = { ...plan._doc, years: plan.year_ids };
+          delete plan.year_ids;
+          reviews
+            .find({ plan_id: plan_id })
+            .populate("reviewer_id")
+            .then((revs) => {
+              plan = { ...plan, reviewers: revs };
+              plansTotal.push(plan);
+              if (plansTotal.length === total) {
+                returnData(plansTotal, res);
+              }
+            });
+        });
+      }
     })
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -40,7 +76,7 @@ router.post("/api/plans", (req, res) => {
     expireAt: req.body.expireAt,
   };
   const year = req.body.year;
-  const numYears = plan.numYears === undefined ? 5 : req.params.numYears;
+  const numYears = !req.params.numYears ? 5 : req.params.numYears;
   if (numYears <= 0 || numYears > 5) {
     errorHandler(res, 400, "numYear must be between 1-5");
   }
@@ -63,6 +99,7 @@ router.post("/api/plans", (req, res) => {
         "Senior",
       ];
       const startYear = getStartYear(year);
+      const yearObjs = [];
       //create default year documents according to numYears
       for (let i = 0; i < numYears; i++) {
         const retrievedYear = {
@@ -76,10 +113,13 @@ router.post("/api/plans", (req, res) => {
               : undefined,
         };
         const newYear = await years.create(retrievedYear);
+        yearObjs.push(newYear);
         retrievedPlan.year_ids.push(newYear._id);
       }
       retrievedPlan.save();
-      returnData(retrievedPlan, res);
+      const resp = { ...retrievedPlan._doc, years: yearObjs, reviewers: [] };
+      delete resp.year_ids;
+      returnData(resp, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -123,10 +163,11 @@ router.delete("/api/plans/:plan_id", (req, res) => {
       distributions.deleteMany({ plan_id: plan._id }).exec();
       courses.deleteMany({ plan_id: plan._id }).exec();
       years.deleteMany({ plan_id: plan._id }).exec();
+      // TODO: delete reviews
       users
         .findByIdAndUpdate(
           //delete plan_id from user
-          plan._id,
+          plan.user_id,
           { $pull: { plan_ids: plan._id } },
           { new: true, runValidators: true }
         )
@@ -153,7 +194,15 @@ router.patch("/api/plans/update", (req, res) => {
     }
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
-      .then((plan) => returnData(plan, res))
+      .then((plan) => {
+        reviews
+          .find({ plan_id: id })
+          .populate("reviewer_id")
+          .then((revs) => {
+            plan = { ...plan, reviewers: revs };
+            returnData(plan, res);
+          });
+      })
       .catch((err) => errorHandler(res, 400, err));
   }
 });

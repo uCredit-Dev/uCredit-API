@@ -15,6 +15,7 @@ const router = express.Router();
 const secret = process.env.SESSION_SECRET;
 const PbK = process.env.PUBLIC_KEY;
 const PvK = process.env.PRIVATE_KEY;
+const DEBUG = process.env.DEBUG === "True";
 
 const JHU_SSO_URL = "https://idp.jh.edu/idp/profile/SAML2/Redirect/SSO";
 const SP_NAME = "https://ucredit-api.herokuapp.com";
@@ -57,16 +58,19 @@ passport.deserializeUser(function (user, done) {
 
 // Middleware
 router.use(bodyParser.urlencoded({ extended: false }));
-router.use(
-  session({
-    secret: secret,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { sameSite: "none", secure: true },
-  })
-);
-router.use(passport.initialize({}));
-router.use(passport.session({}));
+
+if (!DEBUG) {
+  router.use(
+    session({
+      secret: secret,
+      resave: false,
+      saveUninitialized: true,
+      cookie: { sameSite: "none", secure: true },
+    })
+  );
+  router.use(passport.initialize({}));
+  router.use(passport.session({}));
+}
 
 // login route
 router.get(
@@ -131,14 +135,6 @@ router.get("/api/verifyLogin/:hash", (req, res) => {
         .catch((err) => errorHandler(res, 500, res));
     }
   });
-});
-
-router.get("/api/backdoor/verification/:id", (req, res) => {
-  const id = req.params.id;
-  users
-    .findById(id)
-    .then((retrievedUser) => returnData(retrievedUser, res))
-    .catch((err) => errorHandler(res, 500, res));
 });
 
 router.delete("/api/verifyLogin/:hash", (req, res) => {
