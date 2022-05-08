@@ -1993,7 +1993,7 @@ const bsMolCell = {
   ],
 };
 
-export function getMajorFromCommonName(name) {
+const getMajorFromCommonName = (name) => {
   let out = null;
   allMajors.forEach((major) => {
     if (major.degree_name === name) {
@@ -2004,9 +2004,9 @@ export function getMajorFromCommonName(name) {
     throw Error("Major not found");
   }
   return out;
-}
+};
 
-export const allMajors = [
+const allMajors = [
   bsCS_Old,
   bsCS_New,
   baCS_New,
@@ -2045,3 +2045,5 @@ export const allMajors = [
   // baEnglish,
   // bsCivEng,
 ];
+
+module.exports = { getMajorFromCommonName, allMajors };

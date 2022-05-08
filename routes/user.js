@@ -34,7 +34,7 @@ router.get("/api/user", (req, res) => {
         res
       );
     })
-    .catch((err) => errorHandler(err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
 // TODO: Temporarily disabled for OOSE dev deployment

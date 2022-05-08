@@ -57,7 +57,9 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
   years
     .findOne({ plan_id, name: year })
     .populate({ path: "courses", match: term })
-    .then((retrievedYear) => returnData(retrievedYear.courses, res))
+    .then((retrievedYear) => {
+      returnData(retrievedYear.courses, res);
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -65,9 +67,11 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
 //distribution field is also updated
 router.post("/api/courses", async (req, res) => {
   const course = req.body;
+  //console.log("course is ", course);
   await plans
     .findById(course.plan_id)
     .then((plan) => {
+      //console.log(plan);
       course.distribution_ids.forEach((id) => {
         if (!plan.distribution_ids.includes(id)) {
           errorHandler(res, 400, {
@@ -76,7 +80,10 @@ router.post("/api/courses", async (req, res) => {
         }
       });
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => {
+      //console.log("here", err);
+      errorHandler(res, 500, err);
+    });
   courses
     .create(course)
     .then((retrievedCourse) => {
@@ -90,7 +97,10 @@ router.post("/api/courses", async (req, res) => {
           .then((distribution) =>
             distributionCreditUpdate(distribution, retrievedCourse, true)
           )
-          .catch((err) => errorHandler(res, 500, err));
+          .catch((err) => {
+            console.log("or here", err);
+            errorHandler(res, 500, err);
+          });
       });
       //add course id to user plan's year array
       let query = {};
@@ -129,7 +139,10 @@ router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
         });
         returnData(course, res);
       })
-      .catch((err) => errorHandler(res, 404, err));
+      .catch((err) => {
+        console.log("here is error\n" + err);
+        errorHandler(res, 404, err);
+      });
   }
 });
 
