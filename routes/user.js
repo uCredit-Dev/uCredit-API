@@ -19,7 +19,7 @@ router.get("/api/user", (req, res) => {
     .then((users) => {
       returnData(
         users.map((user) => ({
-          _id: user._id, 
+          _id: user._id,
           name: user.name,
           email: user.email,
           affiliation: user.affiliation,
