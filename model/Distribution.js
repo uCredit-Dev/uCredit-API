@@ -15,8 +15,26 @@ const distributionSchema = new Schema({
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
   courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
+  description: { type: String, required: true },
+  criteria: { type: String, required: true },
+  min_credits_per_course: { type: Number, required: true },
+  fine_requirements: [
+    {
+      description: { type: String, required: true },
+      required_credits: { type: Number, required: true },
+      criteria: { type: String, required: true },
+      exception: { type: String },
+      exclusive: { type: Boolean, default: false },
+    },
+  ],
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+  major_id: [{ type: Schema.Types.ObjectId, required: true}]
+  user_select: { type: Boolean, default: false }, 
+  double_count: { type: Boolean, default: false }, 
+  exception: { type: String },
+  exclusive: { type: Boolean, default: false },
+  pathing: { type: Boolean, default: false },
   expireAt: { type: Date },
 });
 
