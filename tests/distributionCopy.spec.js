@@ -42,7 +42,7 @@ describe("create new distribution for major", () => {
       double_count: cs_reqs.double_count,
       fine_requirements: cs_reqs.fine_requirements,
       plan_id: '62b407fbf4dae1c26277a420',
-      user_id: "TEST_USER_1",
+      user_id: "CS_minor_user",
       major_id: cs_minor._id,
     };    
     console.log(newDistribution);

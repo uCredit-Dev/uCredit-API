@@ -66,6 +66,7 @@ beforeEach((done) => {
           min_credits_per_course: 3, 
           description: "testing cs minor",
           criteria: "EN Computer Science[D]^OR^CSCI-OTHER[T]^OR^Gateway Computing[N]",
+          major_id: "62b407fbf4dae1c26277a420"
         });
         await distributions.findByIdAndUpdate(distributionResp._id, {
           $push: { courses: courseResp._id },
@@ -139,7 +140,7 @@ describe("POST /api/distributions", () => {
       criteria: "EN Computer Science[D]^OR^CSCI-OTHER[T]^OR^Gateway Computing[N]",
       min_credits_per_course: 1,
       plan_id: plan_id,
-      major_id: plan_id,
+      major_id: "62b407fbf4dae1c26277a420",
       user_id: TEST_USER_1,
     };
     const resp = await request.post("/api/distributions").send(newDistribution);
