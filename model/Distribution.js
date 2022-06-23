@@ -16,7 +16,7 @@ const distributionSchema = new Schema({
   min_credits_per_course: { type: Number, required: true },
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
-  major_id: [{ type: Schema.Types.ObjectId, required: true}],
+  major_id: { type: Schema.Types.ObjectId, required: true},
   courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   planned: { type: Number, default: 0 },
   current: { type: Number, default: 0 },

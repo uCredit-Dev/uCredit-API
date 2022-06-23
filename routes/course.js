@@ -68,6 +68,23 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
 router.post("/api/courses", async (req, res) => {
   const course = req.body;
   //console.log("course is ", course);
+  // route update #1
+  // courses.create(course)
+    // course_id = retrievedCourse._id;
+  // await plans.findById(course.plan_id)
+    // plan.distribution_ids.forEach((id)) 
+      // dist is distributions.findById(id)
+      // if retrievedCourse satisfies dist.criteria && creds > min_creds 
+        // add course_id to courses[]
+        // planned += course.credits 
+        // add dist_id to course.distribution_ids
+        // for each fine_reqs 
+          // if retrievedCourse satisfies fine_req.criteria 
+            // satisfied = true 
+        // if planned >= fulfilled
+          // satisfied = true
+  // add course id to user plan's year array
+  // returnData(retrievedCourse, res);
   await plans
     .findById(course.plan_id)
     .then((plan) => {

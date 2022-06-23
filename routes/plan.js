@@ -204,6 +204,13 @@ router.patch("/api/plans/update", (req, res) => {
           });
       })
       .catch((err) => errorHandler(res, 400, err));
+      // route update #7
+      // delete major: 
+        // major_id = majors.find({name: major})
+        // find distributions associated with plan_id 
+        // if dist.major_id == major_id
+          // distributions.findByIdAndDelete(dist_id)
+          // plan.findByIdAndUpdate(plan_id, {$pull: {dist_ids: dist_id}})
   }
 });
 
