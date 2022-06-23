@@ -46,7 +46,7 @@ beforeEach((done) => {
         const courseResp = await courses.create({
           name: `course${i}`,
           plan_id: plan._id,
-          year_id: plan.year_ids[0],
+          year_id: plan.years[0],
           user_id: TEST_USER_1,
           year: TEST_YEAR_1,
           term: "fall",
@@ -54,18 +54,18 @@ beforeEach((done) => {
           title: i,
         });
 
-        await years.findByIdAndUpdate(plan.year_ids[0], {
+        await years.findByIdAndUpdate(plan.years[0], {
           $push: { courses: courseResp._id },
         });
         const distributionResp = await distributions.create({
           plan_id: plan._id,
           course_id: courseResp._id,
           user_id: TEST_USER_1,
-          year: TEST_YEAR_1,
-          term: "fall",
           name: i,
-          required: true,
-          year_id: plan.year_ids[0],
+          required: 3,
+          min_credits_per_course: 3, 
+          description: "testing cs minor",
+          criteria: "EN Computer Science[D]^OR^CSCI-OTHER[T]^OR^Gateway Computing[N]",
         });
         await distributions.findByIdAndUpdate(distributionResp._id, {
           $push: { courses: courseResp._id },
@@ -133,16 +133,17 @@ describe("POST /api/distributions", () => {
     const planList = await plans.find({});
     const plan_id = planList[0]._id;
     const newDistribution = {
+      name: "core courses",
+      required: 3,
+      description: "testing cs minor core courses distributions",
+      criteria: "EN Computer Science[D]^OR^CSCI-OTHER[T]^OR^Gateway Computing[N]",
+      min_credits_per_course: 1,
       plan_id: plan_id,
-      course_id: plan_id,
+      major_id: plan_id,
       user_id: TEST_USER_1,
-      year: TEST_YEAR_1,
-      term: "fall",
-      name: "test",
-      required: 0,
-      year_id: planList[0].year_ids[0],
     };
     const resp = await request.post("/api/distributions").send(newDistribution);
+    console.log(resp.body.data);
     expect(resp.body.data).toBeTruthy();
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data.plan_id)).toBe(
