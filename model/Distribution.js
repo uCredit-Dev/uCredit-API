@@ -29,7 +29,7 @@ const distributionSchema = new Schema({
   ],
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
-  major_id: [{ type: Schema.Types.ObjectId, required: true}]
+  major_id: [{ type: Schema.Types.ObjectId, required: true}],
   user_select: { type: Boolean, default: false }, 
   double_count: { type: Boolean, default: false }, 
   exception: { type: String },
