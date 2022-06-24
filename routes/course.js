@@ -259,6 +259,25 @@ router.delete("/api/courses/:course_id", (req, res) => {
           )
           .catch((err) => errorHandler(res, 500, err));
       });
+
+      // Check if course is a fine requirement
+      // (Will need to parse criteria string)
+
+      // course.distribution_ids.forEach((id) => {
+      //   distributions
+      //     .findById(
+      //       id,
+      //       {fine_requirements: c_id },      (This will have to be modified to parse criteria string of distribution.fine_requirements)
+      //       { new: true, runValidators: true }
+      //     )
+      //     .catch((err) => errorHandler(res, 500, err));
+      //     
+      //      Determine if criteria of course being removed matches any of the course specified in fine_req criterion. 
+      //      If so, check Fine requirements again
+      // });
+
+
+
       //delete course id to user's year array
       let query = {};
       query[course.year] = course._id; //e.g. { freshman: id }
