@@ -211,6 +211,13 @@ router.patch("/api/plans/update", (req, res) => {
         // if dist.major_id == major_id
           // distributions.findByIdAndDelete(dist_id)
           // plan.findByIdAndUpdate(plan_id, {$pull: {dist_ids: dist_id}})
+
+      //route update #6
+      // add major:
+      // major = majors.find({name: major})
+      // major_id = major._id
+      // for each distribution object in major, post new distribution object in DB with proper user_id and major_id
+      
   }
 });
 

@@ -260,9 +260,11 @@ router.delete("/api/courses/:course_id", (req, res) => {
           .catch((err) => errorHandler(res, 500, err));
       });
 
+      //Route update #2: 
+      //Deleting a course
+
       // Check if course is a fine requirement
       // (Will need to parse criteria string)
-
       // course.distribution_ids.forEach((id) => {
       //   distributions
       //     .findById(
