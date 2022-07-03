@@ -62,7 +62,7 @@ const checkRequirementSatisfied = (
     // Return true if there is no expression.
     return true;
   }
-  const boolExpr: string | void = getBoolExpr(distribution, course_id);
+  const boolExpr: string | void = getBoolExpr(distribution, course);
   if (boolExpr.length !== 0) {
     // evaluate the expression if it exists,
     //eslint-disable-next-line no-eval
@@ -95,9 +95,8 @@ const getDistributionFromMajor = (distribution_name: string, major: any): requir
  */
 const getBoolExpr = (
   distribution: requirements,
-  course_id: string,
+  course: any,
 ): string => {
-  const course = Courses.findById(ObjectId(course_id));
   let boolExpr: string = '';
   let index: number = 0;
   let concat: string = '';
@@ -117,7 +116,7 @@ const getBoolExpr = (
     } else if (splitArr[index] === 'NOT') {
       concat = '&&!';
     } else {
-      concat = handleTagType(splitArr, index, course_id);
+      concat = handleTagType(splitArr, index, course);
     }
     if (concat.length > 3) {
       index = index + 2;
@@ -130,9 +129,8 @@ const getBoolExpr = (
 const handleTagType = (
   splitArr: string[],
   index: number,
-  course_id: string,
+  course: any,
 ): string => {
-  const course = Courses.findById(ObjectId(course_id));
   let updatedConcat: string;
   switch (splitArr[index + 1]) {
     case 'C': // Course Number
