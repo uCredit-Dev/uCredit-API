@@ -8,6 +8,7 @@ const Schema = mongoose.Schema;
 const planSchema = new Schema({
   name: { type: String, required: true },
   majors: { type: [String] },
+  major_ids: [{ type: Schema.Types.ObjectId, ref: "Major" }],
   year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
