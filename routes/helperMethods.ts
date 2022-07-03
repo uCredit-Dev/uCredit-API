@@ -45,6 +45,9 @@ const checkRequirementSatisfied = (
   distribution: requirements,
   course: Course,
 ): boolean => {
+  if (course.credits < distribution.min_credits_per_course) {
+    return false; 
+  }
   if (distribution.expr.length === 0) {
     // Return true if there is no expression.
     return true;
@@ -217,6 +220,7 @@ const getNextEntry = (expr: string, index: number): [string, number] => {
 //  An array where where each entry corresponds to a distribution (e.g. CS, Math, Science, Liberal Arts, WI)
 //  Each entry contains an array with descriptions, exprsesion for requirements, and credit requirements
 const getRequirements = async (major_id: string) => {
+  // Note: no longer needed probably 
   let out: [string, requirements[]][] = [];
   const major: any = await Majors.findById(ObjectId(major_id));
   major.distributions.forEach((element) => {

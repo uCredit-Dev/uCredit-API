@@ -6,6 +6,9 @@ const {
   returnData,
   errorHandler,
   distributionCreditUpdate,
+  checkRequirementSatisfied, 
+  getRequirements,
+  distributionCreditUpdate,
 } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
@@ -69,68 +72,61 @@ router.post("/api/courses", async (req, res) => {
   const course = req.body;
   //console.log("course is ", course);
   // route update #1
-  // courses.create(course)
-    // course_id = retrievedCourse._id;
-  // await plans.findById(course.plan_id)
-    // plan.distribution_ids.forEach((id)) 
-      // dist is distributions.findById(id)
-      // if retrievedCourse satisfies dist.criteria && creds > min_creds 
-        // add course_id to courses[]
-        // planned += course.credits 
-        // add dist_id to course.distribution_ids
-        // for each fine_reqs 
-          // if retrievedCourse satisfies fine_req.criteria 
-            // satisfied = true 
-        // if planned >= fulfilled
-          // satisfied = true
-  // add course id to user plan's year array
-  // returnData(retrievedCourse, res);
-  await plans
-    .findById(course.plan_id)
-    .then((plan) => {
-      //console.log(plan);
-      course.distribution_ids.forEach((id) => {
-        if (!plan.distribution_ids.includes(id)) {
-          errorHandler(res, 400, {
-            message: "Invalid combination of plan_id and distribution_ids.",
-          });
-        }
-      });
-    })
-    .catch((err) => {
-      //console.log("here", err);
-      errorHandler(res, 500, err);
-    });
   courses
     .create(course)
     .then((retrievedCourse) => {
-      retrievedCourse.distribution_ids.forEach((id) => {
-        distributions
+      const retrievedCourse = retrievedCourse; 
+      //add year id to user plan's year array
+      let query = {};
+      query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
+      plans.findByIdAndUpdate(retrievedCourse.plan_id, { $push: query }).exec();
+      //add course id to plan year's course array
+      years
+      .findByIdAndUpdate(retrievedCourse.year_id, {
+        $push: { courses: retrievedCourse._id },
+      })
+      .exec();
+    })
+    .catch((err) => errorHandler(res, 400, err));
+    
+  await plans
+    .findById(course.plan_id)
+    .then((plan) => {
+      plan.distribution_ids.forEach((id) => {
+        if (checkRequirementSatisfied(id, retrievedCourse._id)) {
+          // add course id to distributions courses[]
+          distributions
           .findByIdAndUpdate(
             id,
             { $push: { courses: retrievedCourse._id } },
             { new: true, runValidators: true }
           )
-          .then((distribution) =>
-            distributionCreditUpdate(distribution, retrievedCourse, true)
+          // update planned and satisfied 
+          .then((distribution) => {
+            distributionCreditUpdate(distribution, retrievedCourse, true);
+            // update planned and satisfied for fine reqs 
+            distribution.fine_requirements.forEach((fine) => {
+              if (checkRequirementSatisfied(fine, retrievedCourse._id)) {
+                distributionCreditUpdate(fine, retrievedCourse, true);
+              }
+            })
+          })
+        // add distribution id to course dist_ids[] 
+        courses
+          .findByIdAndUpdate(
+            retrievedCourse._id,
+            { $push: { distribution_ids: id } }, 
+            { new: true, runValidators: true }
           )
-          .catch((err) => {
-            console.log("or here", err);
-            errorHandler(res, 500, err);
-          });
-      });
-      //add course id to user plan's year array
-      let query = {};
-      query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
-      plans.findByIdAndUpdate(retrievedCourse.plan_id, { $push: query }).exec();
-      years
-        .findByIdAndUpdate(retrievedCourse.year_id, {
-          $push: { courses: retrievedCourse._id },
-        })
-        .exec();
-      returnData(retrievedCourse, res);
+          .then((retrievedCourse) => {
+            returnData(retrievedCourse, res);
+          })
+        } 
+      })
     })
-    .catch((err) => errorHandler(res, 400, err));
+    .catch((err) => {
+      errorHandler(res, 400, err);
+    });
 });
 
 //switch the "taken" status of a course, need to provide status in req body
