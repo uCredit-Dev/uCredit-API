@@ -14,6 +14,7 @@ export type requirements = {
   exclusive?: boolean;
   pathing?: boolean;
   wi?: boolean;
+  min_credits_per_course?: number;
 };
 
 //add data field to the response object. If data is null, return 404 error
@@ -35,16 +36,25 @@ function errorHandler(res, status, err) {
   });
 }
 
+// WE will need to change the function calls because I have changed the types of the parameters
+
 /**
  * Checks if a course satisfies a distribution.
- * @param distribution - the distribution requirement for the major containing an expression, an array where every entry is a seperate parentheses, OR/AND, requirement, or type, name of a class, and all courses
+ * @param distribution - the distribution name for the major containing an expression, an array where every entry is a seperate parentheses, OR/AN D, requirement, or type, name of a class, and all courses
  * @param course - course we're checking for prereq satisfaction
  * @returns whether the class satisifies the requirement
  */
 const checkRequirementSatisfied = (
-  distribution: requirements,
-  course: Course,
+  distribution_name: string,
+  course_id: string,
+  major_id: string
 ): boolean => {
+  const major: any = Majors.findById(ObjectId(major_id));
+  const course = Courses.findById(ObjectId(course_id));
+  const distribution: requirements = getDistributionFromMajor(distribution_name, major)
+  if (distribution === null) {
+    return true;
+  }
   if (course.credits < distribution.min_credits_per_course) {
     return false; 
   }
@@ -52,7 +62,7 @@ const checkRequirementSatisfied = (
     // Return true if there is no expression.
     return true;
   }
-  const boolExpr: string | void = getBoolExpr(distribution, course);
+  const boolExpr: string | void = getBoolExpr(distribution, course_id);
   if (boolExpr.length !== 0) {
     // evaluate the expression if it exists,
     //eslint-disable-next-line no-eval
@@ -63,6 +73,21 @@ const checkRequirementSatisfied = (
 };
 
 /**
+ * 
+ * @param distribution_name - name of distribution that is being extracted from major object in DB
+ * @param major - the major that the distribution is a part of
+ * @returns - the specific distribution of the major
+ */
+const getDistributionFromMajor = (distribution_name: string, major: any): requirements => {
+  major.distributions.forEach((element) => {
+    if (element.name === distribution_name) {
+      return element;
+    }
+  });
+  return null;
+};
+
+/**
  * Gets a boolean expression based on which courses in the prereq string are fulfilled.
  * @param distribution - the distribution of the major to be satisfied containing expr, an array of reqs for the distribution
  * @param course - course we're checkinng for satisfaction
@@ -70,8 +95,9 @@ const checkRequirementSatisfied = (
  */
 const getBoolExpr = (
   distribution: requirements,
-  course: Course,
+  course_id: string,
 ): string => {
+  const course = Courses.findById(ObjectId(course_id));
   let boolExpr: string = '';
   let index: number = 0;
   let concat: string = '';
@@ -91,7 +117,7 @@ const getBoolExpr = (
     } else if (splitArr[index] === 'NOT') {
       concat = '&&!';
     } else {
-      concat = handleTagType(splitArr, index, course);
+      concat = handleTagType(splitArr, index, course_id);
     }
     if (concat.length > 3) {
       index = index + 2;
@@ -104,8 +130,9 @@ const getBoolExpr = (
 const handleTagType = (
   splitArr: string[],
   index: number,
-  course: Course,
+  course_id: string,
 ): string => {
+  const course = Courses.findById(ObjectId(course_id));
   let updatedConcat: string;
   switch (splitArr[index + 1]) {
     case 'C': // Course Number
@@ -233,6 +260,7 @@ const getRequirements = async (major_id: string) => {
       description: element.description,
       pathing: element.pathing,
       exclusive: element.exclusive,
+      min_credits_per_course: element.min_credits_per_course,
     };
     allReq.push(general);
     if (element.fine_requirements !== undefined) {
