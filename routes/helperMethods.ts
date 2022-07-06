@@ -45,20 +45,23 @@ function errorHandler(res, status, err) {
  * @returns whether the class satisifies the requirement
  */
 const checkRequirementSatisfied = (
-  distribution_name: string,
+  distribution_id: string,
   course_id: string,
-  major_id: string
 ): boolean => {
-  const major: any = Majors.findById(ObjectId(major_id));
-  const course = Courses.findById(ObjectId(course_id));
-  const distribution: requirements = getDistributionFromMajor(distribution_name, major)
+  const course: any = Courses.findById(ObjectId(course_id));
+  const distribution: any = Distributions.findById(ObjectId(distribution_id));
+  // Don't know how function is supposed to react when distribution and/or course is null
   if (distribution === null) {
     return true;
   }
-  if (course.credits < distribution.min_credits_per_course) {
+  if (course == null) {
+    return false;
+  }
+
+  if (course['credits'] < distribution['min_credits_per_course']) {
     return false; 
   }
-  if (distribution.expr.length === 0) {
+  if (distribution['criteria'].length === 0) {
     // Return true if there is no expression.
     return true;
   }
@@ -73,34 +76,19 @@ const checkRequirementSatisfied = (
 };
 
 /**
- * 
- * @param distribution_name - name of distribution that is being extracted from major object in DB
- * @param major - the major that the distribution is a part of
- * @returns - the specific distribution of the major
- */
-const getDistributionFromMajor = (distribution_name: string, major: any): requirements => {
-  major.distributions.forEach((element) => {
-    if (element.name === distribution_name) {
-      return element;
-    }
-  });
-  return null;
-};
-
-/**
  * Gets a boolean expression based on which courses in the prereq string are fulfilled.
  * @param distribution - the distribution of the major to be satisfied containing expr, an array of reqs for the distribution
  * @param course - course we're checkinng for satisfaction
  * @returns a boolean expression in a string that describes the satisfaction of the distribution
  */
 const getBoolExpr = (
-  distribution: requirements,
+  distribution: any,
   course: any,
 ): string => {
   let boolExpr: string = '';
   let index: number = 0;
   let concat: string = '';
-  const splitArr: string[] = splitRequirements(distribution.expr);
+  const splitArr: string[] = splitRequirements(distribution.criteria);
   if (course === null) {
     return concat;
   }
