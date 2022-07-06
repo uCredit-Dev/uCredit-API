@@ -82,10 +82,10 @@ router.post("/api/courses", async (req, res) => {
       plans.findByIdAndUpdate(retrievedCourse.plan_id, { $push: query }).exec();
       //add course id to plan year's course array
       years
-      .findByIdAndUpdate(retrievedCourse.year_id, {
-        $push: { courses: retrievedCourse._id },
-      })
-      .exec();
+        .findByIdAndUpdate(retrievedCourse.year_id, {
+          $push: { courses: retrievedCourse._id },
+        })
+        .exec();
     })
     .catch((err) => errorHandler(res, 400, err));
     
