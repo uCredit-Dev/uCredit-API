@@ -58,10 +58,10 @@ const checkRequirementSatisfied = (
     return false;
   }
 
-  if (course['credits'] < distribution['min_credits_per_course']) {
+  if (course.credits < distribution.min_credits_per_course) {
     return false; 
   }
-  if (distribution['criteria'].length === 0) {
+  if (distribution.criteria.length === 0) {
     // Return true if there is no expression.
     return true;
   }
