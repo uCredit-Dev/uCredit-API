@@ -240,92 +240,6 @@ const getNextEntry = (expr: string, index: number): [string, number] => {
   return [out, index];
 };
 
-/**
-   * args: an array containing focus areas and their associated requirements, and all courses
-   * updates the requirements obj so that the fulfilled credits accurately reflects the plan
-   * @param requirements - an array of requirement pairs
-   * @param courses
-   * @param courseCache - cached courses
-   * @param currPlanCourses - courses in current plan
-   */
- const updateFulfilled = (
-  distribution_id: string,
-  course_id: string,
-) => {
-  const courseObj = Courses.findById(ObjectId(course_id)); 
-  const distObj = Distributions.findById(ObjectId(distribution_id)); 
-  if (courseObj.resp !== null && distObj.resp !== null) {
-    updateReqs(distObj.resp , courseObj.resp)
-  } 
-  
-};
-
-const updateReqs = (distribution, course) => {
-  let inNonExclusive: boolean = false;
-  // Exclusive check:
-  // If the requirement is exclusive, this means that if a course fulfills the requirement,
-  // it cannot fulfill any other requirements. Alternatively, if a course fulfills any other requirement, it cannot fulfill this one.
-  const genCriteria: string = distribution.criteria;
-  // if not exclusive 
-  if (
-    course !== null && 
-    checkCriteriaSatisfied(genCriteria, course) &&
-    (distribution.exclusive === undefined || !distribution.exclusive) &&
-    (distribution.fulfilled < distribution.required ||
-    (distribution.required === 0 && distribution.fulfilled === 0))
-  ) {
-    distributionCreditUpdate(distribution, course, true);
-    inNonExclusive = true;
-  }
-
-  const fineReqs: string = distribution.criteria;
-  reqs.forEach((reqGroup, i) =>
-    reqGroup[1].forEach((req: requirements, j: number) => {
-      if (
-        courseObj !== null &&
-        ((checkRequirementSatisfied(req, courseObj) &&
-          req.exclusive &&
-          req.fulfilled_credits < req.required_credits &&
-          !inNonExclusive) ||
-          (req.required_credits === 0 && req.fulfilled_credits === 0))
-      ) {
-        reqs[i][1][j].fulfilled_credits += parseInt(courseObj.credits);
-      }
-    }),
-  );
-  // Pathing check
-  reqs.forEach((reqGroup: [string, requirements[]]) =>
-    reqGroup[1].forEach((req: requirements) => {
-      processReq(req, reqGroup);
-    }),
-  );
-};
-
-const processReq = (
-  req: requirements,
-  reqGroup: [string, requirements[]],
-) => {
-  if (req.pathing) {
-    let [requirement, ...focus_areas] = reqGroup[1];
-    for (let focus_area of focus_areas) {
-      if (focus_area.fulfilled_credits >= focus_area.required_credits) {
-        reqGroup[1] = [requirement, focus_area];
-      }
-    }
-  }
-};
-
-const copyReqs = (reqs) => {
-  const reqCopy: [string, requirements[]][] = [];
-  reqs.forEach((reqGroup) => {
-    const reqGroupCopy: any = [];
-    reqGroup[1].forEach((req) => reqGroupCopy.push({ ...req }));
-    reqCopy.push([reqGroup[0], reqGroupCopy]);
-  });
-  return reqCopy;
-};
-
-
 async function distributionCreditUpdate(distribution, course, add) {
   if (add) {
     distribution.planned += course.credits;
@@ -357,14 +271,57 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
   return n;
 }
 
-// hypotheticals: 
-/**
- * Checks if a course satisfies a distribution.
- * @param distribution - the distribution name for the major containing an expression, an array where every entry is a seperate parentheses, OR/AN D, requirement, or type, name of a class, and all courses
- * @param course - course we're checking for prereq satisfaction
- * @returns whether the class satisifies the requirement
- */
- const checkCriteriaSatisfied = (
+// hypotheticals more suitable for adding a course: 
+const updateReqs = (
+  distribution_id: string,
+  course_id: string,
+) => {
+  const course = Courses.findById(ObjectId(course_id)); 
+  const distribution = Distributions.findById(ObjectId(distribution_id)); 
+  if (course === null || distribution === null) {
+    return false; 
+  }
+  let updated : boolean = false; 
+  const genCriteria: string = distribution.criteria;
+  // general distribution criteria  
+  if (
+    course !== null && 
+    checkCriteriaSatisfied(genCriteria, course) &&
+    (distribution.fulfilled < distribution.required ||
+    (distribution.required === 0 && distribution.fulfilled === 0))
+  ) {
+    updated = true; 
+    // update distribution credits  
+    distributionCreditUpdate(distribution, course, true);
+    // add course id to distributions courses[]
+    distribution.courses.push(course._id);
+    distribution.save(); 
+     // add distribution id to course 
+    course.distribution_ids.push(distribution_id);
+    course.save(); 
+    // update fine requirement credits 
+    let isExclusiveFine: boolean = false; 
+    distribution.fine_requirements.forEach((fine, i: number) => {
+      if (
+        !isExclusiveFine && 
+        checkCriteriaSatisfied(fine.criteria, course) &&
+        (fine.fulfilled < fine.required ||
+        (fine.required === 0 && fine.fulfilled === 0))
+      ) {
+        fineCreditUpdate(distribution, i, course, true);
+        // if fulfilled exclusive, skip rest of fine reqs 
+        if (fine.exclusive !== undefined && fine.exclusive) {
+          isExclusiveFine = true;
+        }
+      }
+    })
+  }
+  return updated;
+  // TODO: pathing check
+};
+
+// works for both distributions and fine requirements 
+const checkCriteriaSatisfied = (
   criteria: string,
   course: any,
 ): boolean => {
@@ -416,13 +373,31 @@ const getCriteriaBoolExpr = (
   return boolExpr;
 };
 
+async function fineCreditUpdate(distribution, i, course, add) {
+  let fine = distribution.fine_requirements[i]; 
+  if (add) {
+    distribution.fine_requirements[i].planned += course.credits;
+    if (course.taken) {
+      distribution.fine_requirements[i].current += course.credits;
+    }
+  } else {
+    distribution.fine_requirements[i].planned -= course.credits;
+    if (course.taken) {
+      distribution.fine_requirements[i].current -= course.credits;
+    }
+  }
+  distribution.fine_requirements[i].satisfied =
+    fine.planned >= fine.required ? true : false;
+  await distribution.save();
+}
+
 module.exports = {
   returnData,
   errorHandler,
   checkRequirementSatisfied, 
   getBoolExpr,
   splitRequirements,
-  getRequirements,
+  updateReqs,
   distributionCreditUpdate,
   postNotification,
 };

@@ -69,11 +69,11 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
 //add course, need to provide course info as json object in request body
 //distribution field is also updated
 router.post("/api/courses", async (req, res) => {
-  const course = req.body;
+  const courseBody = req.body;
   //console.log("course is ", course);
   // route update #1
   courses
-    .create(course)
+    .create(courseBody)
     .then((retrievedCourse) => {
       const retrievedCourse = retrievedCourse; 
       //add year id to user plan's year array
@@ -90,39 +90,21 @@ router.post("/api/courses", async (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
     
   await plans
-    .findById(course.plan_id)
+    .findById(retrievedCourse.plan_id)
     .then((plan) => {
+      let isExclusiveDist = false; 
       plan.distribution_ids.forEach((id) => {
-        if (checkRequirementSatisfied(id, retrievedCourse._id)) {
-          // add course id to distributions courses[]
-          distributions
-          .findByIdAndUpdate(
-            id,
-            { $push: { courses: retrievedCourse._id } },
-            { new: true, runValidators: true }
-          )
-          // update planned and satisfied 
-          .then((distribution) => {
-            distributionCreditUpdate(distribution, retrievedCourse, true);
-            // update planned and satisfied for fine reqs 
-            distribution.fine_requirements.forEach((fine) => {
-              if (checkRequirementSatisfied(fine, retrievedCourse._id)) {
-                distributionCreditUpdate(fine, retrievedCourse, true);
-              }
+        if (!isExclusiveDist && updateReqs(id, retrievedCourse._id)) {
+          // skip other distributions if exclusive
+          await distributions
+            .findById(id) 
+            .then((distribution) => {
+              const exclusive = distribution.exclusive;
+              isExclusiveDist = (exclusive !== undefined && exclusive); 
             })
-          })
-        // add distribution id to course dist_ids[] 
-        courses
-          .findByIdAndUpdate(
-            retrievedCourse._id,
-            { $push: { distribution_ids: id } }, 
-            { new: true, runValidators: true }
-          )
-          .then((retrievedCourse) => {
-            returnData(retrievedCourse, res);
-          })
-        } 
+        }
       })
+      returnData(retrievedCourse, res);
     })
     .catch((err) => {
       errorHandler(res, 400, err);

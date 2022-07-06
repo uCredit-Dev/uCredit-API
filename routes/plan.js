@@ -181,6 +181,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
 router.patch("/api/plans/update", (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
+  const major_ids = req.body.major_ids;
   const name = req.body.name;
   if (!(majors || name)) {
     errorHandler(res, 400, "Must update majors or name.");
@@ -189,12 +190,32 @@ router.patch("/api/plans/update", (req, res) => {
     if (majors) {
       updateBody.majors = majors;
     }
+    if (major_ids) { // how does frontend know major_ids ? 
+      updateBody.major_ids = major_ids; 
+    }
     if (name) {
       updateBody.name = name;
     }
+    
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
+        // cleaning up distributions associated with plan 
+        plan.distribution_ids.forEach((dist_id) => {
+          distributions
+            .findById(dist_id)
+            .then((dist) => {
+              if (!plan.major_ids.includes(dist.major_id)) {
+                plan.updateOne( { _id: plan_id }, { $pull: { distribution_ids: dist_id } } )
+                distributions.deleteOne(dist_id);
+              }
+            })
+          })
+        // TODO: adding new distributions 
+          // suggestion: for major in major_ids, 
+          // if distributions.find({plan_id: plan._id}, {major_id: major._id}) == nada
+            // make new distributions documents for this major 
+          // only a suggestion, feel free to do whatever!
         reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
@@ -204,13 +225,6 @@ router.patch("/api/plans/update", (req, res) => {
           });
       })
       .catch((err) => errorHandler(res, 400, err));
-      // route update #7
-      // delete major: 
-        // major_id = majors.find({name: major})
-        // find distributions associated with plan_id 
-        // if dist.major_id == major_id
-          // distributions.findByIdAndDelete(dist_id)
-          // plan.findByIdAndUpdate(plan_id, {$pull: {dist_ids: dist_id}})
 
       //route update #6
       // add major:
