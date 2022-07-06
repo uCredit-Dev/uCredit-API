@@ -6,7 +6,21 @@ const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 const reviews = require("../model/PlanReview.js");
+const axios = require('axios');
 
+
+const getAPI = (window) => {
+  if (window.location.href.includes('http://localhost:3000')) {
+    return 'http://localhost:4567/api';
+  } else {
+    if (window.location.href.includes('https://ucredit.me')) {
+      return 'https://ucredit-api.herokuapp.com/api';
+    } else {
+      'https://ucredit-dev.herokuapp.com/api';
+    }
+  }
+}
+  
 const express = require("express");
 const router = express.Router();
 
@@ -211,11 +225,34 @@ router.patch("/api/plans/update", (req, res) => {
               }
             })
           })
-        // TODO: adding new distributions 
-          // suggestion: for major in major_ids, 
-          // if distributions.find({plan_id: plan._id}, {major_id: major._id}) == nada
-            // make new distributions documents for this major 
-          // only a suggestion, feel free to do whatever!
+        //Route #6 - Adding new distributions if new major is added
+        for (majorid in major_ids) {
+          if (!distributions.find({plan_id: plan._id}, {major_id: majorid}).length) {
+            let major = Major.findById(majorid);
+            let fine_reqs = []
+            major.distributions.forEach((dist_object) => {
+              dist_object.fine_requirements.forEach((f_req) => {
+                fine_reqs.push(f_req);
+              })
+              const distribution_to_post = {
+                major_id: majorid,
+                plan_id: plan._id,
+                user_id: plan.user_id,
+                name: dist_object.name,
+                required: dist_object.required_credits,
+                description: dist_object.description,
+                criteria: dist_object.criteria,
+                min_credits_per_course: dist_object.min_credits_per_course,
+                fine_requirements: fine_reqs,
+                user_select: dist_object.user_select,
+                pathing: dist_object.pathing,
+                double_count: dist_object.double_count,
+              }
+              await axios.post(getAPI(window) + '/distributions/', distribution_to_post,);
+              fine_reqs = [];
+            });
+          }
+        }
         reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
@@ -225,12 +262,6 @@ router.patch("/api/plans/update", (req, res) => {
           });
       })
       .catch((err) => errorHandler(res, 400, err));
-
-      //route update #6
-      // add major:
-      // major = majors.find({name: major})
-      // major_id = major._id
-      // for each distribution object in major, post new distribution object in DB with proper user_id and major_id
       
   }
 });
