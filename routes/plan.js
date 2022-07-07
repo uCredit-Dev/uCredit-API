@@ -3,6 +3,7 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
+const majors = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 const reviews = require("../model/PlanReview.js");
@@ -218,6 +219,7 @@ router.patch("/api/plans/update", (req, res) => {
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
         // cleaning up distributions associated with plan 
+          // concurrent modification ? 
         plan.distribution_ids.forEach((dist_id) => {
           distributions
             .findById(dist_id)
@@ -244,16 +246,16 @@ router.patch("/api/plans/update", (req, res) => {
 
 function addMajorDistributionsWithID(major_ids, plan) {
   //Route #6 - Adding new distributions if new major is added
-  for (majorid in major_ids) {
+  for (let majorid in major_ids) {
     if (!distributions.find({ plan_id: plan._id }, { major_id: majorid }).length) {
-      const major = Major.findById(majorid);
+      const major = majors.findById(majorid);
       let fine_reqs = []
       major.distributions.forEach((dist_object) => {
         dist_object.fine_requirements.forEach((f_req) => {
           fine_reqs.push(f_req);
         })
         const distribution_to_post = {
-          major_id: majorid,
+          major_id: major._id,
           plan_id: plan._id,
           user_id: plan.user_id,
           name: dist_object.name,
@@ -276,14 +278,14 @@ function addMajorDistributionsWithID(major_ids, plan) {
 function addMajorDistributionsWithNames(major_names, plan) {
   //Route #4 - Adding new distributions if new plan (with major) is created
   for (majorname in major_names) {
-    const major = Major.findOne({name : majorname});
+    const major = majors.findOne({name : majorname});
     let fine_reqs = []
     major.distributions.forEach((dist_object) => {
       dist_object.fine_requirements.forEach((f_req) => {
         fine_reqs.push(f_req);
       })
       const distribution_to_post = {
-        major_id: majorid,
+        major_id: major._id,
         plan_id: plan._id,
         user_id: plan.user_id,
         name: dist_object.name,
@@ -292,6 +294,7 @@ function addMajorDistributionsWithNames(major_names, plan) {
         criteria: dist_object.criteria,
         min_credits_per_course: dist_object.min_credits_per_course,
         fine_requirements: fine_reqs,
+        // note: below are optional 
         user_select: dist_object.user_select,
         pathing: dist_object.pathing,
         double_count: dist_object.double_count,

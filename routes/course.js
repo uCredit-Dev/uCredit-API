@@ -75,36 +75,31 @@ router.post("/api/courses", async (req, res) => {
   courses
     .create(courseBody)
     .then((retrievedCourse) => {
-      const retrievedCourse = retrievedCourse; 
-      //add year id to user plan's year array
-      let query = {};
-      query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
-      plans.findByIdAndUpdate(retrievedCourse.plan_id, { $push: query }).exec();
+      const course = retrievedCourse; 
       //add course id to plan year's course array
-      years
-        .findByIdAndUpdate(retrievedCourse.year_id, {
-          $push: { courses: retrievedCourse._id },
+      await years
+        .findByIdAndUpdate(course.year_id, {
+          $push: { courses: course._id },
         })
         .exec();
-    })
-    .catch((err) => errorHandler(res, 400, err));
-    
-  await plans
-    .findById(retrievedCourse.plan_id)
-    .then((plan) => {
-      let isExclusiveDist = false; 
-      plan.distribution_ids.forEach((id) => {
-        if (!isExclusiveDist && updateReqs(id, retrievedCourse._id)) {
-          // skip other distributions if exclusive
-          await distributions
-            .findById(id) 
-            .then((distribution) => {
-              const exclusive = distribution.exclusive;
-              isExclusiveDist = (exclusive !== undefined && exclusive); 
-            })
-        }
-      })
-      returnData(retrievedCourse, res);
+
+      await plans
+        .findById(course.plan_id)
+        .then((plan) => {
+          let isExclusiveDist = false; 
+          plan.distribution_ids.forEach((id) => {
+            if (!isExclusiveDist && updateReqs(id, course._id)) {
+              // skip other distributions if exclusive
+              await distributions
+                .findById(id) 
+                .then((distribution) => {
+                  isExclusiveDist = 
+                    (distribution.exclusive !== undefined && distribution.exclusive); 
+                })
+            }
+          })
+        })
+      returnData(course, res);
     })
     .catch((err) => {
       errorHandler(res, 400, err);
