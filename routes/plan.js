@@ -105,6 +105,7 @@ router.post("/api/plans", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
+        addMajorDistributionsWithNames(retrievedPlan.majors, retrievedPlan);
       const yearName = [
         "AP/Transfer",
         "Freshman",
@@ -272,33 +273,33 @@ function addMajorDistributionsWithID(major_ids, plan) {
   }
 };
 
-// function addMajorDistributionsWithNames(major_names, plan) {
-//   //Route #4 - Adding new distributions if new plan (with major) is created
-//   for (majorname in major_names) {
-//     const major = Major.findOne({name : majorname});
-//     let fine_reqs = []
-//     major.distributions.forEach((dist_object) => {
-//       dist_object.fine_requirements.forEach((f_req) => {
-//         fine_reqs.push(f_req);
-//       })
-//       const distribution_to_post = {
-//         major_id: majorid,
-//         plan_id: plan._id,
-//         user_id: plan.user_id,
-//         name: dist_object.name,
-//         required: dist_object.required_credits,
-//         description: dist_object.description,
-//         criteria: dist_object.criteria,
-//         min_credits_per_course: dist_object.min_credits_per_course,
-//         fine_requirements: fine_reqs,
-//         user_select: dist_object.user_select,
-//         pathing: dist_object.pathing,
-//         double_count: dist_object.double_count,
-//       }
-//       await axios.post(getAPI(window) + '/distributions/', distribution_to_post,);
-//       fine_reqs = [];
-//     });
-//   }
-// };
+function addMajorDistributionsWithNames(major_names, plan) {
+  //Route #4 - Adding new distributions if new plan (with major) is created
+  for (majorname in major_names) {
+    const major = Major.findOne({name : majorname});
+    let fine_reqs = []
+    major.distributions.forEach((dist_object) => {
+      dist_object.fine_requirements.forEach((f_req) => {
+        fine_reqs.push(f_req);
+      })
+      const distribution_to_post = {
+        major_id: majorid,
+        plan_id: plan._id,
+        user_id: plan.user_id,
+        name: dist_object.name,
+        required: dist_object.required_credits,
+        description: dist_object.description,
+        criteria: dist_object.criteria,
+        min_credits_per_course: dist_object.min_credits_per_course,
+        fine_requirements: fine_reqs,
+        user_select: dist_object.user_select,
+        pathing: dist_object.pathing,
+        double_count: dist_object.double_count,
+      }
+      await axios.post(getAPI(window) + '/distributions/', distribution_to_post,);
+      fine_reqs = [];
+    });
+  }
+};
 
 module.exports = router;
