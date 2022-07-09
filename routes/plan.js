@@ -213,11 +213,10 @@ router.patch("/api/plans/update", (req, res) => {
       updateBody.name = name;
     }
 
-    addMajorDistributionsWithID(major_ids, plan);
-
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
+        addMajorDistributionsWithID(major_ids, plan);
         // cleaning up distributions associated with plan 
           // concurrent modification ? 
         plan.distribution_ids.forEach((dist_id) => {

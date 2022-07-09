@@ -274,6 +274,7 @@ const updateReqs = (
   // general distribution criteria  
   if (
     course !== null && 
+    course.credits < distribution.min_credits_per_course && 
     checkCriteriaSatisfied(genCriteria, course) &&
     (distribution.fulfilled < distribution.required ||
     (distribution.required === 0 && distribution.fulfilled === 0))
@@ -316,9 +317,6 @@ const checkCriteriaSatisfied = (
   if (criteria === null || criteria.length === 0) {
     return true;
   }
-  // if (course.credits < distribution.min_credits_per_course) {
-  //   return false; 
-  // }
   const boolExpr: string | void = getCriteriaBoolExpr(criteria, course);
   if (boolExpr.length !== 0) {
     //eslint-disable-next-line no-eval
