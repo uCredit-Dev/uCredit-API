@@ -32,6 +32,9 @@ const courseSchema = new Schema({
   distribution_ids: [
     { type: Schema.Types.ObjectId, ref: "Distribution", required: true },
   ],
+  fineRequirement_ids: [
+    { type: Schema.Types.ObjectId, ref: "FineRequirement", required: true },
+  ],
   year_id: { type: Schema.Types.ObjectId, ref: "Year" },
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
   user_id: { type: String, required: true },
