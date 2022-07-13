@@ -30,10 +30,10 @@ const courseSchema = new Schema({
   isTransfer: { type: Boolean, default: false },
   ratings: Array,
   distribution_ids: [
-    { type: Schema.Types.ObjectId, ref: "Distribution", required: true },
+    { type: Schema.Types.ObjectId, ref: "Distribution" },
   ],
-  fineRequirement_ids: [
-    { type: Schema.Types.ObjectId, ref: "FineRequirement", required: true },
+  fineReq_ids: [
+    { type: Schema.Types.ObjectId, ref: "FineRequirement" },
   ],
   year_id: { type: Schema.Types.ObjectId, ref: "Year" },
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },

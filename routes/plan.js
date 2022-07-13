@@ -2,13 +2,12 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
+const fineRequirements = require("../model/FineRequirements.js");
 const users = require("../model/User.js");
 const majors = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 const reviews = require("../model/PlanReview.js");
-const axios = require('axios');
-
 
 const getAPI = (window) => {
   if (window.location.href.includes('http://localhost:3000')) {
@@ -179,7 +178,6 @@ router.delete("/api/plans/:plan_id", (req, res) => {
       distributions.deleteMany({ plan_id: plan._id }).exec();
       courses.deleteMany({ plan_id: plan._id }).exec();
       years.deleteMany({ plan_id: plan._id }).exec();
-      // TODO: delete reviews
       users
         .findByIdAndUpdate(
           //delete plan_id from user
@@ -216,20 +214,23 @@ router.patch("/api/plans/update", (req, res) => {
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
-        addMajorDistributionsWithID(major_ids, plan);
-        // cleaning up distributions associated with plan 
-          // concurrent modification ? 
+        addMajorDistributionsWithID(plan);
+        // concurrent modification ? 
         plan.distribution_ids.forEach((dist_id) => {
           distributions
             .findById(dist_id)
             .then((dist) => {
               if (!plan.major_ids.includes(dist.major_id)) {
-                plan.updateOne({ _id: plan_id }, { $pull: { distribution_ids: dist_id } })
                 distributions.deleteOne(dist_id);
+                plans.updateOne({ _id: plan_id }, { $pull: { distribution_ids: dist_id } })
+                courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist_id } }); 
+                dist.fineReq_ids.forEach((fine_id) => {
+                  courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: fine_id } })
+                });
               }
             })
-        })
-
+          })
+        
         reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
@@ -243,18 +244,14 @@ router.patch("/api/plans/update", (req, res) => {
   }
 });
 
-function addMajorDistributionsWithID(major_ids, plan) {
+function addMajorDistributionsWithID(plan) {
   //Route #6 - Adding new distributions if new major is added
-  for (let majorid in major_ids) {
-    if (!distributions.find({ plan_id: plan._id }, { major_id: majorid }).length) {
+  for (let majorid in plan.major_ids) {
+    if (distributions.count({ plan_id: plan._id, major_id: majorid }) !== 0) {
       const major = majors.findById(majorid);
-      let fine_reqs = []
       major.distributions.forEach((dist_object) => {
-        dist_object.fine_requirements.forEach((f_req) => {
-          fine_reqs.push(f_req);
-        })
         const distribution_to_post = {
-          major_id: major._id,
+          major_id: majorid,
           plan_id: plan._id,
           user_id: plan.user_id,
           name: dist_object.name,
@@ -262,13 +259,49 @@ function addMajorDistributionsWithID(major_ids, plan) {
           description: dist_object.description,
           criteria: dist_object.criteria,
           min_credits_per_course: dist_object.min_credits_per_course,
-          fine_requirements: fine_reqs,
-          user_select: dist_object.user_select,
-          pathing: dist_object.pathing,
-          double_count: dist_object.double_count,
         }
-        await axios.post(getAPI(window) + '/distributions/', distribution_to_post,);
-        fine_reqs = [];
+        if (user_select in dist_object) distribution_to_post.user_select = dist_object.user_select;
+        if (pathing in dist_object) distribution_to_post.pathing = dist_object.pathing;
+        if (double_count in dist_object) distribution_to_post.double_count = dist_object.double_count; 
+        if (exception in dist_object) distribution_to_post.exception = dist_object.exception; 
+        if (exclusive in dist_object) distribution_to_post.exception = dist_object.exclusive;
+        
+        distributions
+          .create(distribution_to_post)
+          .then((retrievedDistribution) => {
+            plans
+              .findByIdAndUpdate(
+                retrievedDistribution.plan_id,
+                { $push: { distribution_ids: retrievedDistribution._id } },
+                { new: true, runValidators: true }
+              )
+              .exec();
+
+              dist_object.fine_requirements.forEach((f_req) => {
+                let fineReq_to_post = {
+                  description: f_req.description,
+                  required_credits: f_req.required_credits,
+                  criteria: f_req.criteria,
+                  plan_id: plan._id,
+                  major_id: majorid,
+                  distribution_id: retrievedDistribution._id, 
+                }
+                if (exception in f_req) fineReq_to_post.exception = f_req.exception; 
+                if (exclusive in f_req) fineReq_to_post.exception = f_req.exclusive; 
+                
+                fineRequirements
+                  .create(fineReq)
+                  .then((retrievedFineReq) => {
+                    distributions.findByIdAndUpdate(
+                      retrievedFineReq.distribution_id, 
+                      { $push: { fineReq_ids: retrievedFineReq._id } }, 
+                      { new: true, runValidators: true }
+                    )
+                    .exec();
+                  })
+              })
+          }) // TODO: add courses to new distributions
+          .catch((err) => errorHandler(res, 400, err));
       });
     }
   }
@@ -276,8 +309,8 @@ function addMajorDistributionsWithID(major_ids, plan) {
 
 function addMajorDistributionsWithNames(major_names, plan) {
   //Route #4 - Adding new distributions if new plan (with major) is created
-  for (majorname in major_names) {
-    const major = majors.findOne({name : majorname});
+  for (let major_name in major_names) {
+    const major = majors.findOne({name : major_name});
     let fine_reqs = []
     major.distributions.forEach((dist_object) => {
       dist_object.fine_requirements.forEach((f_req) => {
@@ -298,9 +331,20 @@ function addMajorDistributionsWithNames(major_names, plan) {
         pathing: dist_object.pathing,
         double_count: dist_object.double_count,
       }
-      await axios.post(getAPI(window) + '/distributions/', distribution_to_post,);
+      distributions
+        .create(distribution_to_post)
+        .then((retrievedDistribution) => {
+          plans
+            .findByIdAndUpdate(
+              retrievedDistribution.plan_id,
+              { $push: { distribution_ids: retrievedDistribution._id } },
+              { new: true, runValidators: true }
+            )
+            .exec();
+          })
       fine_reqs = [];
     });
+    // TODO: create fine requirement documents 
   }
 };
 
