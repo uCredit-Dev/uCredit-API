@@ -2,7 +2,7 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
-const fineRequirements = require("../model/FineRequirements.js");
+const fineRequirements = require("../model/FineRequirement.js");
 const users = require("../model/User.js");
 const majors = require("../model/User.js");
 const plans = require("../model/Plan.js");
@@ -106,7 +106,7 @@ router.post("/api/plans", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
-        addMajorDistributionsWithNames(retrievedPlan.majors, retrievedPlan);
+        addMajorDistributionsWithID(retrievedPlan.major_ids, retrievedPlan);
       const yearName = [
         "AP/Transfer",
         "Freshman",
@@ -315,7 +315,6 @@ function addMajorDistributionsWithNames(major_names, plan) {
         double_count: dist_object.double_count,
       }
       distributions.create(distribution_to_post);
-        .then((retrievedDistribution) => {
 
       fine_reqs = [];
     });

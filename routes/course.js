@@ -8,7 +8,6 @@ const {
   distributionCreditUpdate,
   checkRequirementSatisfied, 
   getRequirements,
-  distributionCreditUpdate,
 } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
@@ -77,7 +76,7 @@ router.post("/api/courses", async (req, res) => {
     .then((retrievedCourse) => {
       const course = retrievedCourse; 
       //add course id to plan year's course array
-      await years
+      years
         .findByIdAndUpdate(course.year_id, {
           $push: { courses: course._id },
         })
@@ -88,7 +87,7 @@ router.post("/api/courses", async (req, res) => {
         .forEach((distObj) => {
         if (!isExclusiveDist && updateReqs(distObj._id, course._id)) {
           // skip other distributions if exclusive
-          await distributions
+          distributions
             .findById(distObj._id) 
             .then((distribution) => {
               isExclusiveDist = 

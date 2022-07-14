@@ -1,38 +1,31 @@
 const mongoose = require("mongoose");
 const supertest = require("supertest");
 const majors = require("../../model/Major");
+const plans = require("../../model/Plan");
+const fineRequirements = require("../../model/FineRequirement");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
 
-let plan1 = [];
-let course1 = [];
-let deadPlan = [];
-
-const samplePlan = {
-  name: "TEST_PLAN",
-  user_id: 'TEST_USER',
-  majors: [allMajors[0].name],
-  expireAt: new Date(),
-  year: "Junior",
-};
+let planRes = {}; 
 
 beforeEach((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/distributions", { useNewUrlParser: true })
+    .connect("mongodb://localhost:27017/distributions", { useNewUrlParser: true, useUnifiedTopology: true })
     .then(async () => {
-      const response1 = await request.post("/api/majors").send(allMajors[0]);
-      const response2 = await request.post("/api/plans").send(samplePlan);
-      plan1 = response2.body.data;
-      const course = {
-        title: "TEST_COURSE",
+      // add all majors
+      allMajors.forEach( async (major) => {
+        const majorRes = await request.post("/api/majors").send(major);
+      })
+      const bsAMS = majors.findOne({ degree_name: "B.S. Applied Mathematics & Statistics" });
+      const samplePlan = {
+        name: "TEST_PLAN",
         user_id: 'TEST_USER',
-        term: "spring",
-        credits: 4,
+        majors: [bsAMS.degree_name],
+        major_ids: [bsAMS._id],
+        expireAt: new Date(),
         year: "Junior",
-        plan_id: plan1._id,
-      };      
-      const response3 = await request.post("/api/courses").send(course);
-      course1 = response3.body.data;
+      };
+      planRes = await request.post("/api/plans").send(samplePlan);
       done();
     });
 });
@@ -46,14 +39,42 @@ afterEach((done) => {
 const request = supertest(createApp());
 
 describe("create a plan", () => {
+    it("should create a plan", async () => {
+      expect(planRes).toBeTruthy(); 
+      expect(plans
+        .findById(planRes._id))
+        .toBeTruthy(); 
+    });
+    it("user object should contain new plan id", async () => {
+      const user = users.findById(planRes.user_id); 
+      expect(user).toBeTruthy(); 
+      expect(planRes.user_id).toBe(user._id);
+      expect(user.plan_ids.find((id) => id === planRes._id)).toBeTruthy();
+    });
+    it("should be associated with a major object", async () => {
+      planRes.major_id.forEach((m_id) => {
+        let major = majors.findById(m_id); 
+        expect(major).toBeTruthy(); 
+      })
+    });
     it("should create associated year objects", async () => {
-        for (let id of plan1.year_ids) {
-          expect(years.findById(id)).toBeTruthy();
-        }
-      });
-      it("should create associated distribution objects", async () => {
-        expect(distributions
-          .find({ plan_id: plan1._id }))
-          .toBeTruthy();
-      });
+      planRes.year_ids.forEach((y_id) => {
+        let year = years.findById(y_id); 
+        expect(year).toBeTruthy();
+        expect(year.plan_id).toBe(planRes._id);
+      })
+    });
+    it("should create associated distribution objects", async () => {
+      const distObjs = distributions.find({ plan_id: planRes._id });
+      expect(distObjs).toBeTruthy(); 
+      expect(distObjs.length).toBe(7);
+      distObjs.forEach((dist) => {
+        expect(dist.plan_id).toBe(planRes._id);
+        let fineReqs = fineRequirements.find({dist_id: dist._id});
+        fineReqs.forEach((fine) => {
+          expect(fine.distribution_id).toBe(dist._id);
+          expect(fine.plan_id).toBe(planRes._id);
+        })
+      })
+    });
   });
