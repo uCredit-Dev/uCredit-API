@@ -1,12 +1,15 @@
 const mongoose = require("mongoose");
 const supertest = require("supertest");
 const majors = require("../../model/Major");
+const courses = require("../../model/Course");
+const distributions = require("../../model/Distribution");
+const years = require("../../model/Year");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
 
 let plan1 = [];
 let course1 = [];
-let deadPlan = [];
+let deadPlan = {};
 
 const samplePlan = {
   name: "TEST_PLAN",
@@ -25,7 +28,7 @@ beforeEach((done) => {
       plan1 = response2.body.data;
       const course = {
         title: "TEST_COURSE",
-        user_id: 'TEST_USER',
+        user_id: plan1.user_id,
         term: "spring",
         credits: 4,
         year: "Junior",
@@ -33,8 +36,9 @@ beforeEach((done) => {
       };      
       const response3 = await request.post("/api/courses").send(course);
       course1 = response3.body.data;
-      done();
       deadPlan = await request.delete(`/api/plans/${plan1._id}`);
+      deadPlan = deadPlan.body.data; 
+      done();
     });
 });
 
@@ -48,15 +52,18 @@ const request = supertest(createApp());
 
 describe("delete a plan", () => {
   it("should delete associated year objects", async () => {
-    for (let id of deadPlan.year_ids) {
-      expect(years.findById(id)).toBeFalsy();
-    }
+    deadPlan.year_ids.forEach(async (id) => {
+      const search = await years.findById(id);
+      expect(search).toBeFalsy();
+    })
   });
   it("should delete associated distribution objects", async () => {
-    expect(distributions.find({ plan_id: deadPlan._id })).toBeFalsy(); 
+    const search = await distributions.find({ plan_id: deadPlan._id });
+    expect(search.length).toBe(0);
   });
   it("should delete associated course objects", async () => {
-    expect(courses.findById(course1._id)).toBeFalsy();
+    const search = await courses.find({ plan_id: deadPlan._id });
+    expect(search.length).toBe(0);
   });
 });
 

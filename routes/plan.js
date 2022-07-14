@@ -197,6 +197,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
 
 //***need to consider not allow user to change major for a plan ***/
 router.patch("/api/plans/update", (req, res) => {
+  console.log(id);
   const id = req.body.plan_id;
   const majors = req.body.majors;
   const major_ids = req.body.major_ids;

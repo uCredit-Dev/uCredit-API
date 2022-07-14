@@ -16,7 +16,6 @@ beforeEach((done) => {
   mongoose
     .connect("mongodb://localhost:27017/distributions", { useNewUrlParser: true, useUnifiedTopology: true })
     .then(async () => {
-      // add all majors
       const majorRes = await request.post("/api/majors").send(allMajors[0]);
       const bsCS_Old = await majors.findById(majorRes.body.data._id);
       const samplePlan = {
