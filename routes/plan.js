@@ -4,10 +4,11 @@ const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const fineRequirements = require("../model/FineRequirement.js");
 const users = require("../model/User.js");
-const majors = require("../model/User.js");
+const majors = require("../model/Major.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 const reviews = require("../model/PlanReview.js");
+var ObjectId = require('mongodb').ObjectID;
 
 const getAPI = (window) => {
   if (window.location.href.includes('http://localhost:3000')) {
@@ -107,7 +108,8 @@ router.post("/api/plans", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
-        addMajorDistributionsWithID(retrievedPlan.major_ids, retrievedPlan);
+      await addMajorDistributionsWithID(retrievedPlan.major_ids, retrievedPlan);
+      retrievedPlan.save();
       const yearName = [
         "AP/Transfer",
         "Freshman",
@@ -213,12 +215,12 @@ router.patch("/api/plans/update", (req, res) => {
       updateBody.name = name;
     }
 
-    addMajorDistributionsWithID(major_ids, plan);
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
         // cleaning up distributions associated with plan 
         // concurrent modification ? 
+        addMajorDistributionsWithID(major_ids, plan);
         distributions
           .find({ plan_id: plan._id })
           .forEach((dist) => {
@@ -242,17 +244,15 @@ router.patch("/api/plans/update", (req, res) => {
           });
       })
       .catch((err) => errorHandler(res, 400, err));
-
   }
 });
 
-function addMajorDistributionsWithID(major_ids, plan) {
+async function addMajorDistributionsWithID(major_ids, plan) {
   //Route #6 - Adding new distributions if new major is added
-  for (let majorid in major_ids) {
+  major_ids.forEach( async (majorid) => {
     if (!distributions.find({ plan_id: plan._id }, { major_id: majorid }).length) {
-      const major = majors.findById(majorid);
-      let fine_reqs = []
-      major.distributions.forEach((dist_object) => {
+      const major = await majors.findById(majorid).exec();
+      major.distributions.forEach(async (dist_object) => {
         const distribution_to_post = {
           major_id: major._id,
           plan_id: plan._id,
@@ -262,42 +262,41 @@ function addMajorDistributionsWithID(major_ids, plan) {
           description: dist_object.description,
           criteria: dist_object.criteria,
           min_credits_per_course: dist_object.min_credits_per_course,
-          fine_requirements: fine_reqs,
         }
-        if (user_select in dist_object) distribution_to_post.user_select = dist_object.user_select;
-        if (pathing in dist_object) distribution_to_post.pathing = dist_object.pathing;
-        if (double_count in dist_object) distribution_to_post.double_count = dist_object.double_count; 
-        if (exception in dist_object) distribution_to_post.exception = dist_object.exception; 
-        if (exclusive in dist_object) distribution_to_post.exception = dist_object.exclusive;
+        if (dist_object.hasOwnProperty('user_select')) distribution_to_post.user_select = dist_object.user_select;
+        if (dist_object.hasOwnProperty('pathing')) distribution_to_post.pathing = dist_object.pathing;
+        if (dist_object.hasOwnProperty('double_count')) distribution_to_post.double_count = dist_object.double_count; 
+        if (dist_object.hasOwnProperty('exception')) distribution_to_post.exception = dist_object.exception; 
+        if (dist_object.hasOwnProperty('exclusive')) distribution_to_post.exclusive = dist_object.exclusive;
         
         distributions
           .create(distribution_to_post)
           .then((retrievedDistribution) => {
-              dist_object.fine_requirements.forEach((f_req) => {
-                let fineReq_to_post = {
-                  description: f_req.description,
-                  required_credits: f_req.required_credits,
-                  criteria: f_req.criteria,
-                  plan_id: plan._id,
-                  major_id: majorid,
-                  distribution_id: retrievedDistribution._id, 
-                }
-                if (exception in f_req) fineReq_to_post.exception = f_req.exception; 
-                if (exclusive in f_req) fineReq_to_post.exception = f_req.exclusive; 
-                
-                fineRequirements.create(fineReq_to_post);
-              })
+            dist_object.fine_requirements.forEach(async (f_req) => {
+              let fineReq_to_post = {
+                description: f_req.description,
+                required_credits: f_req.required_credits,
+                criteria: f_req.criteria,
+                plan_id: plan._id,
+                major_id: majorid,
+                distribution_id: retrievedDistribution._id, 
+              }
+              if (f_req.hasOwnProperty('exception')) fineReq_to_post.exception = f_req.exception; 
+              if (f_req.hasOwnProperty('exclusive')) fineReq_to_post.exclusive = f_req.exclusive; 
+              
+              await fineRequirements.create(fineReq_to_post);
+            })
           }) // TODO: add courses to new distributions
           .catch((err) => errorHandler(res, 400, err));
       });
       // Adds all courses for a second or third major, but doesn't update any course, year or plan arrays cause course already existsO
       // Only distributions are being updated
-      const coursesInPlan = Course.findByPlanId(plan._id)
+      const coursesInPlan = await Course.findByPlanId(plan._id);
       for (c in coursesInPlan) {
         addCourses(c);
       };
     }
-  }
+  });    
 };
 
 function addMajorDistributionsWithNames(major_names, plan) {
@@ -332,23 +331,19 @@ function addMajorDistributionsWithNames(major_names, plan) {
 
 //Copied parts of route #1 from course.js file and got rid of array modifications
 function addCourses(course) {
-  await plans
+  plans
     .findById(course.plan_id)
     .then((plan) => {
       let isExclusiveDist = false;
-      plan.distribution_ids.forEach((id) => {
-        if (!isExclusiveDist && updateReqs(id, course._id)) {
-          // skip other distributions if exclusive
-          await distributions
-            .findById(id)
-            .then((distribution) => {
-              isExclusiveDist =
-                (distribution.exclusive !== undefined && distribution.exclusive);
-            })
-        }
+      distributions
+        .find({ plan_id: plan._id })
+        .forEach((dist) => {
+          if (!isExclusiveDist && updateReqs(dist.id, course._id)) {
+            // skip other distributions if exclusive
+            isExclusiveDist = (dist.exclusive !== undefined && dist.exclusive);
+          }
       })
     })
-  returnData(course, res);
 };
 
 module.exports = router;
