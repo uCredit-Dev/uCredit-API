@@ -22,6 +22,7 @@ const getAPI = (window) => {
 }
 
 const express = require("express");
+const Course = require("../model/Course.js");
 const router = express.Router();
 
 //get plan by plan id
@@ -212,10 +213,11 @@ router.patch("/api/plans/update", (req, res) => {
       updateBody.name = name;
     }
 
+    addMajorDistributionsWithID(major_ids, plan);
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
-        addMajorDistributionsWithID(plan);
+        // cleaning up distributions associated with plan 
         // concurrent modification ? 
         distributions
           .find({ plan_id: plan._id })
@@ -244,14 +246,15 @@ router.patch("/api/plans/update", (req, res) => {
   }
 });
 
-function addMajorDistributionsWithID(plan) {
+function addMajorDistributionsWithID(major_ids, plan) {
   //Route #6 - Adding new distributions if new major is added
-  for (let majorid in plan.major_ids) {
-    if (distributions.count({ plan_id: plan._id, major_id: majorid }) !== 0) {
+  for (let majorid in major_ids) {
+    if (!distributions.find({ plan_id: plan._id }, { major_id: majorid }).length) {
       const major = majors.findById(majorid);
+      let fine_reqs = []
       major.distributions.forEach((dist_object) => {
         const distribution_to_post = {
-          major_id: majorid,
+          major_id: major._id,
           plan_id: plan._id,
           user_id: plan.user_id,
           name: dist_object.name,
@@ -259,6 +262,7 @@ function addMajorDistributionsWithID(plan) {
           description: dist_object.description,
           criteria: dist_object.criteria,
           min_credits_per_course: dist_object.min_credits_per_course,
+          fine_requirements: fine_reqs,
         }
         if (user_select in dist_object) distribution_to_post.user_select = dist_object.user_select;
         if (pathing in dist_object) distribution_to_post.pathing = dist_object.pathing;
@@ -286,14 +290,20 @@ function addMajorDistributionsWithID(plan) {
           }) // TODO: add courses to new distributions
           .catch((err) => errorHandler(res, 400, err));
       });
+      // Adds all courses for a second or third major, but doesn't update any course, year or plan arrays cause course already existsO
+      // Only distributions are being updated
+      const coursesInPlan = Course.findByPlanId(plan._id)
+      for (c in coursesInPlan) {
+        addCourses(c);
+      };
     }
   }
 };
 
 function addMajorDistributionsWithNames(major_names, plan) {
   //Route #4 - Adding new distributions if new plan (with major) is created
-  for (let major_name in major_names) {
-    const major = majors.findOne({name : major_name});
+  for (majorname in major_names) {
+    const major = majors.findOne({ name: majorname });
     let fine_reqs = []
     major.distributions.forEach((dist_object) => {
       dist_object.fine_requirements.forEach((f_req) => {
@@ -314,12 +324,31 @@ function addMajorDistributionsWithNames(major_names, plan) {
         pathing: dist_object.pathing,
         double_count: dist_object.double_count,
       }
-      distributions.create(distribution_to_post);
-
+      distributions.create(distribution_to_post); 
       fine_reqs = [];
     });
-    // TODO: create fine requirement documents 
   }
+};
+
+//Copied parts of route #1 from course.js file and got rid of array modifications
+function addCourses(course) {
+  await plans
+    .findById(course.plan_id)
+    .then((plan) => {
+      let isExclusiveDist = false;
+      plan.distribution_ids.forEach((id) => {
+        if (!isExclusiveDist && updateReqs(id, course._id)) {
+          // skip other distributions if exclusive
+          await distributions
+            .findById(id)
+            .then((distribution) => {
+              isExclusiveDist =
+                (distribution.exclusive !== undefined && distribution.exclusive);
+            })
+        }
+      })
+    })
+  returnData(course, res);
 };
 
 module.exports = router;
