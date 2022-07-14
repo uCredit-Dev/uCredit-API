@@ -27,7 +27,6 @@ beforeEach((done) => {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
         term: "spring",
-        distribution_ids: [],
         credits: 4,
         year: "Junior",
         plan_id: plan1._id,
@@ -53,8 +52,8 @@ describe("create a plan", () => {
         }
       });
       it("should create associated distribution objects", async () => {
-        for (let id of plan1.distribution_ids) {
-          expect(distributions.findById(id)).toBeTruthy();
-        }
+        expect(distributions
+          .find({ plan_id: plan1._id }))
+          .toBeTruthy();
       });
   });

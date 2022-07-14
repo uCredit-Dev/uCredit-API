@@ -28,7 +28,6 @@ beforeEach((done) => {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
         term: "spring",
-        distribution_ids: [],
         credits: 4,
         year: "Junior",
         plan_id: plan1._id,
@@ -74,9 +73,6 @@ describe("delete course from plan", () => {
     const plan = await plans.findById(plan1._id);
     const distIds = deadCourse.distributions_ids;
     distIds.forEach((distId) => {
-      expect(
-        plan.distribution_ids.find((id) => id === distId).exists()
-      ).toBeTruthy();
       let dist = await distributions.findById(distId);
       expect(dist.plan_id).toBe(plan._id);
       expect(dist.user_id).toBe(plan.user_id);

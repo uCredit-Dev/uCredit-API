@@ -28,7 +28,6 @@ beforeEach((done) => {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
         term: "spring",
-        distribution_ids: [],
         credits: 4,
         year: "Junior",
         plan_id: plan1._id,
@@ -56,13 +55,13 @@ const request = supertest(createApp());
 describe("Deleting a major", () => {
   it("should delete associated distribution objects", async () => {
     const updatedPlan = plans.findById(plan1._id);
-    const distIds = updatedPlan.distribution_ids;
     expect(updatedPlan).toBeTruthy(); 
-    for (let id of distIds) {
-      let dist = distributions.findById(id); 
-      expect(distributions.findById(id)).toBeTruthy(); 
-      expect(dist.major_id).toBe(major1._id);
-    }
+    distributions
+      .find({ plan_id: updatedPlan._id })
+      .forEach((dist) => {
+        expect(dist).toBeTruthy(); 
+        expect(dist.major_id).toBe(major1._id);
+      })
   });
   it("should not delete course objects", async () => {
     let course = courses.findById(course1._id); 

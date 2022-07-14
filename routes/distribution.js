@@ -21,10 +21,9 @@ router.get("/api/distributions/:distribution_id", (req, res) => {
 //get all distributions in a plan
 router.get("/api/distributionsByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
-  plans
-    .findById(plan_id)
-    .populate({ path: "distribution_ids" })
-    .then((plan) => returnData(plan.distribution_ids, res))
+  distributions
+    .find({ plan_id: req.params.plan_id })
+    .then((distributions) => returnData(distributions, res))
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -34,14 +33,6 @@ router.post("/api/distributions", (req, res) => {
   distributions
     .create(distribution)
     .then((retrievedDistribution) => {
-      plans
-        .findByIdAndUpdate(
-          //update plan
-          retrievedDistribution.plan_id,
-          { $push: { distribution_ids: retrievedDistribution._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
       returnData(retrievedDistribution, res);
     })
     .catch((err) => errorHandler(res, 400, err));
@@ -81,14 +72,6 @@ router.delete("/api/distributions/:d_id", (req, res) => {
   distributions
     .findByIdAndDelete(d_id)
     .then((distribution) => {
-      plans
-        .findByIdAndUpdate(
-          //update plan
-          distribution.plan_id,
-          { $pull: { distribution_ids: distribution._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
       courses //delete courses that only belong to the distribution
         .deleteMany({
           $and: [

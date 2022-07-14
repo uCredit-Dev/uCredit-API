@@ -28,7 +28,6 @@ beforeEach((done) => {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
         term: "spring",
-        distribution_ids: [],
         credits: 4,
         year: "Junior",
         plan_id: plan1._id,
@@ -54,13 +53,12 @@ afterEach((done) => {
   describe("Adding a major", () => {
     it("should create associated distribution objects with correct major_id", async () => {
       const updatedPlan = plans.findById(plan1._id);
-      const distIds = updatedPlan.distribution_ids;
-      expect(distIds.length > 0)
+      expect(distributions.count({ plan_id: updatedPlan._id }) > 0)
       expect(updatedPlan).toBeTruthy(); 
-      for (let id of distIds) {
-        let dist = distributions.findById(id); 
-        expect(distributions.findById(id)).toBeTruthy(); 
-        expect(dist.major_id).toBe(major1._id);
-      }
+      distributions
+        .find({ plan_id: plan1._id })
+        .then((dist) => {
+          expect(dist.major_id).toBe(major1._id);
+        })
     });
   });

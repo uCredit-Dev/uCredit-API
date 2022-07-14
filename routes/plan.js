@@ -87,6 +87,7 @@ router.post("/api/plans", (req, res) => {
     name: req.body.name,
     user_id: req.body.user_id,
     majors: req.body.majors,
+    major_ids: req.body.major_ids,
     expireAt: req.body.expireAt,
   };
   const year = req.body.year;
@@ -216,19 +217,18 @@ router.patch("/api/plans/update", (req, res) => {
       .then((plan) => {
         addMajorDistributionsWithID(plan);
         // concurrent modification ? 
-        plan.distribution_ids.forEach((dist_id) => {
-          distributions
-            .findById(dist_id)
-            .then((dist) => {
-              if (!plan.major_ids.includes(dist.major_id)) {
-                distributions.deleteOne(dist_id);
-                plans.updateOne({ _id: plan_id }, { $pull: { distribution_ids: dist_id } })
-                courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist_id } }); 
-                dist.fineReq_ids.forEach((fine_id) => {
-                  courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: fine_id } })
+        distributions
+          .find({ plan_id: plan._id })
+          .forEach((dist) => {
+            if (!plan.major_ids.includes(dist.major_id)) {
+              distributions.deleteOne(dist._id);
+              courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } }); 
+              fineRequirements
+                .find({ distribution_id: dist._id })
+                .forEach((fineObj) => {
+                  courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: fineObj._id } })
                 });
-              }
-            })
+            }
           })
         
         reviews
@@ -269,14 +269,6 @@ function addMajorDistributionsWithID(plan) {
         distributions
           .create(distribution_to_post)
           .then((retrievedDistribution) => {
-            plans
-              .findByIdAndUpdate(
-                retrievedDistribution.plan_id,
-                { $push: { distribution_ids: retrievedDistribution._id } },
-                { new: true, runValidators: true }
-              )
-              .exec();
-
               dist_object.fine_requirements.forEach((f_req) => {
                 let fineReq_to_post = {
                   description: f_req.description,
@@ -289,16 +281,7 @@ function addMajorDistributionsWithID(plan) {
                 if (exception in f_req) fineReq_to_post.exception = f_req.exception; 
                 if (exclusive in f_req) fineReq_to_post.exception = f_req.exclusive; 
                 
-                fineRequirements
-                  .create(fineReq)
-                  .then((retrievedFineReq) => {
-                    distributions.findByIdAndUpdate(
-                      retrievedFineReq.distribution_id, 
-                      { $push: { fineReq_ids: retrievedFineReq._id } }, 
-                      { new: true, runValidators: true }
-                    )
-                    .exec();
-                  })
+                fineRequirements.create(fineReq_to_post);
               })
           }) // TODO: add courses to new distributions
           .catch((err) => errorHandler(res, 400, err));
@@ -331,17 +314,9 @@ function addMajorDistributionsWithNames(major_names, plan) {
         pathing: dist_object.pathing,
         double_count: dist_object.double_count,
       }
-      distributions
-        .create(distribution_to_post)
+      distributions.create(distribution_to_post);
         .then((retrievedDistribution) => {
-          plans
-            .findByIdAndUpdate(
-              retrievedDistribution.plan_id,
-              { $push: { distribution_ids: retrievedDistribution._id } },
-              { new: true, runValidators: true }
-            )
-            .exec();
-          })
+
       fine_reqs = [];
     });
     // TODO: create fine requirement documents 

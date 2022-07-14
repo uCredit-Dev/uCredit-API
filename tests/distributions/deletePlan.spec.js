@@ -27,7 +27,6 @@ beforeEach((done) => {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
         term: "spring",
-        distribution_ids: [],
         credits: 4,
         year: "Junior",
         plan_id: plan1._id,
@@ -54,9 +53,7 @@ describe("delete a plan", () => {
     }
   });
   it("should delete associated distribution objects", async () => {
-    for (let id of deadPlan.distribution_ids) {
-      expect(distributions.findById(id)).toBeFalsy();
-    }
+    expect(distributions.find({ plan_id: deadPlan._id })).toBeFalsy(); 
   });
   it("should delete associated course objects", async () => {
     expect(courses.findById(course1._id)).toBeFalsy();

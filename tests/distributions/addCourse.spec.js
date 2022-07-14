@@ -28,7 +28,6 @@ beforeEach((done) => {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
         term: "spring",
-        distribution_ids: [],
         credits: 4,
         year: "Junior",
         plan_id: plan1._id,
@@ -77,9 +76,6 @@ describe("add new course to plan", () => {
     const course = await courses.findById(course1._id);
     const distIds = course.distributions_ids;
     distIds.forEach((distId) => {
-      expect(
-        plan.distribution_ids.find((id) => id === distId).exists()
-      ).toBeTruthy();
       let dist = await distributions.findById(distId);
       expect(dist.plan_id).toBe(plan._id);
       expect(dist.user_id).toBe(plan.user_id);

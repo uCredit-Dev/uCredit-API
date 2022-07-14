@@ -20,7 +20,6 @@ const distributionSchema = new Schema({
   planned: { type: Number, default: 0 },
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
-  fineReq_ids: [{ type: Schema.Types.ObjectId, ref: "FineRequirement" }],
   user_select: { type: Boolean, default: false }, 
   double_count: { type: Boolean, default: false }, 
   exception: { type: String },

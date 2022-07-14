@@ -83,22 +83,20 @@ router.post("/api/courses", async (req, res) => {
         })
         .exec();
 
-      await plans
-        .findById(course.plan_id)
-        .then((plan) => {
-          let isExclusiveDist = false; 
-          plan.distribution_ids.forEach((id) => {
-            if (!isExclusiveDist && updateReqs(id, course._id)) {
-              // skip other distributions if exclusive
-              await distributions
-                .findById(id) 
-                .then((distribution) => {
-                  isExclusiveDist = 
-                    (distribution.exclusive !== undefined && distribution.exclusive); 
-                })
-            }
-          })
-        })
+      distributions
+        .find({ plan_id: plan_id })
+        .forEach((distObj) => {
+        if (!isExclusiveDist && updateReqs(distObj._id, course._id)) {
+          // skip other distributions if exclusive
+          await distributions
+            .findById(distObj._id) 
+            .then((distribution) => {
+              isExclusiveDist = 
+                (distribution.exclusive !== undefined && distribution.exclusive); 
+            });
+        }
+      })
+
       returnData(course, res);
     })
     .catch((err) => {
