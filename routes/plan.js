@@ -293,9 +293,10 @@ async function addMajorDistributionsWithID(major_ids, plan) {
       });
       // Adds all courses for a second or third major, but doesn't update any course, year or plan arrays cause course already existsO
       // Only distributions are being updated
-      await Course.findByPlanId(plan._id).forEach(async (c) => {
+      const coursesInPlan = await Course.findByPlanId(plan._id)
+      for (c in coursesInPlan) {
         addCourses(c);
-      })
+      }
     }
   });
 };
