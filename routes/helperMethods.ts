@@ -260,12 +260,12 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
 }
 
 // hypotheticals more suitable for adding a course: 
-const updateReqs = (
+const updateReqs = async (
   distribution_id: string,
   course_id: string,
 ) => {
-  const course = Courses.findById(ObjectId(course_id)); 
-  const distribution = Distributions.findById(ObjectId(distribution_id)); 
+  const course = await Courses.findById(ObjectId(course_id)); 
+  const distribution = await Distributions.findById(ObjectId(distribution_id)); 
   if (course === null || distribution === null) {
     return false; 
   }
@@ -282,8 +282,6 @@ const updateReqs = (
     updated = true; 
     // update distribution credits  
     distributionCreditUpdate(distribution, course, true);
-    // add course id to distributions courses[]
-    distribution.courses.push(course._id);
     distribution.save(); 
      // add distribution id to course 
     course.distribution_ids.push(distribution_id);

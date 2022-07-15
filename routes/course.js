@@ -75,27 +75,27 @@ router.post("/api/courses", async (req, res) => {
     .create(courseBody)
     .then((retrievedCourse) => {
       const course = retrievedCourse; 
-      //add course id to plan year's course array
       years
-        .findByIdAndUpdate(course.year_id, {
-          $push: { courses: course._id },
+        .findOneAndUpdate(
+          { $and: [ {plan_id: course.plan_id}, {name: course.year} ]}, 
+          { $push: { courses: course._id } },
+          { new: true, runValidators: true })
+        .then((year) => {
+          retrievedCourse.year_id = year._id; 
+          retrievedCourse.save(); 
         })
-        .exec();
+      //add course id to plan year's course array
 
+      let exclusive = []; // whitelist
       distributions
-        .find({ plan_id: plan_id })
-        .forEach((distObj) => {
-        if (!isExclusiveDist && updateReqs(distObj._id, course._id)) {
-          // skip other distributions if exclusive
-          distributions
-            .findById(distObj._id) 
-            .then((distribution) => {
-              isExclusiveDist = 
-                (distribution.exclusive !== undefined && distribution.exclusive); 
-            });
-        }
+        .find({ plan_id: retrievedCourse.plan_id })
+        .then((distObjs) => {
+          distObjs.forEach(async (distObj) => {
+            if ((distObj.name in exclusive) && await updateReqs(distObj._id, course._id)) {
+              exclusive = distObj.exclusive; 
+            }
+         });
       })
-
       returnData(course, res);
     })
     .catch((err) => {
