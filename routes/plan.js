@@ -227,7 +227,7 @@ router.patch("/api/plans/update", (req, res) => {
           .forEach((dist) => {
             if (!plan.major_ids.includes(dist.major_id)) {
               distributions.deleteOne(dist._id);
-              courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } }); 
+              courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } });
               fineRequirements
                 .find({ distribution_id: dist._id })
                 .forEach((fineObj) => {
@@ -235,7 +235,7 @@ router.patch("/api/plans/update", (req, res) => {
                 });
             }
           })
-        
+
         reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
@@ -250,7 +250,7 @@ router.patch("/api/plans/update", (req, res) => {
 
 async function addMajorDistributionsWithID(major_ids, plan) {
   //Route #6 - Adding new distributions if new major is added
-  major_ids.forEach( async (majorid) => {
+  major_ids.forEach(async (majorid) => {
     dist = await distributions.find({ plan_id: plan._id }, { major_id: majorid });
     if (dist.length == 0) {
       const major = await majors.findById(majorid).exec();
@@ -267,10 +267,10 @@ async function addMajorDistributionsWithID(major_ids, plan) {
         }
         if (dist_object.hasOwnProperty('user_select')) distribution_to_post.user_select = dist_object.user_select;
         if (dist_object.hasOwnProperty('pathing')) distribution_to_post.pathing = dist_object.pathing;
-        if (dist_object.hasOwnProperty('double_count')) distribution_to_post.double_count = dist_object.double_count; 
-        if (dist_object.hasOwnProperty('exception')) distribution_to_post.exception = dist_object.exception; 
+        if (dist_object.hasOwnProperty('double_count')) distribution_to_post.double_count = dist_object.double_count;
+        if (dist_object.hasOwnProperty('exception')) distribution_to_post.exception = dist_object.exception;
         if (dist_object.hasOwnProperty('exclusive')) distribution_to_post.exclusive = dist_object.exclusive;
-        
+
         await distributions
           .create(distribution_to_post)
           .then((retrievedDistribution) => {
@@ -281,11 +281,11 @@ async function addMajorDistributionsWithID(major_ids, plan) {
                 criteria: f_req.criteria,
                 plan_id: plan._id,
                 major_id: majorid,
-                distribution_id: retrievedDistribution._id, 
+                distribution_id: retrievedDistribution._id,
               }
-              if (f_req.hasOwnProperty('exception')) fineReq_to_post.exception = f_req.exception; 
-              if (f_req.hasOwnProperty('exclusive')) fineReq_to_post.exclusive = f_req.exclusive; 
-              
+              if (f_req.hasOwnProperty('exception')) fineReq_to_post.exception = f_req.exception;
+              if (f_req.hasOwnProperty('exclusive')) fineReq_to_post.exclusive = f_req.exclusive;
+
               await fineRequirements.create(fineReq_to_post)
             })
           }) // TODO: add courses to new distributions
@@ -293,17 +293,16 @@ async function addMajorDistributionsWithID(major_ids, plan) {
       });
       // Adds all courses for a second or third major, but doesn't update any course, year or plan arrays cause course already existsO
       // Only distributions are being updated
-      const coursesInPlan = await Course.findByPlanId(plan._id);
-      for (c in coursesInPlan) {
+      await Course.findByPlanId(plan._id).forEach(async (c) => {
         addCourses(c);
-      };
+      })
     }
-  });    
+  });
 };
 
 
 //Copied parts of route #1 from course.js file and got rid of array modifications
-function addCourses(course) {
+async function addCourses(course) {
   plans
     .findById(course.plan_id)
     .then((plan) => {
@@ -315,7 +314,7 @@ function addCourses(course) {
             // skip other distributions if exclusive
             isExclusiveDist = (dist.exclusive !== undefined && dist.exclusive);
           }
-      })
+        })
     })
 };
 
