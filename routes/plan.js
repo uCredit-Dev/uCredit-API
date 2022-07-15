@@ -251,7 +251,8 @@ router.patch("/api/plans/update", (req, res) => {
 async function addMajorDistributionsWithID(major_ids, plan) {
   //Route #6 - Adding new distributions if new major is added
   major_ids.forEach( async (majorid) => {
-    if (!distributions.find({ plan_id: plan._id }, { major_id: majorid }).length) {
+    dist = await distributions.find({ plan_id: plan._id }, { major_id: majorid });
+    if (dist.length == 0) {
       const major = await majors.findById(majorid).exec();
       major.distributions.forEach(async (dist_object) => {
         const distribution_to_post = {
@@ -270,7 +271,7 @@ async function addMajorDistributionsWithID(major_ids, plan) {
         if (dist_object.hasOwnProperty('exception')) distribution_to_post.exception = dist_object.exception; 
         if (dist_object.hasOwnProperty('exclusive')) distribution_to_post.exclusive = dist_object.exclusive;
         
-        distributions
+        await distributions
           .create(distribution_to_post)
           .then((retrievedDistribution) => {
             dist_object.fine_requirements.forEach(async (f_req) => {
@@ -285,7 +286,7 @@ async function addMajorDistributionsWithID(major_ids, plan) {
               if (f_req.hasOwnProperty('exception')) fineReq_to_post.exception = f_req.exception; 
               if (f_req.hasOwnProperty('exclusive')) fineReq_to_post.exclusive = f_req.exclusive; 
               
-              await fineRequirements.create(fineReq_to_post);
+              await fineRequirements.create(fineReq_to_post)
             })
           }) // TODO: add courses to new distributions
           .catch((err) => errorHandler(res, 400, err));
@@ -300,35 +301,6 @@ async function addMajorDistributionsWithID(major_ids, plan) {
   });    
 };
 
-function addMajorDistributionsWithNames(major_names, plan) {
-  //Route #4 - Adding new distributions if new plan (with major) is created
-  for (majorname in major_names) {
-    const major = majors.findOne({ name: majorname });
-    let fine_reqs = []
-    major.distributions.forEach((dist_object) => {
-      dist_object.fine_requirements.forEach((f_req) => {
-        fine_reqs.push(f_req);
-      })
-      const distribution_to_post = {
-        major_id: major._id,
-        plan_id: plan._id,
-        user_id: plan.user_id,
-        name: dist_object.name,
-        required: dist_object.required_credits,
-        description: dist_object.description,
-        criteria: dist_object.criteria,
-        min_credits_per_course: dist_object.min_credits_per_course,
-        fine_requirements: fine_reqs,
-        // note: below are optional 
-        user_select: dist_object.user_select,
-        pathing: dist_object.pathing,
-        double_count: dist_object.double_count,
-      }
-      distributions.create(distribution_to_post); 
-      fine_reqs = [];
-    });
-  }
-};
 
 //Copied parts of route #1 from course.js file and got rid of array modifications
 function addCourses(course) {
