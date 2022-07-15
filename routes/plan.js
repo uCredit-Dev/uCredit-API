@@ -253,6 +253,13 @@ async function addMajorDistributionsWithID(major_ids, plan) {
   major_ids.forEach(async (majorid) => {
     dist = await distributions.find({ plan_id: plan._id }, { major_id: majorid });
     if (dist.length == 0) {
+      plans.findByIdAndUpdate(
+        //update user
+        plan._id,
+        { $push: { major_ids: majorid } },
+        { new: true, runValidators: true }
+      )
+      .exec();
       const major = await majors.findById(majorid).exec();
       major.distributions.forEach(async (dist_object) => {
         const distribution_to_post = {

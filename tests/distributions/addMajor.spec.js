@@ -56,9 +56,9 @@ afterEach((done) => {
 describe("Adding a major", () => {
   it("should add a major to plan", async () => {
     const updatedPlan = await plans.findById(planRes._id);
-    expect(updatedPlan).toBeTruthy(); 
+    expect(updatedPlan).toBeTruthy();
+    console.log(updatedPlan.major_ids) 
     expect(updatedPlan.major_ids.length).toBe(2);
-    expect(updatedPlan.majors).toBe([allMajors[0].degree_name, allMajors[6].degree_name]);
   });
   it("should create associated distribution objects with correct major_id", async () => {
     const updatedPlan = await plans.findById(planRes._id);
@@ -67,7 +67,9 @@ describe("Adding a major", () => {
     distributions
       .find({ plan_id: planRes._id })
       .then((dist) => {
-        expect(dist.major_id).toBe(updatedPlan.major_ids);
+        for (d in dist) {
+          expect(d.major_id.toBe(updatedPlan.major_ids[0]) || d.major_id.toBe(updatedPlan.major_ids[1]));
+        }
       })
   });
   // check course has been added to distribution 
