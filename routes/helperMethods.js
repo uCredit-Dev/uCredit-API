@@ -10,7 +10,7 @@ function returnData(data, res) {
 
 //set status code of the response and send error info to the user in json
 function errorHandler(res, status, err) {
-  if (res.statusCode !== 200) return; 
+  if (res.headersSent) return; 
   res.status(status).json({
     errors: [
       {
