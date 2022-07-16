@@ -71,11 +71,10 @@ router.post("/api/courses", async (req, res) => {
     .findById(course.plan_id)
     .then((plan) => {
       course.distribution_ids.forEach((id) => {
-        if (!plan.distribution_ids.includes(id)) {
+        if (!plan.distribution_ids.includes(id)) 
           errorHandler(res, 400, {
             message: "Invalid combination of plan_id and distribution_ids.",
           });
-        }
       });
     })
     .catch((err) => {
