@@ -22,6 +22,7 @@ function errorHandler(res, status, err) {
 }
 
 async function distributionCreditUpdate(distribution, course, add) {
+  if (!distribution) return; 
   if (add) {
     distribution.planned += course.credits;
     if (course.taken) {
