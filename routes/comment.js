@@ -96,12 +96,11 @@ router.patch("/api/comment", (req, res) => {
 */
 router.delete("/api/comment", (req, res) => {
   const comment_id = req.body.comment_id;
-  if (!comment_id) {
-    errorHandler(res, 400, { message: "Missing comment_id." });
-  }
-  Comments.findByIdAndDelete(comment_id)
-    .then((c) => returnData(c, res))
-    .catch((err) => errorHandler(res, 500, err));
+  if (!comment_id) errorHandler(res, 400, { message: "Missing comment_id." });
+  else
+    Comments.findByIdAndDelete(comment_id)
+      .then((c) => returnData(c, res))
+      .catch((err) => errorHandler(res, 500, err));
 });
 
 /*
