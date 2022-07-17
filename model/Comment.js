@@ -13,7 +13,7 @@ const commentSchema = new Schema({
   },
   thread_id: { type: Schema.Types.ObjectId, ref: "Thread", required: true },
   message: { type: String, required: true },
-  date: { type: Date },
+  date: { type: Date, required: true },
 });
 
 const Comment = mongoose.model("Comment", commentSchema);
