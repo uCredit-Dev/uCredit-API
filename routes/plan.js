@@ -85,11 +85,22 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
 //create plan and add the plan id to user
 //require user_id in body
 router.post("/api/plans", (req, res) => {
+  let major_ids = req.body.major_ids; 
+  if (!major_ids) {
+    major_ids = [];
+    for (let major in req.body.majors) {
+      majors
+        .findOne({ degree_name: major }) 
+        .then((retrievedMajor) => {
+          major_ids.push(retrievedMajor._id); 
+        }); 
+    }
+  }
   const plan = {
     name: req.body.name,
     user_id: req.body.user_id,
     majors: req.body.majors,
-    major_ids: req.body.major_ids,
+    major_ids: major_ids,
     expireAt: req.body.expireAt,
   };
   const year = req.body.year;
@@ -262,12 +273,12 @@ async function addMajorDistributionsWithID(major_ids, plan) {
       .exec();
       const major = await majors.findById(majorid).exec();
       major.distributions.forEach(async (dist_object) => {
-        const distribution_to_post = {
+        let distribution_to_post = {
           major_id: major._id,
           plan_id: plan._id,
           user_id: plan.user_id,
           name: dist_object.name,
-          required: dist_object.required_credits,
+          required_credits: dist_object.required_credits,
           description: dist_object.description,
           criteria: dist_object.criteria,
           min_credits_per_course: dist_object.min_credits_per_course,
@@ -295,8 +306,7 @@ async function addMajorDistributionsWithID(major_ids, plan) {
 
               await fineRequirements.create(fineReq_to_post)
             })
-          }) // TODO: add courses to new distributions
-          .catch((err) => errorHandler(res, 400, err));
+          }); // TODO: add courses to new distributions
       });
       // Adds all courses for a second or third major, but doesn't update any course, year or plan arrays cause course already existsO
       // Only distributions are being updated
@@ -305,7 +315,7 @@ async function addMajorDistributionsWithID(major_ids, plan) {
         addCourses(c);
       }
     }
-  });
+  })
 };
 
 
