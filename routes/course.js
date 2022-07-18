@@ -5,10 +5,10 @@ const { addSampleCourses } = require("../data/courseSamples.js");
 const {
   returnData,
   errorHandler,
-  distributionCreditUpdate,
-  checkRequirementSatisfied, 
+  updateDistribution,
+  distributionCreditUpdate, 
   getRequirements,
-} = require("./helperMethods.js");
+} = require("./helperMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
@@ -73,9 +73,9 @@ router.post("/api/courses", async (req, res) => {
   // route update #1
   courses
     .create(courseBody)
-    .then((retrievedCourse) => {
+    .then(async (retrievedCourse) => {
       const course = retrievedCourse; 
-      years
+      await years
         .findOneAndUpdate(
           { $and: [ {plan_id: course.plan_id}, {name: course.year} ]}, 
           { $push: { courses: course._id } },
@@ -84,18 +84,25 @@ router.post("/api/courses", async (req, res) => {
           retrievedCourse.year_id = year._id; 
           retrievedCourse.save(); 
         })
-      //add course id to plan year's course array
-
-      let exclusive = []; // whitelist
-      distributions
-        .find({ plan_id: retrievedCourse.plan_id })
-        .then((distObjs) => {
-          distObjs.forEach(async (distObj) => {
-            if ((distObj.name in exclusive) && await updateReqs(distObj._id, course._id)) {
-              exclusive = distObj.exclusive; 
+      
+      const plan = await plans.findById(course.plan_id); 
+      for (let m_id of plan.major_ids) {
+        let distExclusive = undefined; 
+        let distObjs = await distributions
+          .find(
+            { $and: [ 
+              {plan_id: retrievedCourse.plan_id}, 
+              {major_id: m_id} 
+            ]})
+          .then(async (distObjs) => {
+            for (let distObj of distObjs) {
+              if ((distExclusive === undefined || distExclusive.includes(distObj.name))) {
+                let updated = await updateDistribution(distObj._id, course._id); 
+                if (updated) distExclusive = distObj.exclusive; 
+              }
             }
-         });
-      })
+          });
+      }
       returnData(course, res);
     })
     .catch((err) => {
