@@ -27,7 +27,6 @@
     "start": "nodemon",
     "test": "jest"
   },
-  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QinyuanWu/uCredit-API.git"
@@ -40,8 +39,10 @@
   "homepage": "https://github.com/QinyuanWu/uCredit-API#readme",
   "devDependencies": {
     "@shelf/jest-mongodb": "^2.2.0",
-    "@types/jest": "^27.4.0",
+    "@types/jest": "^27.5.2",
     "jest": "^27.5.1",
-    "supertest": "^6.1.6"
+    "supertest": "^6.1.6",
+    "ts-jest": "^28.0.7",
+    "typescript": "^4.7.4"
   }
 }
