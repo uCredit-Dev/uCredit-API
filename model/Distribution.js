@@ -10,7 +10,7 @@ const Schema = mongoose.Schema;
 */
 const distributionSchema = new Schema({
   name: { type: String, required: true },
-  required: { type: Number, required: true },
+  required_credits: { type: Number, required: true },
   description: { type: String, required: true },
   criteria: { type: String, required: true },
   min_credits_per_course: { type: Number, required: true },
@@ -23,8 +23,8 @@ const distributionSchema = new Schema({
   user_select: { type: Boolean, default: false }, 
   double_count: { type: Boolean, default: false }, 
   exception: { type: String },
-  exclusive: { type: Boolean, default: false },
-  pathing: { type: Boolean, default: false },
+  exclusive: [{ type: String }],
+  pathing: { type: Number },
   expireAt: { type: Date },
 });
 
