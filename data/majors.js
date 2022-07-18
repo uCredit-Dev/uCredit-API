@@ -30,7 +30,8 @@ const baEcon = {
         "major degree requirement</a> section on the department website.",
       criteria:
         "AS.180.101[C]^OR^AS.180.102[C]^OR^AS.180.301[C]^OR^AS.108.401[C]^OR^AS.180.302[C]",
-      fine_requirements: [
+      exclusive: ['Humanities (H) Distribution', 'Social Science (S) Distribution', 'Other (N/E/Q) Distribution', 'Writing Intensive'],
+        fine_requirements: [
         {
           description:
             "<b>Elements of Macroeconomics</b> <br /> AS.180.101 Elements of Macroeconomics",
@@ -71,6 +72,7 @@ const baEcon = {
         "All courses in this category must be offered by the Economics Department. Three courses must be taken at the 200 level, " +
         "and two must be taken at the 300 level.",
       criteria: "AS Economics[D]",
+      exclusive: ['Humanities (H) Distribution', 'Social Science (S) Distribution', 'Other (N/E/Q) Distribution', 'Writing Intensive'],
       fine_requirements: [
         {
           description: "<b>Lower Level Classes</b>",
@@ -91,6 +93,7 @@ const baEcon = {
       description:
         "Students must complete the math requirement for the major by taking Calculus I (AS.110.106 OR AS.110.108).",
       criteria: "AS.110.106[C]^OR^AS.110.108[C]",
+      exclusive: ['Humanities (H) Distribution', 'Social Science (S) Distribution', 'Other (N/E/Q) Distribution', 'Writing Intensive'],
     },
     {
       name: "Statistics",
@@ -103,6 +106,7 @@ const baEcon = {
         "AS.280.345 Public Health Biostatistics",
       criteria:
         "EN.553.111[C]^OR^EN.553.112[C]^OR^EN.553.211[C]^OR^EN.553.310[C]^OR^EN.553.311[C]^OR^EN.553.420[C]^OR^EN.553.430[C]^OR^AS.280.345[C]",
+      exclusive: ['Humanities (H) Distribution', 'Social Science (S) Distribution', 'Other (N/E/Q) Distribution', 'Writing Intensive'],
     },
     {
       name: "Humanities (H) Distribution",
@@ -113,6 +117,7 @@ const baEcon = {
         "The student must complete at least 9 credits in the Humanities (H) area. " +
         "These credits fulfilling the distribution requirement may overlap with major or minor requirements and the writing-intensive requirement.",
       criteria: "H[A]",
+      exclusive: ['Economics Core', 'Economics Electives', 'Mathematics', 'Statistics', 'Writing Intensive'],
     },
     {
       name: "Social Science (S) Distribution",
@@ -123,6 +128,7 @@ const baEcon = {
         "The student must complete at least 9 credits in the Social Science (S) area. " +
         "These credits fulfilling the distribution requirement may overlap with major or minor requirements and the writing-intensive requirement.",
       criteria: "S[A]",
+      exclusive: ['Economics Core', 'Economics Electives', 'Mathematics', 'Statistics', 'Writing Intensive'],
     },
     {
       name: "Other (N/E/Q) Distribution",
@@ -133,12 +139,12 @@ const baEcon = {
         "The student must complete at least 9 credits in any of the other areas: Natural Sciences (N), Engineering (E) and/or Quantitative (Q). " +
         "These credits fulfilling the distribution requirement may overlap with major or minor requirements and the writing-intensive requirement.",
       criteria: "N[A]^OR^E[A]^OR^Q[A]",
+      exclusive: ['Economics Core', 'Economics Electives', 'Mathematics', 'Statistics', 'Writing Intensive'],
     },
     {
       name: "Writing Intensive",
       required_credits: 12,
       min_credits_per_course: 3,
-      double_count: true,
       description:
         "To encourage excellence in writing, across disciplines, the university requires all undergraduates to take a number of writing-intensive courses. " +
         "All students earning a degree from the School of Arts and Sciences must complete at least 12 credits in writing-intensive courses. " +
@@ -168,6 +174,7 @@ const bsBME = {
         "EN.580.111[C]^OR^EN.580.151[C]^OR^EN.580.153[C]^OR^EN.580.221[C]^OR^EN.580.241[C]^OR^EN.580.242[C]^OR^EN.580.243[C]^OR^" +
         "EN.580.244[C]^OR^EN.580.246[C]^OR^EN.580.248[C]^OR^EN.580.475[C]^OR^EN.580.477[C]^OR^EN.580.485[C]^OR^EN.580.487[C]^OR^" +
         "EN.580.424[C]^OR^EN.580.427[C]^OR^EN.580.452[C]^OR^EN.580.453[C]^OR^EN.580.454[C]^OR^EN.580.494[C]",
+      exclusive: ['Humanities and Social Sciences', 'Writing Intensive'],
       fine_requirements: [
         {
           description:
@@ -285,6 +292,7 @@ const bsBME = {
       criteria:
         "AS.171.101[C]^OR^AS.171.107[C]^OR^AS.171.102[C]^OR^AS.171.108[C]^OR^AS.173.111[C]^OR^AS.173.112[C]" +
         "^OR^AS.030.101[C]^OR^AS.030.102[C]^OR^AS.030.105[C]^OR^AS.030.106[C]",
+      exclusive: ['Humanities and Social Sciences', 'Writing Intensive'],
       fine_requirements: [
         {
           description:
@@ -346,6 +354,7 @@ const bsBME = {
       criteria:
         "AS.110.108[C]^OR^AS.110.109[C]^OR^AS.110.202[C]^OR^AS.110.211[C]^OR^EN.553.291[C]" +
         "^OR^EN.553.310[C]^OR^EN.553.311[C]^OR^EN.553.413[C]^OR^EN.553.430[C]^OR^EN.553.433[C]^OR^EN.560.348[C]",
+      exclusive: ['Humanities and Social Sciences', 'Writing Intensive'],
       fine_requirements: [
         {
           description:
@@ -389,6 +398,7 @@ const bsBME = {
       description:
         "Students are required to take at least one semester of programming from a select set of gateway computing courses.",
       criteria: "EN.500.112[C]^OR^EN.500.113[C]^OR^EN.500.114[C]",
+      exclusive: ['Humanities and Social Sciences', 'Writing Intensive'],
       fine_requirements: [
         {
           description:
@@ -409,6 +419,7 @@ const bsBME = {
         " determine the best combination of classes for you:",
       criteria:
         "BMED-BDS[T]^OR^BMED-CM[T]^OR^BMED-GSB[T]^OR^BMED-IMD[T]^OR^BMED-IMMU[T]^OR^BMED-NE[T]^OR^BMED-TCTE[T]",
+      exclusive: ['Humanities and Social Sciences', 'Writing Intensive'],
       fine_requirements: [
         {
           description: "<b>Biomedical Data Science</b>",
@@ -460,6 +471,7 @@ const bsBME = {
         "(EN.580.480[C]^OR^EN.580.481[C])^OR^(EN.580.580[C]^OR^EN.580.581[C])^OR^" +
         "(EN.601.455[C]^OR^EN.601.456[C])^OR^(EN.580.437[C]^OR^EN.580.438[C])",
       pathing: true,
+      exclusive: ['Humanities and Social Sciences', 'Writing Intensive'],
       fine_requirements: [
         {
           description:
@@ -548,7 +560,7 @@ const bsBME = {
       min_credits_per_course: 1,
       description: "Select 9 credits from any area.",
       criteria: "H[A]^OR^S[A]^OR^Q[A]^OR^N[A]^OR^E[A]",
-      exclusive: true,
+      exclusive: ['Humanities and Social Sciences', 'Writing Intensive'],
     },
     {
       name: "Humanities and Social Sciences",
@@ -891,6 +903,7 @@ const baIS = {
         "course in American politics (AP) <br /> One course in political theory (PT) <br /> One gateway course",
       criteria:
         "INST-IR[T]^OR^INST-CP[T]^OR^INST-AP[T]^OR^INST-PT[T]^OR^AS.070.295[C]^OR^AS.190.108[C]^OR^AS.190.111[C]^OR^(AS.230.150[C]^AND^Fall 2019[Y])",
+      exclusive: ['Economics', 'Foreign Language', 'History'],
       fine_requirements: [
         {
           required_credits: 3,
@@ -932,6 +945,7 @@ const baIS = {
         "Note: both Elements of Macroeconomics and Elements of Microeconomics must be " +
         "completed by the end of the sophomore year.",
       criteria: "INST-ECON[T]^OR^AS Economics[D]",
+      exclusive: ['Political Science', 'Foreign Language', 'History'],
       fine_requirements: [
         {
           required_credits: 3,
@@ -978,6 +992,7 @@ const baIS = {
         "course advanced coursework requirement.",
       criteria:
         "AS Center for Language Education[D]^OR^AS Modern Languages and Literatures[D]",
+      exclusive: ['Political Science', 'Economics', 'History'],
     },
     {
       name: "Focus Area",
@@ -987,6 +1002,7 @@ const baIS = {
         "Four courses within a coherent field of interest. For more detail please visit " +
         "https://krieger.jhu.edu/internationalstudies/undergraduate/requirements/",
       criteria: "",
+      exclusive: [],
       user_select: true,
     },
     {
@@ -999,6 +1015,7 @@ const baIS = {
         "(e.g., AS.100.1xx).\n\tFour courses designated INST-GLOBAL in the course description.",
       criteria:
         "(AS History[D]^AND^Lower Level Undergraduate[L])^OR^INST-GLOBAL[T]",
+      exclusive: ['Political Science', 'Economics', 'Foreign Language'], 
       fine_requirements: [
         {
           required_credits: 3,
@@ -1029,6 +1046,7 @@ const bsAMS = {
       name: "Math",
       required_credits: 39,
       min_credits_per_course: 3,
+      exclusive: ['Natural Sciences', 'Quantitative Studies', 'Liberal Arts', 'Writing Intensive'],
       description:
         "All courses used to meet the following departmental requirements must be taken for a letter grade and passed with a grade of C- or higher.",
       criteria: "EN Applied Mathematics & Statistics[D]^OR^AS Mathematics[D]",
@@ -1096,6 +1114,7 @@ const bsAMS = {
       criteria:
         "EN.500.112[C]^OR^EN.500.113[C]^OR^EN.500.114[C]^OR^AS.250.205[C]^OR^EN.553.281[C]^OR^EN.580.242[C]^OR^EN.580.244[C]^OR^" +
         "EN.601.220[C]",
+      exclusive: ['Natural Sciences', 'Quantitative Studies', 'Liberal Arts', 'Writing Intensive'],
     },
     {
       name: "Area of Focus",
@@ -1112,6 +1131,7 @@ const bsAMS = {
         "AS.110.401[C]^OR^EN.553.371[C]^OR^EN.553.471[C]^OR^EN.553.472[C]^OR^" +
         "EN.553.428[C]^OR^EN.553.441[C]^OR^EN.553.442[C]^OR^EN.553.444[C]^OR^EN.553.445[C]^OR^EN.553.447[C]^OR^EN.553.448[C]^OR^EN.553.449[C]^OR^EN.553.488[C]^OR^" +
         "EN.553.481[C]^OR^EN.553.493[C]",
+      exclusive: ['Natural Sciences', 'Quantitative Studies', 'Liberal Arts', 'Writing Intensive'],
       fine_requirements: [
         {
           required_credits: 6,
@@ -1168,6 +1188,7 @@ const bsAMS = {
         "AS.110.445[C]^OR^EN.553.400[C]^OR^EN.553.413[C]^OR^EN.553.432[C]^OR^EN.553.433[C]^OR^EN.553.436[C]" +
         "^OR^EN.553.450[C]^OR^EN.553.463[C]^OR^EN.553.467[C]^OR^EN.553.481[C]^OR^EN.553.488[C]^OR^EN.553.493[C]" +
         "^OR^EN.553.494[C]^OR^EN.601.433[C]^OR^EN.601.475[C]^OR^EN.601.482[C]",
+        exclusive: ['Natural Sciences', 'Quantitative Studies', 'Liberal Arts', 'Writing Intensive'],
     },
     {
       name: "Natural Sciences",
@@ -1177,6 +1198,7 @@ const bsAMS = {
         "Courses coded Natural Sciences. Laboratory courses that accompany Natural Science courses may" +
         " be used in reaching this total. (Courses used to meet the requirements above may be counted toward this total.)",
       criteria: "N[A]",
+      exclusive: ['Math', 'Computer Languages and Programming', 'Area of Focus', 'Scientific Computing', 'Writing Intensive'],
     },
     {
       name: "Quantitative Studies",
@@ -1274,7 +1296,6 @@ const bsCS_Old = {
             "<b>2 Upper Level Classifications:</b><p>At least one upper level course in two of these four different classification</p> " +
             "areas: Applications(CSCI-APPL), Systems(CSCI-SYST), Software(CSCI-SOFT) and Reasoning(CSCI-RSNG)",
           required_credits: 6,
-          exclusive: true,
           criteria:
             "CSCI-APPL[T]^OR^CSCI-SYST[T]^OR^CSCI-SOFT[T]^OR^CSCI-RSNG[T]",
         },
@@ -1419,7 +1440,6 @@ const bsCS_New = {
             "<b>2 Upper Level Classifications:</b><p>At least one upper level course in two of these four different classification</p> " +
             "areas: Applications(CSCI-APPL), Systems(CSCI-SYST), Software(CSCI-SOFT) and Reasoning(CSCI-RSNG)",
           required_credits: 6,
-          exclusive: true,
           criteria:
             "CSCI-APPL[T]^OR^CSCI-SYST[T]^OR^CSCI-SOFT[T]^OR^CSCI-RSNG[T]",
         },
@@ -1524,6 +1544,7 @@ const baCS_New = {
         "major degree requirement</a> section on the department website.",
       criteria:
         "EN Computer Science[D]^OR^CSCI-OTHER[T]^OR^Gateway Computing[N]",
+      exclusive: ['Liberal Arts', 'Writing Intensive'],
       fine_requirements: [
         {
           description:
@@ -1560,6 +1581,7 @@ const baCS_New = {
         "campus: Mathematics or Applied Math and Statistics. However, 553.171 Discrete Mathematics " +
         "may not count towards these math requirements. At least one course must be 200-level or above",
       criteria: "AS Mathematics[D]^OR^EN Applied Mathematics & Statistics[D]",
+      exclusive: ['Liberal Arts', 'Writing Intensive'],
       exception: "EN.553.171[C]",
       fine_requirements: [
         {
@@ -1579,6 +1601,7 @@ const baCS_New = {
         "Students must take two semesters of core science courses (any combination of Physics, " +
         "Chemistry, Biology), with their associated labs. AP credit is an acceptable substitute for these courses and labs.",
       criteria: "N[A]",
+      exclusive: ['Liberal Arts', 'Writing Intensive'],
     },
     {
       name: "Liberal Arts",
@@ -1727,7 +1750,7 @@ const CS_Minor_Old = {
             "<b>Upper Level Undergraduate: </b><p>9 upper level CS credits that form a cohesive program of study and <b>must be approved by the computer science minor advisor</b>. One way is to choose all three courses within one or two area tag classifications (CSCI-APPL, CSCI-SOFT, CSCI-THRY, CSCI-RSNG, CSCI-SYST)</p>",
           required_credits: 9,
           criteria: "EN Computer Science[D]^AND^Upper Level Undergraduate[L]",
-          exclusive: true,
+          exclusive: [],
         },
       ],
     },
@@ -1754,6 +1777,7 @@ const bsMolCell = {
         "These are the core biology courses." +
         "<br>For more information please visit the major degree requirement section on the department website.",
       criteria: "AS Biology[D]",
+      exclusive: ['Writing Intensive', 'Humanities Distribution Requirement', 'Social Science Distribution Requirement'],
       fine_requirements: [
         {
           description: "<p>020.303 Genetics</p>",
@@ -1808,6 +1832,7 @@ const bsMolCell = {
       description:
         "Must complete General Chemistry (or AP equivalent) and Organic Chemistry in addition to their respective labs.",
       criteria: "AS Chemistry[D]",
+      exclusive: ['Writing Intensive', 'Humanities Distribution Requirement', 'Social Science Distribution Requirement'],
       exception: "",
       fine_requirements: [
         {
@@ -1858,6 +1883,7 @@ const bsMolCell = {
       description:
         "Must complete Physics I and II (or AP equivalent) in addition to their respective labs.",
       criteria: "AS Physics & Astronomy[D]",
+      exclusive: ['Writing Intensive', 'Humanities Distribution Requirement', 'Social Science Distribution Requirement'],
       fine_requirements: [
         {
           description:
@@ -1893,6 +1919,7 @@ const bsMolCell = {
       min_credits_per_course: 4,
       description: "Must complete Calculus I and II",
       criteria: "AS Mathematics[D]",
+      exclusive: ['Writing Intensive', 'Humanities Distribution Requirement', 'Social Science Distribution Requirement'],
       fine_requirements: [
         {
           description:
@@ -1922,6 +1949,7 @@ const bsMolCell = {
         "<br>See POS-Tag BIOL-UL on SIS for the courses approved by the Director of Undergraduate Studies. " +
         "<br>Students may use 2 credits of Build-a-Genome (AS.020.420 or AS.020.451) toward the upper level Biology elective requirement.",
       criteria: "AS Biology[D]",
+      exclusive: ['Writing Intensive', 'Humanities Distribution Requirement', 'Social Science Distribution Requirement'],
       fine_requirements: [
         {
           description: "<b>Biology Department Upper Level</b>",
@@ -1942,6 +1970,7 @@ const bsMolCell = {
         "AS.020.572[C]^OR^AS.020.597[C]^OR^AS.030.501[C]^OR^AS.030.502[C]^OR^AS.030.503[C]^OR^AS.030.504[C]^OR^AS.030.505[C]^OR^AS.030.506[C]^OR^" +
         "AS.030.507[C]^OR^AS.030.509[C]^OR^AS.030.510[C]^OR^AS.030.521[C]^OR^AS.030.522[C]^OR^AS.030.523[C]^OR^AS.030.524[C]^OR^AS.030.525[C]^OR^" +
         "AS.030.526[C]^OR^AS.030.570[C]^OR^AS.030.597[C]^OR^AS.250.521[C]^OR^AS.250.522[C]^OR^AS.250.574[C]^OR^AS.250.597[C]",
+      exclusive: ['Writing Intensive', 'Humanities Distribution Requirement', 'Social Science Distribution Requirement'],
     },
     {
       name: "Writing Intensive",
@@ -1963,7 +1992,7 @@ const bsMolCell = {
         "<br>Courses passed with a letter grade of D or better, or passed with a Satisfactory grade, will fulfill the distribution requirement. " +
         "<br>Students who entered JHU prior to Fall 2014 should view the appropriate archived catalogue.",
       criteria: "H[A]",
-      exclusive: true,
+      exclusive: ['Chemistry', 'Physics', 'Mathematics', 'Upper Level Electives', 'Biology Research Requirement', 'Writing Intensive'],
     },
     {
       name: "Social Science Distribution Requirement",
@@ -1975,7 +2004,7 @@ const bsMolCell = {
         "<br>Courses passed with a letter grade of D or better, or passed with a Satisfactory grade, will fulfill the distribution requirement. " +
         "<br>Students who entered JHU prior to Fall 2014 should view the appropriate archived catalogue.",
       criteria: "S[A]",
-      exclusive: true,
+      exclusive: ['Chemistry', 'Physics', 'Mathematics', 'Upper Level Electives', 'Biology Research Requirement', 'Writing Intensive'],
     },
     {
       name: "Honors",
