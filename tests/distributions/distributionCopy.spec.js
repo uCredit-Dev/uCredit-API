@@ -4,14 +4,14 @@ const majors = require("../../model/Major");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
 
-beforeEach((done) => {
+beforeAll((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/distributions", { useNewUrlParser: true })
+    .connect("mongodb://localhost:27017/dist", { useNewUrlParser: true })
     .then(() => done());
 });
 
-afterEach((done) => {
-  mongoose.connection.db.collection("majors").drop(() => {
+afterAll((done) => {
+  mongoose.connection.db.dropDatabase(() => {
     mongoose.connection.close(() => done());
   });
 });

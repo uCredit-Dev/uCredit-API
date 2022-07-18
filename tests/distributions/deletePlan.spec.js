@@ -19,9 +19,9 @@ const samplePlan = {
   year: "Junior",
 };
 
-beforeEach((done) => {
+beforeAll((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/distributions", { useNewUrlParser: true })
+    .connect("mongodb://localhost:27017/dist", { useNewUrlParser: true })
     .then(async () => {
       const response1 = await request.post("/api/majors").send(allMajors[0]);
       const response2 = await request.post("/api/plans").send(samplePlan);
@@ -42,8 +42,8 @@ beforeEach((done) => {
     });
 });
 
-afterEach((done) => {
-  mongoose.connection.db.collection("distributions").drop(() => {
+afterAll((done) => {
+  mongoose.connection.db.dropDatabase(() => {
     mongoose.connection.close(() => done());
   });
 });

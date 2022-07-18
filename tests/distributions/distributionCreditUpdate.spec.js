@@ -41,7 +41,7 @@ const SAMPLES = [
 
 beforeAll((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/helperMethods", {
+    .connect("mongodb://localhost:27017/dist", {
       useNewUrlParser: true,
     })
     .then(async () => {

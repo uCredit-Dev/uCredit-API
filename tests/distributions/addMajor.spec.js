@@ -9,9 +9,9 @@ const { allMajors } = require("../../data/majors");
 let planRes = {};
 const request = supertest(createApp());
 
-beforeEach((done) => {
+beforeAll((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/distributions", { useNewUrlParser: true, useUnifiedTopology: true })
+    .connect("mongodb://localhost:27017/dist", { useNewUrlParser: true, useUnifiedTopology: true })
     .then(async () => {
       let majorRes = await request.post("/api/majors").send(allMajors[0]);
       const bsCS_Old = await majors.findById(majorRes.body.data._id);
@@ -47,8 +47,8 @@ beforeEach((done) => {
     });
 });
 
-afterEach((done) => {
-  mongoose.connection.db.collection("distributions").drop(() => {
+afterAll((done) => {
+  mongoose.connection.db.dropDatabase(() => {
     mongoose.connection.close(() => done());
   });
 });

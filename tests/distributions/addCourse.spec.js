@@ -7,23 +7,24 @@ const years = require("../../model/Year");
 const courses = require("../../model/Course");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
+const FineRequirement = require("../../model/FineRequirement");
 
-let major1 = {};
+let bsCS_New = {};
 let plan1 = {};
 let course1 = {};
 let course2 = {};
 
-beforeEach((done) => {
+beforeAll((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/distributions", { useNewUrlParser: true })
+    .connect("mongodb://localhost:27017/distributinos", { useNewUrlParser: true })
     .then(async () => {
-      const response1 = await request.post("/api/majors").send(allMajors[0]);
-      major1 = response1.body.data;
+      const response1 = await request.post("/api/majors").send(allMajors[1]);
+      bsCS_New = response1.body.data;
       const samplePlan = {
         name: "TEST_PLAN",
         user_id: 'TEST_USER',
-        majors: [major1.degree_name],
-        majors: [major1._id],
+        majors: [bsCS_New.degree_name],
+        major_ids: [bsCS_New._id],
         expireAt: new Date(),
         year: "Junior",
       };
@@ -56,8 +57,8 @@ beforeEach((done) => {
     });
 });
 
-afterEach((done) => {
-  mongoose.connection.db.collection("distributions").drop(() => {
+afterAll((done) => {
+  mongoose.connection.db.dropDatabase(() => {
     mongoose.connection.close(() => done());
   });
 });
@@ -89,19 +90,51 @@ describe("add new course to plan", () => {
   });
   it("should be associated with one or more of the plan's distribution objects", async () => {
     const plan = await plans.findById(plan1._id);
-    const course = await courses.findById(course2._id); //wi
-    const distIds = course.distribution_ids;
+    const distIds = distributions.find({plan_id: plan._id});
     expect(distIds.length).toBeTruthy();
+    expect(distIds.length).toBe(5);
     distIds.forEach(async (distId) => {
       let dist = await distributions.findById(distId);
-      expect(dist.plan_id).toBe(plan._id);
-      expect(dist.user_id).toBe(plan.user_id);
-      expect(dist.major_id).toBe(plan.major_id);
-      expect(dist.planned).toBe(course.credits);
+      expect(dist.plan_id.toString()).toBe(plan._id.toString());
+      expect(dist.user_id.toString()).toBe(plan.user_id.toString());
+      expect(dist.major_id.toString()).toBe(plan.major_id.toString());
+      expect(dist.planned).toBe(6);
       expect(
         dist.courses.find((courseId) => courseId === course._id).exists()
       ).toBeTruthy(); 
       // check that fine_req satisfied if applicable
+    });
+  });
+  it("should be associated with the two course objects", async () => {
+    const java = await courses.findById(course1._id); //java
+    const wi = await courses.findById(course2._id); //wi
+    java.distribution_ids.forEach(async (distId) => {
+      const dist = await distributions.findById(distId);
+      expect(dist.plan_id.toString()).toBe(java.plan_id.toString());
+      expect(dist.user_id.toString()).toBe(java.user_id.toString());
+      expect(dist.planned).toBe(java.credits);
+      expect(dist.satisfied).toBe(false);
+      expect(dist.name).toBe('Computer Science');
+      expect(dist.fineReq_ids).toBeTruthy(); 
+      const fine = await FineRequirement.findById(dist.fineReq_ids[1]); 
+      expect(fine.planned).toBe(java.credits);
+      expect(fine.satisfied).toBe(false);
+    });
+    wi.distribution_ids.forEach(async (distId) => {
+      const dist = await distributions.findById(distId);
+      expect(dist.plan_id.toString()).toBe(wi.plan_id.toString());
+      expect(dist.user_id.toString()).toBe(wi.user_id.toString());
+      expect(dist.planned).toBe(wi.credits);
+      expect(dist.satisfied).toBe(false);
+      if (dist.wi) {
+        expect(dist.name).toBe('Writing Intensive');
+        const fine = await FineRequirement.findById(dist.fineReq_ids[0]);
+        expect(fine.planned).toBe(wi.credits);
+      } else {
+        expect(dist.name).toBe('Liberal Arts');
+      }
+      expect(dist.planned).toBe(wi.credits);
+      expect(dist.satisfied).toBe(false);
     });
   });
 });
