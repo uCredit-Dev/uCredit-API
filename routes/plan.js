@@ -85,22 +85,11 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
 //create plan and add the plan id to user
 //require user_id in body
 router.post("/api/plans", (req, res) => {
-  let major_ids = req.body.major_ids; 
-  if (!major_ids) {
-    major_ids = [];
-    for (let major in req.body.majors) {
-      majors
-        .findOne({ degree_name: major }) 
-        .then((retrievedMajor) => {
-          major_ids.push(retrievedMajor._id); 
-        }); 
-    }
-  }
   const plan = {
     name: req.body.name,
     user_id: req.body.user_id,
     majors: req.body.majors,
-    major_ids: major_ids,
+    major_ids: req.body.major_ids,
     expireAt: req.body.expireAt,
   };
   const year = req.body.year;
@@ -208,7 +197,6 @@ router.delete("/api/plans/:plan_id", (req, res) => {
 
 //***need to consider not allow user to change major for a plan ***/
 router.patch("/api/plans/update", (req, res) => {
-  console.log(id);
   const id = req.body.plan_id;
   const majors = req.body.majors;
   const major_ids = req.body.major_ids;
@@ -261,18 +249,18 @@ router.patch("/api/plans/update", (req, res) => {
 
 async function addMajorDistributionsWithID(major_ids, plan) {
   //Route #6 - Adding new distributions if new major is added
-  major_ids.forEach(async (majorid) => {
-    dist = await distributions.find({ plan_id: plan._id }, { major_id: majorid });
+  for (let m_id of major_ids) {
+    const dist = await distributions.find({ plan_id: plan._id }, { major_id: m_id });
     if (dist.length == 0) {
       plans.findByIdAndUpdate(
         //update user
         plan._id,
-        { $push: { major_ids: majorid } },
+        { $addToSet: { major_ids: m_id } },
         { new: true, runValidators: true }
       )
       .exec();
-      const major = await majors.findById(majorid).exec();
-      major.distributions.forEach(async (dist_object) => {
+      const major = await majors.findById(m_id).exec();
+      for (let dist_object of major.distributions) {
         let distribution_to_post = {
           major_id: major._id,
           plan_id: plan._id,
@@ -291,23 +279,23 @@ async function addMajorDistributionsWithID(major_ids, plan) {
 
         await distributions
           .create(distribution_to_post)
-          .then((retrievedDistribution) => {
-            dist_object.fine_requirements.forEach(async (f_req) => {
+          .then(async (retrievedDistribution) => {
+            for (let f_req of dist_object.fine_requirements) {
               let fineReq_to_post = {
                 description: f_req.description,
                 required_credits: f_req.required_credits,
                 criteria: f_req.criteria,
                 plan_id: plan._id,
-                major_id: majorid,
+                major_id: major._id,
                 distribution_id: retrievedDistribution._id,
               }
               if (f_req.hasOwnProperty('exception')) fineReq_to_post.exception = f_req.exception;
               if (f_req.hasOwnProperty('exclusive')) fineReq_to_post.exclusive = f_req.exclusive;
 
-              await fineRequirements.create(fineReq_to_post)
-            })
+              await fineRequirements.create(fineReq_to_post);
+            }
           }); // TODO: add courses to new distributions
-      });
+      }
       // Adds all courses for a second or third major, but doesn't update any course, year or plan arrays cause course already existsO
       // Only distributions are being updated
       const coursesInPlan = await Course.findByPlanId(plan._id)
@@ -315,7 +303,7 @@ async function addMajorDistributionsWithID(major_ids, plan) {
         addCourses(c);
       }
     }
-  })
+  }
 };
 
 

@@ -3,6 +3,7 @@ const Notifications = require("../model/Notification.js");
 const Courses = require("../model/Course.js");
 const Distributions = require("../model/Distribution.js");
 const Majors = require("../model/Major.js");
+const FineRequirements = require("../model/FineRequirement.js")
 var ObjectId = require('mongoose').Types.ObjectId;
 
 //add data field to the response object. If data is null, return 404 error
@@ -48,19 +49,22 @@ const updateDistribution = async (
         course.distribution_ids.push(distribution_id);
         course.save(); 
         // update fine requirement credits 
-        if (distribution.fine_requirements) {
-          let fineExclusive: string[] | undefined = undefined; 
-          distribution.fine_requirements.forEach((fine, i: number) => {
-            if (
-              (fine.planned < fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
-              (fineExclusive === undefined || fineExclusive.includes(fine.description)) &&  
-              checkCriteriaSatisfied(fine.criteria, course)
-            ) {
-              fineCreditUpdate(distribution, i, course, true);
-              fineExclusive = fine.exclusive;
+        FineRequirements
+          .find({distribution_id: distribution._id})
+          .then((fineReqs) => {
+            let fineExclusive: string[] | undefined = undefined; 
+            for (let fine of fineReqs) {
+              if (
+                (fine.planned < fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
+                (fineExclusive === undefined || fineExclusive.includes(fine.description)) &&  
+                checkCriteriaSatisfied(fine.criteria, course)
+              ) {
+                distributionCreditUpdate(fine, course, true);
+                fine.save(); 
+                fineExclusive = fine.exclusive;
+              }
             }
           })
-        }
         if (distribution.planned >= distribution.required_credits) {
           if (distribution.pathing !== undefined) {
             processPathing(distribution); 
@@ -75,7 +79,7 @@ const updateDistribution = async (
   return false;
 };
 
-async function distributionCreditUpdate(distribution, course, add) {
+function distributionCreditUpdate(distribution, course, add) {
   if (add) {
     distribution.planned += course.credits;
     if (course.taken) {
@@ -87,26 +91,15 @@ async function distributionCreditUpdate(distribution, course, add) {
       distribution.current -= course.credits;
     }
   }
-  if (distribution.planned < distribution.required_credits) {
-    distribution.satisfied = false; // true check later with pathing
-  }
-}
-
-async function fineCreditUpdate(distribution, i, course, add) {
-  if (add) {
-    distribution.fine_requirements[i].planned += course.credits;
-    if (course.taken) {
-      distribution.fine_requirements[i].current += course.credits;
+  if (distribution.name) {
+    if (distribution.planned < distribution.required_credits) {
+      distribution.satisfied = false; // true check later with pathing
     }
-  } else {
-    distribution.fine_requirements[i].planned -= course.credits;
-    if (course.taken) {
-      distribution.fine_requirements[i].current -= course.credits;
+  } else { // finereq
+    if (distribution.planned >= distribution.required_credits) {
+      distribution.satisfied = true; 
     }
   }
-  const fine = distribution.fine_requirements[i]; 
-  distribution.fine_requirements[i].satisfied =
-    fine.planned >= fine.required_credits ? true : false;
 }
 
 const processPathing = (

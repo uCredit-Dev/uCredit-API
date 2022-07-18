@@ -61,25 +61,25 @@ describe("create a plan", () => {
   });
   it("should create associated year objects", async () => {
     planRes.years.forEach(async (y_id) => {
-      let year = await years.findById(y_id).exec();
+      let year = await years.findById(y_id);
       expect(year).toBeTruthy();
       expect(year.plan_id.toString()).toBe(planRes._id);
     })
   });
   it("should create associated distribution objects", async () => {
-    const distObjs = await distributions.find({ plan_id: planRes._id }).exec();
+    const distObjs = await distributions.find({ plan_id: planRes._id });
     expect(distObjs).toBeTruthy();
     expect(distObjs.length).toBe(5);
     var count = 0;
-    distObjs.forEach(async (dist) => {
+    for (let dist of distObjs) {
       expect(dist.plan_id.toString()).toBe(planRes._id);
-      let fineReqs = await fineRequirements.find({ distribution_id: dist._id }).exec();
+      let fineReqs = await fineRequirements.find({ distribution_id: dist._id });
       count += fineReqs.length;
       fineReqs.forEach((fine) => {
         expect(fine.distribution_id.toString()).toBe(dist._id.toString());
         expect(fine.plan_id.toString()).toBe(planRes._id);
       })
-    })
-    expect(count == 9);
+    }
+    expect(count).toBe(9);
   });
 });
