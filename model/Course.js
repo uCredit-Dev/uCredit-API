@@ -21,7 +21,7 @@ const courseSchema = new Schema({
   number: String,
   department: String,
   tags: [{ type: String }],
-  area: {type: String, default: "None"},
+  areas: {type: String},
   credits: { type: Number, required: true },
   wi: { type: Boolean, default: false },
   taken: { type: Boolean, default: false },

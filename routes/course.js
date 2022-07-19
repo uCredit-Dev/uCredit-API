@@ -71,7 +71,7 @@ router.post("/api/courses", async (req, res) => {
   const courseBody = req.body;
   //console.log("course is ", course);
   // route update #1
-  courses
+  await courses
     .create(courseBody)
     .then(async (retrievedCourse) => {
       const course = retrievedCourse; 
@@ -80,18 +80,18 @@ router.post("/api/courses", async (req, res) => {
           { $and: [ {plan_id: course.plan_id}, {name: course.year} ]}, 
           { $push: { courses: course._id } },
           { new: true, runValidators: true })
-        .then((year) => {
+        .then(async (year) => {
           retrievedCourse.year_id = year._id; 
-          retrievedCourse.save(); 
+          await retrievedCourse.save(); 
         })
       
       const plan = await plans.findById(course.plan_id); 
       for (let m_id of plan.major_ids) {
         let distExclusive = undefined; 
-        let distObjs = await distributions
+        await distributions
           .find(
             { $and: [ 
-              {plan_id: retrievedCourse.plan_id}, 
+              {plan_id: course.plan_id}, 
               {major_id: m_id} 
             ]})
           .then(async (distObjs) => {
@@ -103,7 +103,9 @@ router.post("/api/courses", async (req, res) => {
             }
           });
       }
-      returnData(course, res);
+      // reflect changes
+      const updatedCourse = await courses.findById(course._id);
+      returnData(updatedCourse, res);
     })
     .catch((err) => {
       errorHandler(res, 400, err);

@@ -31,7 +31,7 @@ const updateDistribution = async (
 ) : Promise<boolean> => {
   let course = await Courses.findById(ObjectId(course_id)); 
   if (!course) return false; 
-  Distributions
+  await Distributions
     .findById(ObjectId(distribution_id))
     .then(async (distribution) => {
       if (!distribution) return false; 
@@ -45,13 +45,13 @@ const updateDistribution = async (
       ) {
         // update distribution credits  
         distributionCreditUpdate(distribution, course, true);
-          // add distribution id to course 
+        // add distribution id to course 
         course.distribution_ids.push(distribution_id);
-        course.save(); 
+        await course.save(); 
         // update fine requirement credits 
-        FineRequirements
+        await FineRequirements
           .find({distribution_id: distribution._id})
-          .then((fineReqs) => {
+          .then(async (fineReqs) => {
             let fineExclusive: string[] | undefined = undefined; 
             for (let fine of fineReqs) {
               if (
@@ -60,7 +60,7 @@ const updateDistribution = async (
                 checkCriteriaSatisfied(fine.criteria, course)
               ) {
                 distributionCreditUpdate(fine, course, true);
-                fine.save(); 
+                await fine.save(); 
                 fineExclusive = fine.exclusive;
               }
             }
@@ -195,7 +195,7 @@ const handleTagType = (
       break;
     case 'A': // Area
       updatedConcat = (
-        course.areas !== undefined && course.areas !== 'None' && course.areas.includes(splitArr[index])
+        course.areas !== undefined && course.areas.includes(splitArr[index])
       ).toString();
       break;
     case 'N': // Name
