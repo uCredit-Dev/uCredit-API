@@ -25,11 +25,12 @@ const majorSchema = new Schema({
       name: { type: String, required: true },
       required_credits: { type: Number, required: true },
       min_credits_per_course: { type: Number, required: true },
-      pathing: { type: Boolean, default: false },
+      pathing: { type: Number, default: false },
       description: { type: String, required: true },
       criteria: { type: String, required: true },
       user_select: { type: Boolean, default: false }, //if true, user can put any course into this distribution
       double_count: { type: Boolean, default: false }, //courses being classified to this distribution might also be double counted for another distribution
+      exclusive: [{ type: String }], // whitelisted distributions that can double count; if undefined, all whitelisted 
       exception: { type: String }, //course that match the exception expression cannot be added toward this distirbution
       fine_requirements: [
         {
@@ -37,7 +38,7 @@ const majorSchema = new Schema({
           required_credits: { type: Number, required: true },
           criteria: { type: String, required: true },
           exception: { type: String },
-          exclusive: { type: Boolean, default: false },
+          exclusive: [{ type: String }],
         },
       ],
     },
