@@ -65,14 +65,16 @@ afterAll((done) => {
 
 const request = supertest(createApp());
 
-describe("add new course to plan", () => {
-  it("should return posted course", async () => {
+describe("POST /api/courses", () => {
+  it("response should correspond to java", async () => {
     expect(java.title).toBe("Gateway Computing: Java");
     expect(java.user_id).toBe("TEST_USER");
     expect(java.year).toBe("Junior");
     expect(java.term).toBe("spring");
     expect(java.number).toBe('EN.500.112');
     expect(java.credits).toBe(3);
+  });
+  it("response should correspond to expos", async () => {
     expect(expos.title).toBe("Expository Writing");
     expect(expos.user_id).toBe("TEST_USER");
     expect(expos.year).toBe("Freshman");
@@ -81,28 +83,29 @@ describe("add new course to plan", () => {
     expect(expos.credits).toBe(3);
     expect(expos.wi).toBeTruthy();
   });
-  it("should associate course objects to plan object", async () => {
+  it("course objects have correct plan_id and user_id", async () => {
     expect(java.plan_id.toString()).toBe(plan._id.toString());
     expect(java.user_id).toBe(plan.user_id);
     expect(expos.plan_id.toString()).toBe(plan._id.toString());
     expect(expos.user_id).toBe(plan.user_id);
   });
-  it("should associate course year with plan's year objects", async () => {
-    let planObj = await plans.findById(plan._id);
+  it("course year corresponds to year objects", async () => {
+    let planObj = await plans.findById(plan._id); // res does not have year_ids 
     let year = await years.findById(java.year_id);
+    expect(year.name).toBe(java.year);
     expect(year.plan_id.toString()).toBe(planObj._id.toString());
     expect(planObj.year_ids.find((id) => id.toString() === java.year_id.toString())).toBeTruthy(); 
     expect(year.courses.find((c) => c.toString() === java._id.toString())).toBeTruthy();
     year = await years.findById(expos.year_id);
+    expect(year.name).toBe(expos.year);
     expect(year.plan_id.toString()).toBe(planObj._id.toString());
     expect(planObj.year_ids.find((id) => id.toString() === expos.year_id.toString())).toBeTruthy(); 
     expect(year.courses.find((c) => c.toString() === expos._id.toString())).toBeTruthy();
   });
-  it("should associate java with the Computer Science distribution", async () => {
+  it("java fulfills the Computer Science distribution", async () => {
     expect(java.distribution_ids.length).toBe(1); 
     for (let distId of java.distribution_ids) {
       const dist = await distributions.findById(distId);
-      console.log(dist);
       expect(dist.plan_id.toString()).toBe(java.plan_id.toString());
       expect(dist.user_id.toString()).toBe(java.user_id.toString());
       expect(dist.name).toBe('Computer Science');
@@ -116,22 +119,57 @@ describe("add new course to plan", () => {
       expect(fine.satisfied).toBe(false);
     }
   });
-  it("should associate expos with the Liberal Arts and WI distribution", async () => {
+  it("expos fulfills Liberal Arts and WI distributions", async () => {
     expect(expos.distribution_ids.length).toBe(2); 
     for (let distId of expos.distribution_ids) {
       const dist = await distributions.findById(distId);
       expect(dist.plan_id.toString()).toBe(expos.plan_id.toString());
       expect(dist.user_id.toString()).toBe(expos.user_id.toString());
       expect(dist.planned).toBe(expos.credits);
-      expect(dist.planned).toBe(expos.credits);
       expect(dist.satisfied).toBe(false);
       if (dist.required_credits === 6) {
         expect(dist.name).toBe('Writing Intensive');
         const fine = await fineRequirements.findOne({distribution_id: dist._id}); 
         expect(fine).toBeTruthy(); 
+        expect(fine.satisfied).toBeTruthy(); 
         expect(fine.planned).toBe(expos.credits);
       } else {
         expect(dist.name).toBe('Liberal Arts');
+      }
+    }
+  }); 
+  it("should not add courses to a satisfied distribution", async () => {
+    const exposBody = {
+      title: "Expository Writing",
+      user_id: "TEST_USER",
+      number: "AS.060.113",
+      areas: "H", 
+      term: "spring",
+      year: "Freshman",
+      wi: true,
+      plan_id: plan._id,
+      credits: 3,
+    };
+    let lastExpos = await request.post("/api/courses").send(exposBody); // in
+    lastExpos = lastExpos.body.data; 
+    let extraExpos = await request.post("/api/courses").send(exposBody); // not in
+    extraExpos = extraExpos.body.data; 
+    expect(lastExpos.distribution_ids.length).toBe(2); 
+    expect(extraExpos.distribution_ids.length).toBe(1); 
+    for (let distId of lastExpos.distribution_ids) {
+      const dist = await distributions.findById(distId);
+      if (dist.required_credits === 6) {
+        expect(dist.name).toBe('Writing Intensive');
+        expect(dist.planned).toBe(6); // should not be 9
+        expect(dist.satisfied).toBeTruthy(); // should be true 
+        // 3rd expos class only fulfilled liberal arts 
+        expect(!extraExpos.distribution_ids.includes(dist._id)).toBeTruthy(); 
+        const fine = await fineRequirements.findOne({distribution_id: dist._id}); 
+        expect(fine.satisfied).toBeTruthy(); 
+        expect(fine.planned).toBe(3);
+      } else {
+        expect(dist.name).toBe('Liberal Arts');
+        expect(extraExpos.distribution_ids.includes(dist._id.toString())).toBeTruthy(); 
       }
     }
   }); 
