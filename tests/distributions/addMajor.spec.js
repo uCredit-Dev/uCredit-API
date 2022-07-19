@@ -38,11 +38,11 @@ beforeAll((done) => {
       const response3 = await request.post("/api/courses").send(course);
       // adding AMS
       const body = {
-        id: planRes._id, 
+        plan_id: planRes._id, 
         majors: [bsCS_Old.degree_name, bsAMS.degree_name], 
         major_ids: [bsCS_Old._id, bsAMS._id],
       };
-      await request.patch(`/api/plans/update/`).send(body);
+      const response4 = await request.patch(`/api/plans/update/`).send(body);
       done();
     });
 });
@@ -57,7 +57,6 @@ describe("Adding a major", () => {
   it("should add a major to plan", async () => {
     const updatedPlan = await plans.findById(planRes._id);
     expect(updatedPlan).toBeTruthy();
-    console.log(updatedPlan.major_ids) 
     expect(updatedPlan.major_ids.length).toBe(2);
   });
   it("should create associated distribution objects with correct major_id", async () => {
@@ -68,7 +67,7 @@ describe("Adding a major", () => {
       .find({ plan_id: planRes._id })
       .then((dist) => {
         for (d in dist) {
-          expect(d.major_id.toBe(updatedPlan.major_ids[0]) || d.major_id.toBe(updatedPlan.major_ids[1]));
+          expect(d.major_id === updatedPlan.major_ids[0] || d.major_id === updatedPlan.major_ids[1]);
         }
       })
   });

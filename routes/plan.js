@@ -108,7 +108,7 @@ router.post("/api/plans", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
-      await addMajorDistributionsWithID(retrievedPlan.major_ids, retrievedPlan);
+      await addMajorDistributions(retrievedPlan);
       retrievedPlan.save();
       const yearName = [
         "AP/Transfer",
@@ -217,23 +217,29 @@ router.patch("/api/plans/update", (req, res) => {
 
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
-      .then((plan) => {
+      .then(async (plan) => {
         // cleaning up distributions associated with plan 
         // concurrent modification ? 
-        addMajorDistributionsWithID(major_ids, plan);
+        await addMajorDistributions(plan);
         distributions
           .find({ plan_id: plan._id })
-          .forEach((dist) => {
-            if (!plan.major_ids.includes(dist.major_id)) {
-              distributions.deleteOne(dist._id);
-              courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } });
-              fineRequirements
-                .find({ distribution_id: dist._id })
-                .forEach((fineObj) => {
-                  courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: fineObj._id } })
-                });
+          .then((distributions) => {
+            for (let dist of distributions) {
+              if (!plan._doc.major_ids.includes(dist.major_id)) {
+                distributions.deleteOne(dist._id);
+                courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } });
+                fineRequirements
+                  .find({ distribution_id: dist._id })
+                  .then((fines) => {
+                    fines.forEach((fine) => {
+                      courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: fine._id } });
+                    })
+                  });
+                fineRequirements
+                  .deleteMany({ distribution_id: dist._id });
+              }
             }
-          })
+          });
 
         reviews
           .find({ plan_id: id })
@@ -247,9 +253,9 @@ router.patch("/api/plans/update", (req, res) => {
   }
 });
 
-async function addMajorDistributionsWithID(major_ids, plan) {
+async function addMajorDistributions(plan) {
   //Route #6 - Adding new distributions if new major is added
-  for (let m_id of major_ids) {
+  for (let m_id of plan.major_ids) {
     const dist = await distributions.find({ plan_id: plan._id }, { major_id: m_id });
     if (dist.length == 0) {
       plans.findByIdAndUpdate(
@@ -294,34 +300,30 @@ async function addMajorDistributionsWithID(major_ids, plan) {
 
               await fineRequirements.create(fineReq_to_post);
             }
-          }); // TODO: add courses to new distributions
+          }); 
       }
-      // Adds all courses for a second or third major, but doesn't update any course, year or plan arrays cause course already existsO
-      // Only distributions are being updated
-      const coursesInPlan = await Course.findByPlanId(plan._id)
-      for (c in coursesInPlan) {
-        addCourses(c);
-      }
+      await addCourses(plan, m_id);
     }
   }
 };
 
 
-//Copied parts of route #1 from course.js file and got rid of array modifications
-async function addCourses(course) {
-  plans
-    .findById(course.plan_id)
-    .then((plan) => {
-      let isExclusiveDist = false;
-      distributions
-        .find({ plan_id: plan._id })
-        .forEach((dist) => {
-          if (!isExclusiveDist && updateReqs(dist.id, course._id)) {
-            // skip other distributions if exclusive
-            isExclusiveDist = (dist.exclusive !== undefined && dist.exclusive);
-          }
-        })
-    })
+// Copied parts of route #1 from course.js file and got rid of array modifications
+// Adds all courses for specified major, but doesn't add year or plan arrays cause course already existsO
+// Only distributions and course are being updated
+async function addCourses(plan, m_id) {
+  const coursesInPlan = await Course.findByPlanId(plan._id)
+  let distObjs = await distributions.find({ $and: [ {plan_id: plan._id}, {major_id: m_id} ]});
+  
+  for (let course in coursesInPlan) {
+    let distExclusive = undefined; 
+    for (let distObj of distObjs) {
+      if ((distExclusive === undefined || distExclusive.includes(distObj.name))) {
+        let updated = await updateDistribution(distObj._id, course._id); 
+        if (updated) distExclusive = distObj.exclusive; 
+      }
+    }
+  }
 };
 
 module.exports = router;
