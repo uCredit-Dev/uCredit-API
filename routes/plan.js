@@ -277,11 +277,11 @@ async function addMajorDistributions(plan) {
           criteria: dist_object.criteria,
           min_credits_per_course: dist_object.min_credits_per_course,
         }
-        if (dist_object.hasOwnProperty('user_select')) distribution_to_post.user_select = dist_object.user_select;
-        if (dist_object.hasOwnProperty('pathing')) distribution_to_post.pathing = dist_object.pathing;
-        if (dist_object.hasOwnProperty('double_count')) distribution_to_post.double_count = dist_object.double_count;
-        if (dist_object.hasOwnProperty('exception')) distribution_to_post.exception = dist_object.exception;
-        if (dist_object.hasOwnProperty('exclusive')) distribution_to_post.exclusive = dist_object.exclusive;
+        if (dist_object.user_select) distribution_to_post.user_select = dist_object.user_select;
+        if (dist_object.pathing) distribution_to_post.pathing = dist_object.pathing;
+        if (dist_object.double_count) distribution_to_post.double_count = dist_object.double_count;
+        if (dist_object.exception) distribution_to_post.exception = dist_object.exception;
+        if (dist_object.exclusive) distribution_to_post.exclusive = dist_object.exclusive;
 
         await distributions
           .create(distribution_to_post)
@@ -295,8 +295,8 @@ async function addMajorDistributions(plan) {
                 major_id: major._id,
                 distribution_id: retrievedDistribution._id,
               }
-              if (f_req.hasOwnProperty('exception')) fineReq_to_post.exception = f_req.exception;
-              if (f_req.hasOwnProperty('exclusive')) fineReq_to_post.exclusive = f_req.exclusive;
+              if (f_req.exception) fineReq_to_post.exception = f_req.exception;
+              if (f_req.exclusive) fineReq_to_post.exclusive = f_req.exclusive;
 
               await fineRequirements.create(fineReq_to_post);
             }

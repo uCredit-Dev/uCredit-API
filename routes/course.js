@@ -96,9 +96,12 @@ router.post("/api/courses", async (req, res) => {
             ]})
           .then(async (distObjs) => {
             for (let distObj of distObjs) {
-              if ((distExclusive === undefined || distExclusive.includes(distObj.name))) {
+              if (!distObjs.satisfied && 
+                 (distExclusive === undefined || distExclusive.includes(distObj.name))) {
                 let updated = await updateDistribution(distObj._id, course._id); 
-                if (updated) distExclusive = distObj.exclusive; 
+                if (updated) {
+                  distExclusive = distObj.exclusive; 
+                }
               }
             }
           });

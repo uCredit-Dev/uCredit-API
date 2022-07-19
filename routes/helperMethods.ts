@@ -30,21 +30,23 @@ const updateDistribution = async (
   course_id: string
 ) : Promise<boolean> => {
   let course = await Courses.findById(ObjectId(course_id)); 
-  if (!course) return false; 
-  await Distributions
+  return await Distributions // return promise 
     .findById(ObjectId(distribution_id))
     .then(async (distribution) => {
-      if (!distribution) return false; 
+      if (!course)
+      if (!distribution || !course) return false; 
       const genCriteria: string = distribution.criteria;
       // general distribution criteria  
       if (
-        (distribution.planned < distribution.required_credits ||
-        (distribution.required_credits === 0 && distribution.planned === 0)) &&
+        !distribution.satisfied &&
         course.credits >= distribution.min_credits_per_course && 
         checkCriteriaSatisfied(genCriteria, course)
       ) {
         // update distribution credits  
-        distributionCreditUpdate(distribution, course, true);
+        if (distribution.planned < distribution.required_credits ||
+            (distribution.planned === 0 && distribution.required_credits === 0)) {
+              distributionCreditUpdate(distribution, course, true);
+        }
         // add distribution id to course 
         course.distribution_ids.push(distribution_id);
         await course.save(); 
@@ -61,13 +63,17 @@ const updateDistribution = async (
               ) {
                 distributionCreditUpdate(fine, course, true);
                 await fine.save(); 
-                fineExclusive = fine.exclusive;
+                course.fineReq_ids.push(fine._id);
+                await course.save();
+                if (fine.exclusive && fine.exclusive.length > 0) {
+                  fineExclusive = fine.exclusive;
+                }
               }
             }
           })
         if (distribution.planned >= distribution.required_credits) {
-          if (distribution.pathing !== undefined) {
-            processPathing(distribution); 
+          if (distribution.pathing) {
+            await processPathing(distribution); 
           } else {
             distribution.satisfied = true; 
           }
@@ -75,8 +81,8 @@ const updateDistribution = async (
         await distribution.save(); 
         return true; 
       }
+      return false; 
     }); 
-  return false;
 };
 
 function distributionCreditUpdate(distribution, course, add) {
@@ -102,18 +108,22 @@ function distributionCreditUpdate(distribution, course, add) {
   }
 }
 
-const processPathing = (
+const processPathing = async (
   distribution: any
 ) => {
   let numPaths = distribution.pathing; 
-  distribution.fine_requirements.forEach((fine, i: number) => {
-    if (fine.satisfied) {
-      numPaths -= 1; 
-      if (numPaths == 0) {
-        distribution.satisfied = true; 
-      }
-    }
-  });
+  await FineRequirements
+    .find({distribution_id: distribution._id})
+    .then((fineObjs) => {
+      fineObjs.forEach((fine, i: number) => {
+        if (fine.satisfied) {
+          numPaths -= 1; 
+          if (numPaths == 0) {
+            distribution.satisfied = true; 
+          }
+        }
+      });
+    })
 }
 
 /**
