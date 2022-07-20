@@ -238,6 +238,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
           FineRequirements
             .find({ distribution_id: distribution._id })
             .then(async (fineReqs) => {
+              var paths = 0;
               for (let fine of fineReqs) {
                 if (
                   (fine.planned >= fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
@@ -245,9 +246,14 @@ router.delete("/api/courses/:course_id", (req, res) => {
                   distributionCreditUpdate(fine, course, false);
                   await fine.save();
                 }
-                if (fine.satisfied === false) {
-                  distribution.satisfied = false;
+                if (fine.satisfied === true) {
+                  paths += 1;
                 }
+              }
+              if (distribution.satisfied && paths >= distribution.pathing) {
+                distribution.satisfied = true;
+              } else {
+                distribution.satisfied = false;
               }
             })
           // if (distribution.planned >= distribution.required_credits) {
