@@ -15,7 +15,7 @@ beforeAll((done) => {
     .then(async () => {
       let majorRes = await request.post("/api/majors").send(allMajors[0]);
       const bsCS_Old = await majors.findById(majorRes.body.data._id);
-      majorRes = await request.post("/api/majors").send(allMajors[6]);
+      majorRes = await request.post("/api/majors").send(allMajors[7]);
       const bsAMS = await majors.findById(majorRes.body.data._id);
       const samplePlan = {
         name: "TEST_PLAN",
@@ -72,16 +72,16 @@ describe("Adding a major", () => {
       })
   });
   it("should be associated with one or more of the plan's distribution objects", async () => {
-    const distIds = await distributions.find({plan_id: plan._id});
+    const distIds = await distributions.find({plan_id: planRes._id});
     expect(distIds.length).toBe(5); // five dists in bsCS
     for (let distId of distIds) {
       let dist = await distributions.findById(distId);
-      expect(dist.plan_id.toString()).toBe(plan._id.toString());
+      expect(dist.plan_id.toString()).toBe(planRes._id.toString());
       expect(
-        plan.major_ids.find((m_id) => m_id.toString() === dist.major_id.toString()))
+        planRes.major_ids.find((m_id) => m_id.toString() === dist.major_id.toString()))
       .toBeTruthy(); 
       expect(
-        plan.major_ids.find((m_id) => m_id.toString() === dist.major_id.toString()))
+        planRes.major_ids.find((m_id) => m_id.toString() === dist.major_id.toString()))
       .toBeTruthy();
     };
   });
