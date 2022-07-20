@@ -118,7 +118,7 @@ const processPathing = async (
       fineObjs.forEach((fine, i: number) => {
         if (fine.satisfied) {
           numPaths -= 1; 
-          if (numPaths == 0) {
+          if (numPaths <= 0) {
             distribution.satisfied = true; 
           }
         }
