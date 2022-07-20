@@ -17,6 +17,7 @@ const evalRouter = require("./routes/evaluation.js");
 const sisRouter = require("./routes/sisData.js");
 const experimentsRouter = require("./routes/experiments.js");
 const commentRouter = require("./routes/comment.js");
+const roadmapPlanRouter = require("./routes/roadmapPlan.js");
 
 function createApp() {
   const corsOptions = {
@@ -52,6 +53,7 @@ function createApp() {
   app.use(sisRouter);
   app.use(experimentsRouter);
   app.use(commentRouter);
+  //app.use(roadmapPlanRouter); uncomment when functional or for testing
 
   return app;
 }
