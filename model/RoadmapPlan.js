@@ -9,6 +9,7 @@ const Schema = mongoose.Schema;
 const roadmapPlanSchema = new Schema({
   original: { type: Schema.Types.ObjectId, ref: "Plan" },
   name: { type: String, required: true },
+  description: { type: String },
   majors: { type: [String] },
   tags: { type: [String] },
   num_likes: { type: Number, default: 0 },
@@ -17,7 +18,7 @@ const roadmapPlanSchema = new Schema({
   user_id: { type: String, required: true },
   expireAt: { type: Date },
   postedAt: { type: Date, default: Date.now, required: true },
-  graduatesAt: { type: Date, required: true },
+  graduatesAt: { type: Date },
 });
 
 const RoadmapPlan = mongoose.model("RoadmapPlan", roadmapPlanSchema);

@@ -53,7 +53,7 @@ function createApp() {
   app.use(sisRouter);
   app.use(experimentsRouter);
   app.use(commentRouter);
-  //app.use(roadmapPlanRouter); uncomment when functional or for testing
+  app.use(roadmapPlanRouter);
 
   return app;
 }
