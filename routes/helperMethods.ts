@@ -58,7 +58,7 @@ const updateDistribution = async (
             for (let fine of fineReqs) {
               if (
                 (fine.planned < fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
-                (fineExclusive === undefined || fineExclusive.includes(fine.description)) &&  
+                (fineExclusive === undefined || fineExclusive.length === 0 || fineExclusive.includes(fine.description)) &&  
                 checkCriteriaSatisfied(fine.criteria, course)
               ) {
                 distributionCreditUpdate(fine, course, true);
