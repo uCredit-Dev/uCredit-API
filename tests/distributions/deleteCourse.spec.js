@@ -83,7 +83,7 @@ describe("delete course from plan", () => {
   it("should not be associated with one or more of the plan's distribution objects", async () => {
     const plan = await plans.findById(plan1._id);
     const distIds = deadCourse.distributions_ids;
-    for (distId in distIds) {
+    for (let distId in distIds) {
       let dist = await distributions.findById(distId);
       expect(dist.plan_id).toBe(plan._id);
       expect(dist.user_id).toBe(plan.user_id);
@@ -91,8 +91,9 @@ describe("delete course from plan", () => {
       expect(
         dist.courses.find((courseId) => courseId === deadCourse._id).exists()
       ).toBeFalsy();
+      expect(dist.planned).toBe(0); 
+      expect(dist.satisfied).toBeFalsy(); 
     }
-
   });
 });
 

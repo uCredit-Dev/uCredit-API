@@ -1,5 +1,5 @@
 //routes related to Plan CRUD
-const { returnData, errorHandler } = require("./helperMethods.js");
+const { returnData, errorHandler, updateDistribution } = require("./helperMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const fineRequirements = require("../model/FineRequirement.js");
@@ -177,12 +177,13 @@ router.delete("/api/plans/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findByIdAndDelete(plan_id)
-    .then((plan) => {
+    .then(async (plan) => {
       //delete distribution & courses
-      distributions.deleteMany({ plan_id: plan._id }).exec();
-      courses.deleteMany({ plan_id: plan._id }).exec();
-      years.deleteMany({ plan_id: plan._id }).exec();
-      users
+      await fineRequirements.deleteMany({ plan_id: plan._id }).exec();
+      await distributions.deleteMany({ plan_id: plan._id }).exec();
+      await courses.deleteMany({ plan_id: plan._id }).exec();
+      await years.deleteMany({ plan_id: plan._id }).exec();
+      await users
         .findByIdAndUpdate(
           //delete plan_id from user
           plan.user_id,
@@ -231,9 +232,9 @@ router.patch("/api/plans/update", (req, res) => {
                 fineRequirements
                   .find({ distribution_id: dist._id })
                   .then((fines) => {
-                    fines.forEach((fine) => {
+                    for (let fine of fines) {
                       courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: fine._id } });
-                    })
+                    }
                   });
                 fineRequirements
                   .deleteMany({ distribution_id: dist._id });
@@ -256,9 +257,9 @@ router.patch("/api/plans/update", (req, res) => {
 async function addMajorDistributions(plan) {
   //Route #6 - Adding new distributions if new major is added
   for (let m_id of plan.major_ids) {
-    const dist = await distributions.find({ plan_id: plan._id }, { major_id: m_id });
+    const dist = await distributions.find({ plan_id: plan._id, major_id: m_id });
     if (dist.length == 0) {
-      plans.findByIdAndUpdate(
+      await plans.findByIdAndUpdate(
         //update user
         plan._id,
         { $addToSet: { major_ids: m_id } },
@@ -312,13 +313,13 @@ async function addMajorDistributions(plan) {
 // Adds all courses for specified major, but doesn't add year or plan arrays cause course already existsO
 // Only distributions and course are being updated
 async function addCourses(plan, m_id) {
-  const coursesInPlan = await Course.findByPlanId(plan._id)
-  let distObjs = await distributions.find({ $and: [ {plan_id: plan._id}, {major_id: m_id} ]});
+  const coursesInPlan = await courses.findByPlanId(plan._id); 
+  let distObjs = await distributions.find({plan_id: plan._id, major_id: m_id});
   
-  for (let course in coursesInPlan) {
+  for (let course of coursesInPlan) {
     let distExclusive = undefined; 
     for (let distObj of distObjs) {
-      if ((distExclusive === undefined || distExclusive.includes(distObj.name))) {
+      if ((distExclusive === undefined || distExclusive.length === 0 || distExclusive.includes(distObj.name))) {
         let updated = await updateDistribution(distObj._id, course._id); 
         if (updated) distExclusive = distObj.exclusive; 
       }

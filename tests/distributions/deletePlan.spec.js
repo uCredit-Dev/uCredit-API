@@ -3,6 +3,7 @@ const supertest = require("supertest");
 const majors = require("../../model/Major");
 const courses = require("../../model/Course");
 const distributions = require("../../model/Distribution");
+const fineRequirements = require("../../model/FineRequirement"); 
 const years = require("../../model/Year");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
@@ -59,6 +60,10 @@ describe("delete a plan", () => {
   });
   it("should delete associated distribution objects", async () => {
     const search = await distributions.find({ plan_id: deadPlan._id });
+    expect(search.length).toBe(0);
+  });
+  it("should delete associated fine requirement objects", async () => {
+    const search = await fineRequirements.find({ plan_id: deadPlan._id });
     expect(search.length).toBe(0);
   });
   it("should delete associated course objects", async () => {
