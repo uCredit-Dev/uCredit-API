@@ -37,36 +37,59 @@ router.get("/api/roadmapPlans/get/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-// searches the roadmapPlan documents based on name, description, tags, and
-// major (all optionally)
+/* searches the roadmapPlan documents based on name, description, tags, and
+ * major (all optionally)
+ * Behavoir: Main search text searches name, description, tags, and major text.
+ * This is the main search bar, at the top of the page. Tags are searched for
+ * with an exact match only. Multiple tags can be searched, with both matching
+ * all or matching any of functionality. Majors are also exact match, and
+ * multiple can be searched the same way. Tags and majors should be sent as
+ * one string, seperated by commas (with no spaces) if there are multiple
+ */
 router.get("/api/roadmapPlans/search", (req, res) => {
   // get search queries if they exist
   const nameSearch = req.query.nameSearch ? req.query.nameSearch : "";
   const tagSearch = req.query.tagSearch ? req.query.tagSearch : "";
   const majorSearch = req.query.majorSearch ? req.query.majorSearch : "";
+  const tagAny = req.query.tagAny === "yes" ? true : false;
+  const majorAny = req.query.majorAny === "yes" ? true : false;
   let selector = {};
   // setup search for name and description
   if (nameSearch !== "") {
     selector["$or"] = [
       { name: { $regex: nameSearch, $options: "i" } },
       { description: { $regex: nameSearch, $options: "i" } },
+      { tags: { $regex: nameSearch, $options: "i" } },
+      { major: { $regex: nameSearch, $options: "i" } },
     ];
   }
   // setup search for tags
-  /*if (tagSearch !== "") {
-    let splitTags = tagSearch.split(" ");
-    let tagQuery = [];
-    splitTags.forEach((elem) => tagQuery.push({ $regex: elem, $options: "i" }));
-    selector["tags"] = { $all: tagQuery };
-  }*/
+  if (tagSearch !== "") {
+    if (tagAny) {
+      selector["tags"] = { $in: splitMultivalueQueryString(tagSearch) };
+    } else {
+      selector["tags"] = { $all: splitMultivalueQueryString(tagSearch) };
+    }
+  }
   // setup search for majors
   if (majorSearch !== "") {
-    selector["majors"] = majorSearch;
+    if (majorAny) {
+      selector["majors"] = { $in: splitMultivalueQueryString(majorSearch) };
+    } else {
+      selector["majors"] = { $all: splitMultivalueQueryString(majorSearch) };
+    }
   }
   roadmapPlans
     .find(selector)
     .then((result) => returnData(result, res))
     .catch((err) => errorHandler(res, 400, err));
 });
+
+const splitMultivalueQueryString = (values) => {
+  let splitValues = values.split(",");
+  let query = [];
+  splitValues.forEach((elem) => query.push(elem));
+  return splitValues;
+};
 
 module.exports = router;
