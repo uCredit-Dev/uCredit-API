@@ -136,7 +136,7 @@ const checkCriteriaSatisfied = (
   criteria: string,
   course: any,
 ): boolean => {
-  if (criteria === null || criteria.length === 0) {
+  if (criteria === null || criteria.length === 0 || criteria === "N/A") {
     return true;
   }
   const boolExpr: string | void = getCriteriaBoolExpr(criteria, course);

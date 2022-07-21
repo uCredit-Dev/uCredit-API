@@ -692,7 +692,7 @@ const bsCBE = {
       min_credits_per_course: 3,
       description:
         "Take one of the following course options for Product Design.",
-      criteria: "",
+      criteria: "N/A",
       pathing: true,
       fine_requirements: [
         {
@@ -830,7 +830,7 @@ const bsCBE = {
       description:
         "The student must take elective courses to meet the remainder of the following requirements: <br /> 48 credits of Engineering (E designation) <br />" +
         "16 credits of Mathematics (must be from 110 or 553) <br /> 13 credits Advanced Chemistry and Biology <br /> 18 H/S credits (must be six courses that are at least 3 credits each)",
-      criteria: "",
+      criteria: "N/A",
       fine_requirements: [
         {
           description: "<b>Engineering Credits</b>",
@@ -2017,7 +2017,7 @@ const bsMolCell = {
         "<br>- r6 credits of registered independent research (note that this is already a requirement for the BS degree). " +
         "<br>- A letter of support from your research supervisor (the PI of the lab)" +
         "<br>- Presentation of your independent research as a seminar or poster presentation",
-      criteria: "",
+      criteria: "N/A", // cannot be blank 
     },
   ],
 };
