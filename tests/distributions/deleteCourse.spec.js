@@ -1,8 +1,16 @@
 const mongoose = require("mongoose");
 const supertest = require("supertest");
 const majors = require("../../model/Major");
+const courses = require("../../model/Course");
+const users = require("../../model/User");
+const years = require("../../model/Year");
+const distributions = require("../../model/Distribution")
+const plans = require("../../model/Plan");
+const fineRequirements = require("../../model/FineRequirement");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
+const request = supertest(createApp());
+
 
 let major1 = [];
 let major2 = [];
@@ -23,7 +31,7 @@ beforeAll((done) => {
       major1 = request.post("/api/majors").send(allMajors[0]);
       major2 = request.post("/api/majors").send(allMajors[5]);
       const response2 = await request.post("/api/plans").send(samplePlan);
-      plan1 = response2.body.data;
+      var plan1 = response2.body.data;
       const course = {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
@@ -35,8 +43,8 @@ beforeAll((done) => {
       const response3 = await request.post("/api/courses").send(course);
       course1 = response3.body.data;
       const body = {
-        id: plan1._id, 
-        majors: [plan1.major[0].name], 
+        id: plan1._id,
+        majors: [plan1.majors[0]],
         name: plan1.name,
       };
       request.patch(`/api/plans/update/`).send(body);
@@ -51,36 +59,40 @@ afterAll((done) => {
   });
 });
 
-  // Course should not be associated with any of the plan's distribution objects
-
-  const request = supertest(createApp());
+// Course should not be associated with any of the plan's distribution objects
 
 describe("delete course from plan", () => {
   it("should be deleted ", async () => {
-    expect(courses.findById(deadCourse._id)).toBeFalsy();
-    expect(plan._id).toBe(deadCourse.plan_id);
-    expect(plan.user_id).toBe(deadCourse.user_id);
-    expect().tonotbe
+    expect(await courses.findById(deadCourse._id)).toBeFalsy();
   });
   it("should not be associated with one of the plan's year objects", async () => {
-    const plan = await plans.findById(plan1._id);
-    const year = await years.findById(deadCourse.year_id);
-    expect(year.plan_id).toBe(plan._id);
-    expect(year.user_id).toBe(plan.user_id);
-    expect(year.courses.find((course) => course === deadCourse._id)).toBeFalsy();
+    //const plan = await plans.findById(plan1._id);
+    const year = years.findById(deadCourse.year_id);
+    var flag = true;
+    if (year === null || year === undefined) {
+      flag = false;
+    } else {
+      for (cid in year.courses) {
+        if (cid === deadCourse._id) {
+          flag = false;
+        }
+      }
+    }
+    expect(flag).toBeTruthy();
   });
   it("should not be associated with one or more of the plan's distribution objects", async () => {
     const plan = await plans.findById(plan1._id);
     const distIds = deadCourse.distributions_ids;
-    distIds.forEach((distId) => {
+    for (distId in distIds) {
       let dist = await distributions.findById(distId);
       expect(dist.plan_id).toBe(plan._id);
       expect(dist.user_id).toBe(plan.user_id);
       expect(dist.major_id).toBe(plan.major_id);
       expect(
         dist.courses.find((courseId) => courseId === deadCourse._id).exists()
-      ).toBeFalsy(); 
-    });
+      ).toBeFalsy();
+    }
+
   });
 });
 

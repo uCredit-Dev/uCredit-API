@@ -6,7 +6,7 @@ const {
   returnData,
   errorHandler,
   updateDistribution,
-  distributionCreditUpdate, 
+  distributionCreditUpdate,
   getRequirements,
 } = require("./helperMethods.ts");
 const courses = require("../model/Course.js");
@@ -74,26 +74,28 @@ router.post("/api/courses", async (req, res) => {
   await courses
     .create(courseBody)
     .then(async (retrievedCourse) => {
-      const course = retrievedCourse; 
+      const course = retrievedCourse;
       await years
         .findOneAndUpdate(
-          { $and: [ {plan_id: course.plan_id}, {name: course.year} ]}, 
+          { $and: [{ plan_id: course.plan_id }, { name: course.year }] },
           { $push: { courses: course._id } },
           { new: true, runValidators: true })
         .then(async (year) => {
-          retrievedCourse.year_id = year._id; 
-          await retrievedCourse.save(); 
+          retrievedCourse.year_id = year._id;
+          await retrievedCourse.save();
         })
-      
-      const plan = await plans.findById(course.plan_id); 
+
+      const plan = await plans.findById(course.plan_id);
       for (let m_id of plan.major_ids) {
-        let distExclusive = undefined; 
+        let distExclusive = undefined;
         await distributions
           .find(
-            { $and: [ 
-              {plan_id: course.plan_id}, 
-              {major_id: m_id} 
-            ]})
+            {
+              $and: [
+                { plan_id: course.plan_id },
+                { major_id: m_id }
+              ]
+            })
           .then(async (distObjs) => {
             for (let distObj of distObjs) {
               if (!distObjs.satisfied && 
@@ -101,7 +103,7 @@ router.post("/api/courses", async (req, res) => {
                   distExclusive.includes(distObj.name))) {
                 let updated = await updateDistribution(distObj._id, course._id); 
                 if (updated) {
-                  distExclusive = distObj.exclusive; 
+                  distExclusive = distObj.exclusive;
                 }
               }
             }
@@ -230,39 +232,34 @@ router.delete("/api/courses/:course_id", (req, res) => {
   courses
     .findByIdAndDelete(c_id)
     .then((course) => {
-      course.distribution_ids.forEach((id) => {
-        distributions
-          .findByIdAndUpdate(
-            id,
-            { $pull: { courses: c_id } },
-            { new: true, runValidators: true }
-          )
-          .then((distribution) =>
-            distributionCreditUpdate(distribution, course, false)
-          )
+      for (id in course.distribution_ids) {
+        distributions.findById(id).then((distribution) => {
+          distributionCreditUpdate(distribution, course, false)
+
+          FineRequirements
+            .find({ distribution_id: distribution._id })
+            .then(async (fineReqs) => {
+              for (let fine of fineReqs) {
+                if (
+                  (fine.planned >= fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
+                  checkCriteriaSatisfied(fine.criteria, course)) {
+                  distributionCreditUpdate(fine, course, false);
+                  await fine.save();
+                }
+              }
+            })
+          if (distribution.planned >= distribution.required_credits) {
+            if (distribution.pathing) {
+              processPathing(distribution);
+            } else {
+              distribution.satisfied = true;
+            }
+          }
+          distribution.save();
+
+        })
           .catch((err) => errorHandler(res, 500, err));
-      });
-
-      //Route update #2: 
-      //Deleting a course
-
-      // Check if course is a fine requirement
-      // (Will need to parse criteria string)
-      // course.distribution_ids.forEach((id) => {
-      //   distributions
-      //     .findById(
-      //       id,
-      //       {fine_requirements: c_id },      (This will have to be modified to parse criteria string of distribution.fine_requirements)
-      //       { new: true, runValidators: true }
-      //     )
-      //     .catch((err) => errorHandler(res, 500, err));
-      //     
-      //      Determine if criteria of course being removed matches any of the course specified in fine_req criterion. 
-      //      If so, check Fine requirements again
-      // });
-
-
-
+      }
       //delete course id to user's year array
       let query = {};
       query[course.year] = course._id; //e.g. { freshman: id }

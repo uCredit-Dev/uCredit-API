@@ -15,7 +15,7 @@ beforeAll((done) => {
     .then(async () => {
       let majorRes = await request.post("/api/majors").send(allMajors[0]);
       const bsCS_Old = await majors.findById(majorRes.body.data._id);
-      majorRes = await request.post("/api/majors").send(allMajors[6]);
+      majorRes = await request.post("/api/majors").send(allMajors[7]);
       const bsAMS = await majors.findById(majorRes.body.data._id);
       const samplePlan = {
         name: "TEST_PLAN",
