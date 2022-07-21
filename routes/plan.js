@@ -222,21 +222,21 @@ router.patch("/api/plans/update", (req, res) => {
         // cleaning up distributions associated with plan 
         // concurrent modification ? 
         await addMajorDistributions(plan);
-        distributions
+        await distributions
           .find({ plan_id: plan._id })
-          .then((distributions) => {
-            for (let dist of distributions) {
+          .then(async (dists) => {
+            for (let dist of dists) {
               if (!plan._doc.major_ids.includes(dist.major_id)) {
-                distributions.deleteOne(dist._id);
-                courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } });
-                fineRequirements
+                await distributions.findByIdAndDelete(dist._id);
+                await courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } });
+                await fineRequirements
                   .find({ distribution_id: dist._id })
-                  .then((fines) => {
+                  .then(async (fines) => {
                     for (let fine of fines) {
-                      courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: fine._id } });
+                      await courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: fine._id } });
                     }
                   });
-                fineRequirements
+                await fineRequirements
                   .deleteMany({ distribution_id: dist._id });
               }
             }
