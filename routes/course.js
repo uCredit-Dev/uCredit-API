@@ -98,10 +98,10 @@ router.post("/api/courses", async (req, res) => {
             })
           .then(async (distObjs) => {
             for (let distObj of distObjs) {
-              if (!distObjs.satisfied && 
-                 (distExclusive === undefined || distExclusive.length === 0 || 
+              if (!distObjs.satisfied &&
+                (distExclusive === undefined || distExclusive.length === 0 ||
                   distExclusive.includes(distObj.name))) {
-                let updated = await updateDistribution(distObj._id, course._id); 
+                let updated = await updateDistribution(distObj._id, course._id);
                 if (updated) {
                   distExclusive = distObj.exclusive;
                 }
@@ -236,8 +236,8 @@ router.delete("/api/courses/:course_id", (req, res) => {
         distributions.findById(id).then(async (distribution) => {
           distributionCreditUpdate(distribution, course, false)
 
-          FineRequirements // should we use course.fineReq_ids at all? 
-            .find({ distribution_id: distribution._id })
+          FineRequirements
+            .find({ distribution_id: distribution._id }) // should we use course.fineReq_ids at all? 
             .then(async (fineReqs) => {
               for (let fine of fineReqs) {
                 if (

@@ -16,21 +16,26 @@ let major1 = [];
 let major2 = [];
 let plan1 = [];
 let course1 = [];
-const samplePlan = {
-  name: "TEST_PLAN",
-  user_id: 'TEST_USER',
-  majors: [allMajors[0].name],
-  expireAt: new Date(),
-  year: "Junior",
-};
+let deadCourse = []
 
 beforeAll((done) => {
   mongoose
     .connect("mongodb://localhost:27017/dist", { useNewUrlParser: true })
     .then(async () => {
-      major1 = request.post("/api/majors").send(allMajors[0]);
-      major2 = request.post("/api/majors").send(allMajors[5]);
-      const response2 = await request.post("/api/plans").send(samplePlan);
+      const response1 = await request.post("/api/majors").send(allMajors[3]); // cogsci 
+      let cogsci = response1.body.data;
+      const planBody = {
+        name: "TEST_PLAN",
+        user_id: 'TEST_USER',
+        majors: [cogsci.degree_name],
+        major_ids: [cogsci._id],
+        expireAt: new Date(),
+        year: "Junior",
+      };
+      const response2 = await request.post("/api/plans").send(planBody);
+      plan = response2.body.data;
+      done();
+
       var plan1 = response2.body.data;
       const course = {
         title: "TEST_COURSE",
@@ -40,15 +45,37 @@ beforeAll((done) => {
         year: "Junior",
         plan_id: plan1._id,
       };
+      // const gatewayCourse = {
+      //   title: "Gateway Computing: Java",
+      //   department: "EN Computer Science",
+      //   number: "EN.500.112",
+      //   user_id: 'TEST_USER',
+      //   term: "spring",
+      //   credits: 4,
+      //   year: "Junior",
+      //   plan_id: planRes._id,
+      // };
+      // const twoTagsBody = {
+      //   title: "TWO_TAGS",
+      //   user_id: 'TEST_USER',
+      //   tags: ['COGS-COGPSY', 'COGS-LING'], // One Course from each Focal Area, Two Focal Areas
+      //   term: "spring",
+      //   credits: 3,
+      //   year: "Junior",
+      //   plan_id: plan._id,
+      //   number: "adsf"
+      // };
       const response3 = await request.post("/api/courses").send(course);
+
       course1 = response3.body.data;
+      deadCourse = await request.delete(`/api/courses/${response3._id}`);
+
       const body = {
         id: plan1._id,
         majors: [plan1.majors[0]],
         name: plan1.name,
       };
       request.patch(`/api/plans/update/`).send(body);
-      deadCourse = await request.delete(`/api/courses/${course1._id}`);
       done();
     });
 });
@@ -95,6 +122,72 @@ describe("delete course from plan", () => {
       expect(dist.satisfied).toBeFalsy(); 
     }
   });
+});
+
+describe("Fine Requirement Testing", () => {
+  it("Deleting Courses makes distribution and fine_reqs not satisfied", async () => {
+    const cogsNeuroBody = {
+      title: "COGS-NEURO",
+      user_id: "TEST_USER",
+      number: "adsf", // NOT upper elective due to exclusive 
+      tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
+      term: "fall",
+      year: "Senior",
+      plan_id: plan._id,
+      credits: 3,
+    };
+    const cogsCompcgBody = {
+      title: "COGS-COMPCG",
+      user_id: "TEST_USER",
+      number: "afds", // NOT upper elective due to exclusive 
+      tags: ["COGS-COMPCG"], // One Course from each Focal Area, Two Focal Areas
+      term: "fall",
+      year: "Senior",
+      plan_id: plan._id,
+      credits: 3,
+    };
+    const cogNeuro = await request.post("/api/courses").send(cogsNeuroBody);
+    await request.post("/api/courses").send(cogsNeuroBody);
+    await request.post("/api/courses").send(cogsNeuroBody);
+    await request.post("/api/courses").send(cogsNeuroBody);
+    await request.post("/api/courses").send(cogsCompcgBody);
+    await request.post("/api/courses").send(cogsCompcgBody);
+    await request.post("/api/courses").send(cogsCompcgBody);
+    await request.post("/api/courses").send(cogsCompcgBody);
+    //delete course
+    const deadCogsNeuro = await request.delete(`/api/courses/${cogNeuro._id}`);
+    //const deadCompcg = await request.delete(`/api/courses/${compcg._id}`);
+    expect(deadCogsNeuro.distribution_ids).toBeTruthy;
+
+    let found = false; 
+    for (let d_id of deadCogsNeuro.distribution_ids) {
+      await distributions
+        .findById(d_id)
+        .then(async (dist) => {
+          if (dist.name === "Two Focal Areas") {
+            found = true; 
+            expect(dist.planned).toBe(12); // 24 but overflow 
+            expect(dist.satisfied).toBeFalsy();
+            await fineRequirements
+              .find({plan_id: plan._id, distribution_id: dist._id})
+              .then((fineObjs) => {
+                let names = [];
+                for (let fine of fineObjs) {
+                  if (fine.satisfied) {
+                    names.push(fine.criteria);
+                  }
+                }
+                expect(names.length).toBe(1);
+                expect(names).toContain("COGS-COMPCG[T]");
+                expect(names).toContain("COGS-NEURO[T]").toBeFalsy();
+
+              })
+          }
+        })
+    }
+    expect(found).toBeTruthy();
+  }); 
+  
 });
 
 const data = { test: true };
