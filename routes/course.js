@@ -82,6 +82,7 @@ router.post("/api/courses", async (req, res) => {
           { new: true, runValidators: true })
         .then(async (year) => {
           retrievedCourse.year_id = year._id;
+
           await retrievedCourse.save();
         })
 
@@ -89,13 +90,7 @@ router.post("/api/courses", async (req, res) => {
       for (let m_id of plan.major_ids) {
         let distExclusive = undefined;
         await distributions
-          .find(
-            {
-              $and: [
-                { plan_id: course.plan_id },
-                { major_id: m_id }
-              ]
-            })
+          .find({ plan_id: course.plan_id, major_id: m_id })
           .then(async (distObjs) => {
             for (let distObj of distObjs) {
               if (!distObjs.satisfied &&
@@ -234,28 +229,28 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .then((course) => {
       for (id in course.distribution_ids) {
         distributions.findById(id).then(async (distribution) => {
-          distributionCreditUpdate(distribution, course, false)
+          for (let fineReq_id in course.fineReq_ids) {
 
-          FineRequirements
-            .find({ distribution_id: distribution._id }) // should we use course.fineReq_ids at all? 
-            .then(async (fineReqs) => {
-              for (let fine of fineReqs) {
-                if (
-                  (fine.planned >= fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
-                  checkCriteriaSatisfied(fine.criteria, course)) {
-                  distributionCreditUpdate(fine, course, false);
-                  await fine.save();
-                }
+            await FineRequirements.findById(fineReq_id).then(async (fine) => {
+              fine.planned -= course.credits;
+              if (course.taken) {
+                fine.current -= course.credits;
               }
-            })
+              fine.satisfied = fine.planned >= fine.required_credits ? true : false;
+              await fine.save();
+            });
+          }
+          distributionCreditUpdate(distribution, course, false);
           if (distribution.planned >= distribution.required_credits) {
             if (distribution.pathing) {
               await processPathing(distribution);
             } else {
               distribution.satisfied = true;
             }
+          } else {
+            distribution.satisfied = false;
           }
-          distribution.save();
+          await distribution.save();
 
         })
           .catch((err) => errorHandler(res, 500, err));
