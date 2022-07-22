@@ -16,8 +16,7 @@ let major1 = [];
 let major2 = [];
 let plan1 = [];
 let course1 = [];
-let deadCourse = [];
-let deadCogsNeuro = [];
+let deadCourse = []
 
 beforeAll((done) => {
   mongoose
@@ -34,41 +33,17 @@ beforeAll((done) => {
         year: "Junior",
       };
       const response2 = await request.post("/api/plans").send(planBody);
-      plan = response2.body.data;
-      done();
+      plan1 = response2.body.data;
 
-      var plan1 = response2.body.data;
       const course = {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
         term: "spring",
         credits: 4,
-        year: "Senior",
+        year: "Junior",
         plan_id: plan1._id,
       };
-      // const gatewayCourse = {
-      //   title: "Gateway Computing: Java",
-      //   department: "EN Computer Science",
-      //   number: "EN.500.112",
-      //   user_id: 'TEST_USER',
-      //   term: "spring",
-      //   credits: 4,
-      //   year: "Junior",
-      //   plan_id: planRes._id,
-      // };
-      // const twoTagsBody = {
-      //   title: "TWO_TAGS",
-      //   user_id: 'TEST_USER',
-      //   tags: ['COGS-COGPSY', 'COGS-LING'], // One Course from each Focal Area, Two Focal Areas
-      //   term: "spring",
-      //   credits: 3,
-      //   year: "Junior",
-      //   plan_id: plan._id,
-      //   number: "adsf"
-      // };
       const response3 = await request.post("/api/courses").send(course);
-      console.log(response3);
-
       course1 = response3.body.data;
       deadCourse = await request.delete(`/api/courses/${response3._id}`);
 
@@ -77,6 +52,7 @@ beforeAll((done) => {
         majors: [plan1.majors[0]],
         name: plan1.name,
       };
+      request.patch(`/api/plans/update/`).send(body);
       done();
     });
 });
@@ -134,7 +110,7 @@ describe("Fine Requirement Testing", () => {
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
-      plan_id: plan._id,
+      plan_id: plan1._id,
       credits: 3,
     };
     const cogsCompcgBody = {
@@ -144,10 +120,11 @@ describe("Fine Requirement Testing", () => {
       tags: ["COGS-COMPCG"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
-      plan_id: plan._id,
+      plan_id: plan1._id,
       credits: 3,
     };
-    const cogNeuro = await request.post("/api/courses").send(cogsNeuroBody);
+    let cogNeuro = await request.post("/api/courses").send(cogsNeuroBody);
+    cogNeuro = cogNeuro.body.data; 
     await request.post("/api/courses").send(cogsNeuroBody);
     await request.post("/api/courses").send(cogsNeuroBody);
     await request.post("/api/courses").send(cogsNeuroBody);
@@ -156,35 +133,32 @@ describe("Fine Requirement Testing", () => {
     await request.post("/api/courses").send(cogsCompcgBody);
     await request.post("/api/courses").send(cogsCompcgBody);
     //delete course
-    const deadCogsNeuro = await request.delete(`/api/courses/${cogNeuro._id}`);
+    let deadCogsNeuro = await request.delete(`/api/courses/${cogNeuro._id}`);
+    deadCogsNeuro = deadCogsNeuro.body.data;
     //const deadCompcg = await request.delete(`/api/courses/${compcg._id}`);
-    expect(deadCogsNeuro.distribution_ids).toBeTruthy;
+    expect(deadCogsNeuro.distribution_ids).toBeTruthy();
 
     let found = false; 
-    for (let d_id of deadNeuro.distribution_ids) {
+    for (let d_id of deadCogsNeuro.distribution_ids) {
       await distributions
         .findById(d_id)
         .then(async (dist) => {
           if (dist.name === "Two Focal Areas") {
             found = true; 
-            expect(dist.planned).toBe(12); // 24 but overflow 
+            expect(dist.planned).toBe(9); // 3 credits less than 12
+            expect(dist.satisfied).toBeFalsy();
             await fineRequirements
-              .find({plan_id: plan._id, distribution_id: dist._id})
+              .find({plan_id: plan1._id, distribution_id: dist._id})
               .then((fineObjs) => {
                 let names = [];
                 for (let fine of fineObjs) {
-                  console.log(fine.planned);
-                  console.log(fine.required_credits);
                   if (fine.satisfied) {
                     names.push(fine.criteria);
                   }
-                } 
+                }
                 console.log(names);
                 expect(names.length).toBe(1);
                 expect(names).toContain("COGS-COMPCG[T]");
-                expect(names).toContain("COGS-NEURO[T]").toBeFalsy();
-                expect(dist.satisfied).toBeFalsy();
-
 
               })
           }
