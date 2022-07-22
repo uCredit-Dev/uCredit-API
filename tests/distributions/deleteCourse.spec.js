@@ -44,8 +44,31 @@ beforeAll((done) => {
         year: "Senior",
         plan_id: plan1._id,
       };
-      course1 = await request.post("/api/courses").send(course);
-      deadCourse = await request.delete(`/api/courses/${course1._id}`);
+      // const gatewayCourse = {
+      //   title: "Gateway Computing: Java",
+      //   department: "EN Computer Science",
+      //   number: "EN.500.112",
+      //   user_id: 'TEST_USER',
+      //   term: "spring",
+      //   credits: 4,
+      //   year: "Junior",
+      //   plan_id: planRes._id,
+      // };
+      // const twoTagsBody = {
+      //   title: "TWO_TAGS",
+      //   user_id: 'TEST_USER',
+      //   tags: ['COGS-COGPSY', 'COGS-LING'], // One Course from each Focal Area, Two Focal Areas
+      //   term: "spring",
+      //   credits: 3,
+      //   year: "Junior",
+      //   plan_id: plan._id,
+      //   number: "adsf"
+      // };
+      const response3 = await request.post("/api/courses").send(course);
+      console.log(response3);
+
+      course1 = response3.body.data;
+      deadCourse = await request.delete(`/api/courses/${response3._id}`);
 
       const body = {
         id: plan1._id,
@@ -131,9 +154,10 @@ describe("Fine Requirement Testing", () => {
     await request.post("/api/courses").send(cogsCompcgBody);
     await request.post("/api/courses").send(cogsCompcgBody);
     await request.post("/api/courses").send(cogsCompcgBody);
-    let deadNeuro = await request.delete(`/api/courses/${course._id}`);
-    deadNeuro = deadNeuro.body.data;
-    expect(deadNeuro.distribution_ids.length).toBeTruthy;
+    //delete course
+    const deadCogsNeuro = await request.delete(`/api/courses/${cogNeuro._id}`);
+    //const deadCompcg = await request.delete(`/api/courses/${compcg._id}`);
+    expect(deadCogsNeuro.distribution_ids).toBeTruthy;
 
     let found = false; 
     for (let d_id of deadNeuro.distribution_ids) {
