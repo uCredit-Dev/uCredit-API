@@ -35,11 +35,8 @@ beforeAll((done) => {
       };
       const response2 = await request.post("/api/plans").send(planBody);
       plan = response2.body.data;
-<<<<<<< HEAD
-=======
       done();
 
->>>>>>> parent of db512e1 (deleteCourse: debugging tests)
       var plan1 = response2.body.data;
       const course = {
         title: "TEST_COURSE",
@@ -150,12 +147,7 @@ describe("Fine Requirement Testing", () => {
       plan_id: plan._id,
       credits: 3,
     };
-<<<<<<< HEAD
-    let course = await request.post("/api/courses").send(cogsNeuroBody);
-    course = course.body.data; 
-=======
     const cogNeuro = await request.post("/api/courses").send(cogsNeuroBody);
->>>>>>> parent of db512e1 (deleteCourse: debugging tests)
     await request.post("/api/courses").send(cogsNeuroBody);
     await request.post("/api/courses").send(cogsNeuroBody);
     await request.post("/api/courses").send(cogsNeuroBody);
