@@ -64,10 +64,9 @@ beforeAll((done) => {
       //   number: "adsf"
       // };
       const response3 = await request.post("/api/courses").send(course);
-      console.log(response3);
 
       course1 = response3.body.data;
-      deadCourse = await request.delete(`/api/courses/${response3._id}`);
+      deadCourse = await request.delete(`/api/courses/${course1._id}`);
 
       const body = {
         id: plan1._id,
@@ -155,7 +154,8 @@ describe("Fine Requirement Testing", () => {
     await request.post("/api/courses").send(cogsCompcgBody);
     await request.post("/api/courses").send(cogsCompcgBody);
     //delete course
-    const deadCogsNeuro = await request.delete(`/api/courses/${cogNeuro._id}`);
+    let deadCogsNeuro = await request.delete(`/api/courses/${cogNeuro._id}`);
+    deadCogsNeuro = deadCogsNeuro.body.data; 
     //const deadCompcg = await request.delete(`/api/courses/${compcg._id}`);
     expect(deadCogsNeuro.distribution_ids).toBeTruthy;
 
