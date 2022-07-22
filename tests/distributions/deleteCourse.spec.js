@@ -109,7 +109,7 @@ describe("Fine Requirement Testing", () => {
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
-      plan_id: plan._id,
+      plan_id: plan1._id,
       credits: 3,
     };
     const cogsCompcgBody = {
@@ -119,18 +119,18 @@ describe("Fine Requirement Testing", () => {
       tags: ["COGS-COMPCG"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
-      plan_id: plan._id,
+      plan_id: plan1._id,
       credits: 3,
     };
     let course = await request.post("/api/courses").send(cogsNeuroBody);
-    await request.post("/api/courses").send(cogsNeuroBody);
-    await request.post("/api/courses").send(cogsNeuroBody);
-    await request.post("/api/courses").send(cogsNeuroBody);
-    await request.post("/api/courses").send(cogsCompcgBody);
-    await request.post("/api/courses").send(cogsCompcgBody);
-    await request.post("/api/courses").send(cogsCompcgBody);
-    await request.post("/api/courses").send(cogsCompcgBody);
     course = course.body.data; 
+    await request.post("/api/courses").send(cogsNeuroBody);
+    await request.post("/api/courses").send(cogsNeuroBody);
+    await request.post("/api/courses").send(cogsNeuroBody);
+    await request.post("/api/courses").send(cogsCompcgBody);
+    await request.post("/api/courses").send(cogsCompcgBody);
+    await request.post("/api/courses").send(cogsCompcgBody);
+    await request.post("/api/courses").send(cogsCompcgBody);
     let deadNeuro = await request.delete(`/api/courses/${course._id}`);
     deadNeuro = deadNeuro.body.data;
     expect(deadNeuro.distribution_ids.length).toBeTruthy;
