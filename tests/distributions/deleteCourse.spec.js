@@ -70,6 +70,7 @@ beforeAll((done) => {
       //   number: "adsf"
       // };
       const response3 = await request.post("/api/courses").send(course);
+      console.log(response3);
 
       course1 = response3.body.data;
       deadCourse = await request.delete(`/api/courses/${response3._id}`);
