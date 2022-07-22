@@ -33,10 +33,8 @@ beforeAll((done) => {
         year: "Junior",
       };
       const response2 = await request.post("/api/plans").send(planBody);
-      plan = response2.body.data;
-      done();
+      plan1 = response2.body.data;
 
-      var plan1 = response2.body.data;
       const course = {
         title: "TEST_COURSE",
         user_id: 'TEST_USER',
@@ -66,6 +64,7 @@ beforeAll((done) => {
       //   number: "adsf"
       // };
       const response3 = await request.post("/api/courses").send(course);
+      console.log(response3);
 
       course1 = response3.body.data;
       deadCourse = await request.delete(`/api/courses/${response3._id}`);
@@ -133,7 +132,7 @@ describe("Fine Requirement Testing", () => {
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
-      plan_id: plan._id,
+      plan_id: plan1._id,
       credits: 3,
     };
     const cogsCompcgBody = {
@@ -143,10 +142,11 @@ describe("Fine Requirement Testing", () => {
       tags: ["COGS-COMPCG"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
-      plan_id: plan._id,
+      plan_id: plan1._id,
       credits: 3,
     };
-    const cogNeuro = await request.post("/api/courses").send(cogsNeuroBody);
+    let cogNeuro = await request.post("/api/courses").send(cogsNeuroBody);
+    cogNeuro = cogNeuro.body.data; 
     await request.post("/api/courses").send(cogsNeuroBody);
     await request.post("/api/courses").send(cogsNeuroBody);
     await request.post("/api/courses").send(cogsNeuroBody);

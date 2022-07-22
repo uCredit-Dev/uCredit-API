@@ -7,14 +7,16 @@ const {
   errorHandler,
   updateDistribution,
   distributionCreditUpdate,
-  getRequirements,
+  checkCriteriaSatisfied,
 } = require("./helperMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
+const fineRequirements = require("../model/FineRequirement.js"); 
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 
+var ObjectId = require('mongodb').ObjectID;
 const express = require("express");
 const router = express.Router();
 /*
@@ -228,15 +230,15 @@ router.patch("/api/courses/changeDistribution/:course_id"),
 //delete a course given course id
 //update associated distribution credits
 router.delete("/api/courses/:course_id", (req, res) => {
-  const c_id = req.params.course_id;
+  const c_id = ObjectId(req.params.course_id);
   courses
     .findByIdAndDelete(c_id)
-    .then((course) => {
-      for (id in course.distribution_ids) {
-        distributions.findById(id).then(async (distribution) => {
+    .then(async (course) => {
+      for (let id of course.distribution_ids) {
+        await distributions.findById(id).then(async (distribution) => {
           distributionCreditUpdate(distribution, course, false)
 
-          FineRequirements
+          await fineRequirements
             .find({ distribution_id: distribution._id }) // should we use course.fineReq_ids at all? 
             .then(async (fineReqs) => {
               for (let fine of fineReqs) {
@@ -255,7 +257,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
               distribution.satisfied = true;
             }
           }
-          distribution.save();
+          await distribution.save();
 
         })
           .catch((err) => errorHandler(res, 500, err));
@@ -266,12 +268,12 @@ router.delete("/api/courses/:course_id", (req, res) => {
       plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
       years
         .findById(course.year_id)
-        .then((y) => {
+        .then(async (y) => {
           const yearArr = y.courses;
           const index = yearArr.indexOf(course._id);
           if (index !== -1) {
             yearArr.splice(index, 1);
-            years
+            await years
               .findByIdAndUpdate(
                 course.year_id,
                 { courses: yearArr },
