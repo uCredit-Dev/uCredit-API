@@ -1,6 +1,8 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const roadmapPlans = require("../model/RoadmapPlan.js");
 const plans = require("../model/Plan.js");
+const years = require("../model/Year.js");
+const distributions = require("../model/Distribution.js");
 
 const express = require("express");
 const router = express.Router();
@@ -9,17 +11,41 @@ const router = express.Router();
 // based on that plan
 router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
   const old_id = req.body.id;
+  console.log(old_id);
   plans
     .findById(old_id)
     .then((retrieved) => {
+      // extract simple fields from the plan
       let data = {
         original: retrieved.id,
         name: retrieved.name,
+        description: "",
+        num_likes: 0,
         majors: retrieved.majors.slice(),
         tags: [],
         user_id: retrieved.user_id,
         expireAt: retrieved.expireAt,
+        // postedAt will default to Date.now by the schema
       };
+      // now clone the linked year and distribution documents
+      newYears = [];
+      retrieved.year_ids.forEach((elem) => {
+        // TODO courses also need to be deep copied
+        years
+          .create(years.find({ _id: elem }, { _id: 0 }))
+          .then((created) => newYears.append(created._id))
+          .catch((err) => errorHandler(res, 400, err));
+      });
+      newDistributions = [];
+      retrieved.distribution_ids.forEach((elem) => {
+        // TODO courses also need to be deep copied
+        distributions
+          .create(distributions.find({ _id: elem }, { _id: 0 }))
+          .then((created) => newDistributions.append(created._id))
+          .catch((err) => errorHandler(res, 400, err));
+      });
+      data.year_ids = newYears;
+      data.distribution_ids = newDistributions;
       roadmapPlans
         .create(data)
         .then((result) => returnData(result, res))
