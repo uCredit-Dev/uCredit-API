@@ -189,7 +189,9 @@ const handleTagType = (
   let updatedConcat: string;
   switch (splitArr[index + 1]) {
     case 'C': // Course Number
-      updatedConcat = course.number.includes(splitArr[index]).toString();
+      updatedConcat = (
+        course.number !== undefined && course.number.includes(splitArr[index])
+      ).toString();
       break;
     case 'T': // Tag
       updatedConcat = (
@@ -209,10 +211,14 @@ const handleTagType = (
       ).toString();
       break;
     case 'N': // Name
-      updatedConcat = course.title.includes(splitArr[index]).toString();
+      updatedConcat = (
+        course.title !== undefined && course.title.includes(splitArr[index])
+      ).toString(); 
       break;
     case 'W': //Written intensive
-      updatedConcat = course.wi.toString();
+      updatedConcat = (
+        course.wi !== undefined && course.wi
+      ).toString();
       break;
     case 'L': // Level
       updatedConcat = handleLCase(splitArr, index, course);
@@ -225,6 +231,7 @@ const handleTagType = (
 
 // Handles the L case in the getBoolExpr function
 const handleLCase = (splitArr, index, course): string => {
+  if (course.number === undefined) return 'false';
   let updatedConcat: string = '';
   if (splitArr[index].includes('Upper')) {
     if (course.number[7] >= '3') {

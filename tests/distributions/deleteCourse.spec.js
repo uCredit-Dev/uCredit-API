@@ -45,7 +45,7 @@ beforeAll((done) => {
       };
       const response3 = await request.post("/api/courses").send(course);
       course1 = response3.body.data;
-      deadCourse = await request.delete(`/api/courses/${response3._id}`);
+      deadCourse = await request.delete(`/api/courses/${course1._id}`);
 
       const body = {
         id: plan1._id,
@@ -156,7 +156,6 @@ describe("Fine Requirement Testing", () => {
                     names.push(fine.criteria);
                   }
                 }
-                console.log(names);
                 expect(names.length).toBe(1);
                 expect(names).toContain("COGS-COMPCG[T]");
 

@@ -173,6 +173,20 @@ describe("POST /api/courses", () => {
       }
     }
   }); 
+  it("can create course with minimal information", async () => {
+    const body = {
+      title: "title",
+      term: 'fall',
+      year: 'Sophomore', 
+      credits: 1, 
+      plan_id: plan._id, 
+      user_id: "TEST_USER",
+    };
+    let res = await request.post("/api/courses").send(body); 
+    expect(res.status).toBe(200);
+    const course = res.body.data;
+    expect(course.distribution_ids.length).toBe(0);
+  }); 
 });
 
 const data = { test: true };
