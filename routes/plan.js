@@ -108,6 +108,7 @@ router.post("/api/plans", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
+      // add distributions for selected major(s)
       await addMajorDistributions(retrievedPlan);
       retrievedPlan.save();
       const yearName = [
@@ -204,24 +205,23 @@ router.patch("/api/plans/update", (req, res) => {
   const name = req.body.name;
   if (!(majors || name)) {
     errorHandler(res, 400, "Must update majors or name.");
+  } else if ((majors && !major_ids) || (major_ids && !majors)) {
+    errorHandler(res, 400, "Must supply both major names and ids.");
   } else {
     let updateBody = {};
     if (majors) {
       updateBody.majors = majors;
-    }
-    if (major_ids) { // how does frontend know major_ids ? 
       updateBody.major_ids = major_ids;
     }
     if (name) {
       updateBody.name = name;
     }
-
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then(async (plan) => {
-        // cleaning up distributions associated with plan 
-        // concurrent modification ? 
+        // add dists for new major, if any  
         await addMajorDistributions(plan);
+        // remove dists for deleted major, if any
         await distributions
           .find({ plan_id: plan._id })
           .then(async (dists) => {
@@ -241,8 +241,8 @@ router.patch("/api/plans/update", (req, res) => {
               }
             }
           });
-
-        reviews
+        // return plan with reviews 
+        await reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
           .then((revs) => {
@@ -254,13 +254,13 @@ router.patch("/api/plans/update", (req, res) => {
   }
 });
 
+// Adding new distributions if new major is added
 async function addMajorDistributions(plan) {
-  //Route #6 - Adding new distributions if new major is added
   for (let m_id of plan.major_ids) {
     const dist = await distributions.find({ plan_id: plan._id, major_id: m_id });
     if (dist.length == 0) {
+      // update plan with major id 
       await plans.findByIdAndUpdate(
-        //update user
         plan._id,
         { $addToSet: { major_ids: m_id } },
         { new: true, runValidators: true }
@@ -278,12 +278,13 @@ async function addMajorDistributions(plan) {
           criteria: dist_object.criteria,
           min_credits_per_course: dist_object.min_credits_per_course,
         }
+        // optional fields 
         if (dist_object.user_select) distribution_to_post.user_select = dist_object.user_select;
         if (dist_object.pathing) distribution_to_post.pathing = dist_object.pathing;
         if (dist_object.double_count) distribution_to_post.double_count = dist_object.double_count;
         if (dist_object.exception) distribution_to_post.exception = dist_object.exception;
         if (dist_object.exclusive) distribution_to_post.exclusive = dist_object.exclusive;
-
+        // create new distribution documents  
         await distributions
           .create(distribution_to_post)
           .then(async (retrievedDistribution) => {
@@ -298,7 +299,7 @@ async function addMajorDistributions(plan) {
               }
               if (f_req.exception) fineReq_to_post.exception = f_req.exception;
               if (f_req.exclusive) fineReq_to_post.exclusive = f_req.exclusive;
-
+              // create new fine requirement documents  
               await fineRequirements.create(fineReq_to_post);
             }
           }); 

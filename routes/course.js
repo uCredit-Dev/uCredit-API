@@ -67,34 +67,32 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//add course, need to provide course info as json object in request body
-//distribution field is also updated
+// add course, need to provide course info as json object in request body
+// year, distribution, and fineReq objects updated
 router.post("/api/courses", async (req, res) => {
   const courseBody = req.body;
-  //console.log("course is ", course);
-  // route update #1
   await courses
     .create(courseBody)
     .then(async (retrievedCourse) => {
-      const course = retrievedCourse;
+      // find year obj and insert course id to array  
       await years
         .findOneAndUpdate(
-          { $and: [{ plan_id: course.plan_id }, { name: course.year }] },
-          { $push: { courses: course._id } },
+          { $and: [{ plan_id: retrievedCourse.plan_id }, { name: retrievedCourse.year }] },
+          { $push: { courses: retrievedCourse._id } },
           { new: true, runValidators: true })
         .then(async (year) => {
-          retrievedCourse.year_id = year._id;
+          retrievedCourse.year_id = year._id; // set year_id
           await retrievedCourse.save();
         })
-
-      const plan = await plans.findById(course.plan_id);
+      // update plan's distribution objs 
+      const plan = await plans.findById(retrievedCourse.plan_id);
       for (let m_id of plan.major_ids) {
         let distExclusive = undefined;
         await distributions
           .find(
             {
               $and: [
-                { plan_id: course.plan_id },
+                { plan_id: retrievedCourse.plan_id },
                 { major_id: m_id }
               ]
             })
@@ -103,7 +101,7 @@ router.post("/api/courses", async (req, res) => {
               if (!distObjs.satisfied &&
                 (distExclusive === undefined || distExclusive.length === 0 ||
                   distExclusive.includes(distObj.name))) {
-                let updated = await updateDistribution(distObj._id, course._id);
+                let updated = await updateDistribution(distObj._id, retrievedCourse._id);
                 if (updated) {
                   distExclusive = distObj.exclusive;
                 }
@@ -111,8 +109,8 @@ router.post("/api/courses", async (req, res) => {
             }
           });
       }
-      // reflect changes
-      const updatedCourse = await courses.findById(course._id);
+      // return up to date course 
+      const updatedCourse = await courses.findById(retrievedCourse._id);
       returnData(updatedCourse, res);
     })
     .catch((err) => {
