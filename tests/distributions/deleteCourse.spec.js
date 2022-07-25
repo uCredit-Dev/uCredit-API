@@ -106,7 +106,7 @@ describe("Fine Requirement Testing", () => {
     const cogsNeuroBody = {
       title: "COGS-NEURO",
       user_id: "TEST_USER",
-      number: "adsf", // NOT upper elective due to exclusive 
+      number: "adsf", // NOT upper elective due to double_count 
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
@@ -116,7 +116,7 @@ describe("Fine Requirement Testing", () => {
     const cogsCompcgBody = {
       title: "COGS-COMPCG",
       user_id: "TEST_USER",
-      number: "afds", // NOT upper elective due to exclusive 
+      number: "afds", // NOT upper elective due to double_count 
       tags: ["COGS-COMPCG"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",

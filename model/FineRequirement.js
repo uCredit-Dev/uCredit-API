@@ -12,7 +12,7 @@ const fineSchema = new Schema({
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
   exception: { type: String },
-  exclusive: [{ type: String }],
+  double_count: [{ type: String }],
   expireAt: { type: Date },
 });
 

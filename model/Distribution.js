@@ -22,9 +22,8 @@ const distributionSchema = new Schema({
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
   user_select: { type: Boolean, default: false }, 
-  double_count: { type: Boolean, default: false }, 
   exception: { type: String },
-  exclusive: [{ type: String }],
+  double_count: [{ type: String }],
   pathing: { type: Number },
   expireAt: { type: Date },
 });

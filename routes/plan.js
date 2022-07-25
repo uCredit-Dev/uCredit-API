@@ -294,7 +294,6 @@ async function addMajorDistributions(plan) {
         if (dist_object.pathing) distribution_to_post.pathing = dist_object.pathing;
         if (dist_object.double_count) distribution_to_post.double_count = dist_object.double_count;
         if (dist_object.exception) distribution_to_post.exception = dist_object.exception;
-        if (dist_object.exclusive) distribution_to_post.exclusive = dist_object.exclusive;
         // create new distribution documents  
         await distributions
           .create(distribution_to_post)
@@ -309,7 +308,7 @@ async function addMajorDistributions(plan) {
                 distribution_id: retrievedDistribution._id,
               }
               if (f_req.exception) fineReq_to_post.exception = f_req.exception;
-              if (f_req.exclusive) fineReq_to_post.exclusive = f_req.exclusive;
+              if (f_req.double_count) fineReq_to_post.double_count = f_req.double_count;
               // create new fine requirement documents  
               await fineRequirements
                 .create(fineReq_to_post)
@@ -331,11 +330,11 @@ async function addCourses(plan, m_id) {
   const coursesInPlan = await courses.findByPlanId(plan._id); 
   let distObjs = await distributions.find({plan_id: plan._id, major_id: m_id});
   for (let course of coursesInPlan) {
-    let distExclusive = undefined; 
+    let distDoubleCount = undefined; 
     for (let distObj of distObjs) {
-      if ((distExclusive === undefined || distExclusive.length === 0 || distExclusive.includes(distObj.name))) {
+      if ((distDoubleCount === undefined || distDoubleCount.length === 0 || distDoubleCount.includes(distObj.name))) {
         let updated = await updateDistribution(distObj._id, course._id); 
-        if (updated) distExclusive = distObj.exclusive; 
+        if (updated) distDoubleCount = distObj.double_counts; 
       }
     }
   }

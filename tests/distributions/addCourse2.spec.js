@@ -137,7 +137,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
       let distribution = await distributions.findById(d_id); 
       names.push(distribution.name);
     }
-    expect(course.distribution_ids.length).toBe(2); // exclusive works 
+    expect(course.distribution_ids.length).toBe(2); // double_count works 
     expect(names).toContain('Humanities (H) Distribution');
     expect(names).toContain('Writing Intensive');
   });
@@ -145,7 +145,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const upperCogBody = {
       title: "UPPER_COG",
       user_id: "TEST_USER",
-      number: "AS.080.400", // NOT upper elective due to exclusive 
+      number: "AS.080.400", // NOT upper elective due to double_count 
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
@@ -159,7 +159,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
       let distribution = await distributions.findById(d_id); 
       names.push(distribution.name);
     }
-    expect(course.distribution_ids.length).toBe(2); // exclusive works 
+    expect(course.distribution_ids.length).toBe(2); // double_count works 
     expect(names).toContain("One Course from each Focal Area");
     expect(names).toContain("Two Focal Areas");
   }); 
@@ -167,7 +167,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const upperNWiCogBody = {
       title: "UPPER_N_WI_Cog",
       user_id: "TEST_USER",
-      number: "AS.080.400", // NOT upper elective due to exclusive 
+      number: "AS.080.400", // NOT upper elective due to double_count 
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       areas: "SNH", // Humanities (H) Distribution
       wi: true, // Writing Intensive 
@@ -183,7 +183,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
       let distribution = await distributions.findById(d_id); 
       names.push(distribution.name);
     }
-    expect(course.distribution_ids.length).toBe(4); // exclusive works 
+    expect(course.distribution_ids.length).toBe(4); // double_count works 
     expect(names).toContain("One Course from each Focal Area");
     expect(names).toContain("Two Focal Areas");
     expect(names).toContain("Humanities (H) Distribution");
@@ -193,7 +193,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const upperNWiCogBody = {
       title: "UPPER_N_WI_Cog",
       user_id: "TEST_USER",
-      number: "AS.080.400", // NOT upper elective due to exclusive 
+      number: "AS.080.400", // NOT upper elective due to double_count 
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       areas: "SNH", // Humanities (H) Distribution
       wi: true, // Writing Intensive 
@@ -209,7 +209,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
       let distribution = await distributions.findById(d_id); 
       names.push(distribution.name);
     }
-    expect(course.distribution_ids.length).toBe(4); // exclusive works 
+    expect(course.distribution_ids.length).toBe(4); // double_count works 
     expect(names).toContain("One Course from each Focal Area");
     expect(names).toContain("Two Focal Areas");
     expect(names).toContain("Humanities (H) Distribution");
@@ -222,7 +222,7 @@ describe("POST /api/courses: PATHING", () => {
     const cogsNeuroBody = {
       title: "COGS-NEURO",
       user_id: "TEST_USER",
-      number: "adsf", // NOT upper elective due to exclusive 
+      number: "adsf", // NOT upper elective due to double_count 
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
@@ -232,7 +232,7 @@ describe("POST /api/courses: PATHING", () => {
     const cogsCompcgBody = {
       title: "COGS-COMPCG",
       user_id: "TEST_USER",
-      number: "afds", // NOT upper elective due to exclusive 
+      number: "afds", // NOT upper elective due to double_count 
       tags: ["COGS-COMPCG"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
@@ -324,7 +324,7 @@ describe("POST /api/courses: PATHING", () => {
     const cogsNeuroBody = {
       title: "COGS-NEURO",
       user_id: "TEST_USER",
-      number: "adsf", // NOT upper elective due to exclusive 
+      number: "adsf", // NOT upper elective due to double_count 
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
