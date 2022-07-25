@@ -172,7 +172,10 @@ describe("POST /api/courses", () => {
         expect(fine.planned).toBe(3);
       } else {
         expect(dist.name).toBe('Liberal Arts');
-        expect(extraExpos.distribution_ids.includes(dist._id.toString())).toBeTruthy(); 
+        expect(
+          extraExpos.distribution_ids.find(
+            (expoDist) => expoDist._id.toString() === dist._id.toString())
+        ).toBeTruthy(); 
       }
     }
   }); 

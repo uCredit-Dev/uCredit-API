@@ -137,7 +137,15 @@ router.post("/api/plans", (req, res) => {
         retrievedPlan.year_ids.push(newYear._id);
       }
       retrievedPlan.save();
-      const resp = { ...retrievedPlan._doc, years: yearObjs, reviewers: [] };
+      let distObjs = await distributions.find({plan_id: retrievedPlan._id}); 
+      let fineObjs = await fineRequirements.find({plan_id: retrievedPlan._id}); 
+      const resp = { 
+        ...retrievedPlan._doc, 
+        years: yearObjs, 
+        distributions: distObjs, 
+        fine_requirements: fineObjs, 
+        reviewers: [] 
+      };
       delete resp.year_ids;
       returnData(resp, res);
     })
@@ -192,7 +200,12 @@ router.delete("/api/plans/:plan_id", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
-      returnData(plan, res);
+      let deletedPlan = {
+        ...plan._doc, 
+        distributions: [], 
+        fine_requirements: []
+      }
+      returnData(deletedPlan, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -239,12 +252,19 @@ router.patch("/api/plans/update", (req, res) => {
               }
             }
           });
-        // return plan with reviews 
+        // return plan with reviews and distributions 
+        let distObjs = await distributions.find({plan_id: retrievedPlan._id}); 
+        let fineObjs = await fineRequirements.find({plan_id: retrievedPlan._id}); 
         await reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
           .then((revs) => {
-            plan = { ...plan, reviewers: revs };
+            plan = { 
+              ...plan, 
+              distributions: distObjs, 
+              fine_requirements: fineObjs,
+              reviewers: revs 
+            };
             returnData(plan, res);
           });
       })
