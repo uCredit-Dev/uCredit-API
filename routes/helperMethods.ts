@@ -30,22 +30,22 @@ const updateDistribution = async (
   course_id: string
 ) : Promise<boolean> => {
   let course = await Courses.findById(ObjectId(course_id)); 
-  return await Distributions // return promise 
+  return await Distributions // returns a promise 
     .findById(ObjectId(distribution_id))
     .then(async (distribution) => {
-      if (!course)
       if (!distribution || !course) return false; 
-      const genCriteria: string = distribution.criteria;
       // general distribution criteria  
+      const genCriteria: string = distribution.criteria;
       if (
         !distribution.satisfied &&
         course.credits >= distribution.min_credits_per_course && 
         checkCriteriaSatisfied(genCriteria, course)
       ) {
         // update distribution credits  
+        // a distribution can have enough credits and still be unsatisfied 
         if (distribution.planned < distribution.required_credits ||
             (distribution.planned === 0 && distribution.required_credits === 0)) {
-              distributionCreditUpdate(distribution, course, true);
+              await requirementCreditUpdate(distribution, course, true);
         }
         // add distribution id to course 
         course.distribution_ids.push(distribution_id);
@@ -59,77 +59,78 @@ const updateDistribution = async (
             (fineExclusive === undefined || fineExclusive.length === 0 || fineExclusive.includes(fine.description)) &&  
             checkCriteriaSatisfied(fine.criteria, course)
           ) {
-            distributionCreditUpdate(fine, course, true);
-            await fine.save(); 
-            course.fineReq_ids.push(fine._id);
-            await course.save();
+            await requirementCreditUpdate(fine, course, true);
             if (fine.exclusive && fine.exclusive.length > 0) {
               fineExclusive = fine.exclusive;
             }
+            course.fineReq_ids.push(fine._id);
+            await course.save();
           }
         }
-            
+        // update satisfied with pathing 
         if (distribution.planned >= distribution.required_credits) {
           if (distribution.pathing) {
             await processPathing(distribution); 
           } else {
             distribution.satisfied = true; 
+            await distribution.save(); 
           }
         }
-        await distribution.save(); 
         return true; 
       }
       return false; 
     }); 
 };
 
-function distributionCreditUpdate(distribution, course, add) {
+// updates planned, current, and satisfied with added / removed course 
+// ***requirement can be distribution OR fine requirement 
+async function requirementCreditUpdate(requirement, course, add) {
   if (add) {
-    distribution.planned += course.credits;
+    requirement.planned += course.credits;
     if (course.taken) {
-      distribution.current += course.credits;
+      requirement.current += course.credits;
     }
   } else {
-    distribution.planned -= course.credits;
+    requirement.planned -= course.credits;
     if (course.taken) {
-      distribution.current -= course.credits;
+      requirement.current -= course.credits;
     }
   }
-  if (distribution.name) { // distributino 
-    if (distribution.planned < distribution.required_credits) {
-      distribution.satisfied = false; // true check later with pathing
+  if (requirement.name) { // distribution 
+    if (requirement.planned < requirement.required_credits) {
+      requirement.satisfied = false; // true check later with pathing
     }
   } else { // finereq
-    if (distribution.planned >= distribution.required_credits) {
-      distribution.satisfied = true; 
+    if (requirement.planned >= requirement.required_credits) {
+      requirement.satisfied = true; 
+    } else {
+      requirement.satisfied = false; 
     }
   }
+  await requirement.save(); 
 }
 
+// updates a distribution's satisfied, if pathing condition is met 
 const processPathing = async (
   distribution: any
 ) => {
   let numPaths = distribution.pathing; 
   await FineRequirements
     .find({distribution_id: distribution._id})
-    .then((fineObjs) => {
-      fineObjs.forEach((fine, i: number) => {
+    .then(async (fineObjs) => {
+      for (let fine of fineObjs) {
         if (fine.satisfied) {
           numPaths -= 1; 
           if (numPaths <= 0) {
             distribution.satisfied = true; 
           }
         }
-      });
-    })
+      }
+    });
+  await distribution.save(); 
 }
 
-/**
- * Checks if a course satisfies a criteria.
- * @param criteria - criteria for given distribution OR fine requirement 
- * @param course - course we're checking for prereq satisfaction
- * @returns whether the course satisifies the criteria 
- */
+// returns if a course satisfies a criteria
 const checkCriteriaSatisfied = (
   criteria: string,
   course: any,
@@ -146,6 +147,7 @@ const checkCriteriaSatisfied = (
   }
 };
 
+// returns a string expression of whether a course satisfies a criteria  
 const getCriteriaBoolExpr = (
   criteria: string,
   course: any,
@@ -179,6 +181,7 @@ const getCriteriaBoolExpr = (
   return boolExpr;
 };
 
+// handles different tags (C, T, D, Y, A, N, W, L) in criteria string 
 const handleTagType = (
   splitArr: string[],
   index: number,
@@ -321,6 +324,6 @@ module.exports = {
   getCriteriaBoolExpr,
   splitRequirements,
   updateDistribution,
-  distributionCreditUpdate,
+  requirementCreditUpdate,
   postNotification,
 };

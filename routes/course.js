@@ -6,7 +6,7 @@ const {
   returnData,
   errorHandler,
   updateDistribution,
-  distributionCreditUpdate,
+  requirementCreditUpdate,
   checkCriteriaSatisfied,
 } = require("./helperMethods.ts");
 const courses = require("../model/Course.js");
@@ -98,11 +98,10 @@ router.post("/api/courses", async (req, res) => {
             })
           .then(async (distObjs) => {
             for (let distObj of distObjs) {
-              if (!distObjs.satisfied &&
-                (distExclusive === undefined || distExclusive.length === 0 ||
-                  distExclusive.includes(distObj.name))) {
-                let updated = await updateDistribution(distObj._id, retrievedCourse._id);
-                if (updated) {
+              if (!distObjs.satisfied && (distExclusive === undefined 
+                  || distExclusive.length === 0 || distExclusive.includes(distObj.name))) {
+                let isUpdated = await updateDistribution(distObj._id, retrievedCourse._id);
+                if (isUpdated) {
                   distExclusive = distObj.exclusive;
                 }
               }
@@ -225,26 +224,25 @@ router.patch("/api/courses/changeDistribution/:course_id"),
   };
 */
 
-//delete a course given course id
-//update associated distribution credits
+// delete a course given course id
+// update associated distribution credits
 router.delete("/api/courses/:course_id", (req, res) => {
   const c_id = ObjectId(req.params.course_id);
   courses
     .findByIdAndDelete(c_id)
     .then(async (course) => {
+      // remove course from distributions 
       for (let id of course.distribution_ids) {
         await distributions.findById(id).then(async (distribution) => {
-          distributionCreditUpdate(distribution, course, false); 
+          await requirementCreditUpdate(distribution, course, false); 
+          // remove course from fineReqs 
           for (let f_id of distribution.fineReq_ids) {
             let fine = await fineRequirements.findById(f_id); 
             if (checkCriteriaSatisfied(fine.criteria, course)) {
-              distributionCreditUpdate(fine, course, false);
-              if (fine.planned < fine.required_credits) {
-                fine.satisfied = false; 
-              }
-              await fine.save();
+              await requirementCreditUpdate(fine, course, false);
             }
           }
+          // determine distribution satisfied with pathing 
           if (distribution.planned >= distribution.required_credits) {
             if (distribution.pathing) {
               await processPathing(distribution);
@@ -253,7 +251,6 @@ router.delete("/api/courses/:course_id", (req, res) => {
             }
           }
           await distribution.save();
-
         })
           .catch((err) => errorHandler(res, 500, err));
       }

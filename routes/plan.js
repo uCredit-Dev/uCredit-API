@@ -82,8 +82,8 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-//create plan and add the plan id to user
-//require user_id in body
+// create plan and add the plan id to user
+// require user_id in body
 router.post("/api/plans", (req, res) => {
   const plan = {
     name: req.body.name,
@@ -172,21 +172,21 @@ const getStartYear = (year) => {
   }
 };
 
-//delete a plan and its years, distributions and courses
-//return deleted courses
+// delete a plan and its years, distributions and courses
+// return deleted courses
 router.delete("/api/plans/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findByIdAndDelete(plan_id)
     .then(async (plan) => {
-      //delete distribution & courses
-      await fineRequirements.deleteMany({ plan_id: plan._id }).exec();
+      //delete distributions, fineReqs, courses, and years 
       await distributions.deleteMany({ plan_id: plan._id }).exec();
+      await fineRequirements.deleteMany({ plan_id: plan._id }).exec();
       await courses.deleteMany({ plan_id: plan._id }).exec();
       await years.deleteMany({ plan_id: plan._id }).exec();
+      //delete plan_id from user
       await users
         .findByIdAndUpdate(
-          //delete plan_id from user
           plan.user_id,
           { $pull: { plan_ids: plan._id } },
           { new: true, runValidators: true }
@@ -198,6 +198,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
 });
 
 //***need to consider not allow user to change major for a plan ***/
+// updates a plan's major(s) and name 
 router.patch("/api/plans/update", (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
@@ -221,16 +222,18 @@ router.patch("/api/plans/update", (req, res) => {
       .then(async (plan) => {
         // add dists for new major, if any  
         await addMajorDistributions(plan);
-        // remove dists for deleted major, if any
+        // remove dists and fineReqs for deleted major, if any
         await distributions
           .find({ plan_id: plan._id })
           .then(async (dists) => {
             for (let dist of dists) {
               if (!plan._doc.major_ids.includes(dist.major_id)) {
+                // maintain courses array fields 
                 await courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } });
                 for (let f_id of dist.fineReq_ids) {
                   await courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: f_id } });
                 } 
+                // delete documents 
                 await distributions.findByIdAndDelete(dist._id);
                 await fineRequirements.deleteMany({ distribution_id: dist._id });
               }
@@ -253,14 +256,7 @@ router.patch("/api/plans/update", (req, res) => {
 async function addMajorDistributions(plan) {
   for (let m_id of plan.major_ids) {
     const dist = await distributions.find({ plan_id: plan._id, major_id: m_id });
-    if (dist.length == 0) {
-      // update plan with major id 
-      await plans.findByIdAndUpdate(
-        plan._id,
-        { $addToSet: { major_ids: m_id } },
-        { new: true, runValidators: true }
-      )
-      .exec();
+    if (dist.length == 0) { // new major 
       const major = await majors.findById(m_id).exec();
       for (let dist_object of major.distributions) {
         let distribution_to_post = {
@@ -310,13 +306,10 @@ async function addMajorDistributions(plan) {
 };
 
 
-// Copied parts of route #1 from course.js file and got rid of array modifications
-// Adds all courses for specified major, but doesn't add year or plan arrays cause course already existsO
-// Only distributions and course are being updated
+// Adds each existing course in a plan to distributions of specified major   
 async function addCourses(plan, m_id) {
   const coursesInPlan = await courses.findByPlanId(plan._id); 
   let distObjs = await distributions.find({plan_id: plan._id, major_id: m_id});
-  
   for (let course of coursesInPlan) {
     let distExclusive = undefined; 
     for (let distObj of distObjs) {
