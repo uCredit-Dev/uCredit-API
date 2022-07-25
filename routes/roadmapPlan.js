@@ -3,6 +3,7 @@ const roadmapPlans = require("../model/RoadmapPlan.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 const distributions = require("../model/Distribution.js");
+const courses = require("../model/Course.js");
 
 const express = require("express");
 const router = express.Router();
@@ -48,7 +49,25 @@ router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
       data.distribution_ids = newDistributions;
       roadmapPlans
         .create(data)
-        .then((result) => returnData(result, res))
+        .then((result) => {
+          newYears.forEach((id) => {
+            years.findByIdAndUpdate(id, { plan_id: result._id });
+          });
+          // create deep copy of courses
+          newDistributions.forEach((id) => {
+            dist = distributions.find({ _id: id });
+            dist.plan_id = result._id;
+            newCourses = [];
+            dist.courses.forEach((course) => {
+              courses.create(courses.find({ _id: course })).then((created) => {
+                created.distribution_id = dist._id;
+                created.plan_id = result._id;
+                // now need to do year, which is tougher
+              });
+            });
+          });
+          returnData(result, res);
+        })
         .catch((err) => errorHandler(res, 400, err));
     })
     .catch((err) => errorHandler(res, 400, err));
