@@ -253,8 +253,8 @@ router.patch("/api/plans/update", (req, res) => {
             }
           });
         // return plan with reviews and distributions 
-        let distObjs = await distributions.find({plan_id: retrievedPlan._id}); 
-        let fineObjs = await fineRequirements.find({plan_id: retrievedPlan._id}); 
+        let distObjs = await distributions.find({plan_id: plan._id}); 
+        let fineObjs = await fineRequirements.find({plan_id: plan._id}); 
         await reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
