@@ -11,12 +11,12 @@ const {
 } = require("./helperMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
-const fineRequirements = require("../model/FineRequirement.js"); 
+const fineRequirements = require("../model/FineRequirement.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 
-var ObjectId = require('mongodb').ObjectID;
+var ObjectId = require("mongodb").ObjectID;
 const express = require("express");
 const router = express.Router();
 /*
@@ -74,17 +74,23 @@ router.post("/api/courses", async (req, res) => {
   await courses
     .create(courseBody)
     .then(async (retrievedCourse) => {
-      // find year obj and insert course id to array  
+      // find year obj and insert course id to array
       await years
         .findOneAndUpdate(
-          { $and: [{ plan_id: retrievedCourse.plan_id }, { name: retrievedCourse.year }] },
+          {
+            $and: [
+              { plan_id: retrievedCourse.plan_id },
+              { name: retrievedCourse.year },
+            ],
+          },
           { $push: { courses: retrievedCourse._id } },
-          { new: true, runValidators: true })
+          { new: true, runValidators: true }
+        )
         .then(async (year) => {
           retrievedCourse.year_id = year._id; // set year_id
           await retrievedCourse.save();
-        })
-      // update plan's distribution objs 
+        });
+      // update plan's distribution objs
       const plan = await plans.findById(retrievedCourse.plan_id);
       for (let m_id of plan.major_ids) {
         let distDoubleCount = undefined;
@@ -92,9 +98,16 @@ router.post("/api/courses", async (req, res) => {
           .find({ plan_id: retrievedCourse.plan_id, major_id: m_id })
           .then(async (distObjs) => {
             for (let distObj of distObjs) {
-              if (!distObjs.satisfied && (distDoubleCount === undefined 
-                  || distDoubleCount.length === 0 || distDoubleCount.includes(distObj.name))) {
-                let isUpdated = await updateDistribution(distObj._id, retrievedCourse._id);
+              if (
+                !distObjs.satisfied &&
+                (distDoubleCount === undefined ||
+                  distDoubleCount.length === 0 ||
+                  distDoubleCount.includes(distObj.name))
+              ) {
+                let isUpdated = await updateDistribution(
+                  distObj._id,
+                  retrievedCourse._id
+                );
                 if (isUpdated) {
                   distDoubleCount = distObj.double_count;
                 }
@@ -103,18 +116,19 @@ router.post("/api/courses", async (req, res) => {
           });
       }
       // return up to date course (because modified in helper method)
-      
-      // option 1: return distribution and fine objs separate from course obj 
-        // const updatedCourse = await courses.findById(retrievedCourse._id); 
-        // const resp = { ...updatedCourse._doc, distributions: updatedDists, fineReqs: updatedFines };
 
-      // option 2: include distribution and fine objs within course obj 
-      await courses.findById(retrievedCourse._id)
+      // option 1: return distribution and fine objs separate from course obj
+      // const updatedCourse = await courses.findById(retrievedCourse._id);
+      // const resp = { ...updatedCourse._doc, distributions: updatedDists, fineReqs: updatedFines };
+
+      // option 2: include distribution and fine objs within course obj
+      await courses
+        .findById(retrievedCourse._id)
         .populate({
-          path: "distribution_ids", 
+          path: "distribution_ids",
           populate: {
-            path: "fineReq_ids" 
-          }
+            path: "fineReq_ids",
+          },
         })
         .then((course) => {
           returnData(course, res);
@@ -241,29 +255,31 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .then(async (course) => {
       let updatedDists = [];
       let updatedFines = [];
-      // remove course from distributions 
+      // remove course from distributions
       for (let id of course.distribution_ids) {
-        await distributions.findById(id).then(async (distribution) => {
-          await requirementCreditUpdate(distribution, course, false); 
-          // remove course from fineReqs 
-          for (let f_id of distribution.fineReq_ids) {
-            let fine = await fineRequirements.findById(f_id); 
-            if (checkCriteriaSatisfied(fine.criteria, course)) {
-              await requirementCreditUpdate(fine, course, false);
-              updatedFines.push(fine);
+        await distributions
+          .findById(id)
+          .then(async (distribution) => {
+            await requirementCreditUpdate(distribution, course, false);
+            // remove course from fineReqs
+            for (let f_id of distribution.fineReq_ids) {
+              let fine = await fineRequirements.findById(f_id);
+              if (checkCriteriaSatisfied(fine.criteria, course)) {
+                await requirementCreditUpdate(fine, course, false);
+                updatedFines.push(fine);
+              }
             }
-          }
-          // determine distribution satisfied with pathing 
-          if (distribution.planned >= distribution.required_credits) {
-            if (distribution.pathing) {
-              await processPathing(distribution);
-            } else {
-              distribution.satisfied = true;
+            // determine distribution satisfied with pathing
+            if (distribution.planned >= distribution.required_credits) {
+              if (distribution.pathing) {
+                await processPathing(distribution);
+              } else {
+                distribution.satisfied = true;
+              }
             }
-          }
-          await distribution.save();
-          updatedDists.push(distribution);
-        })
+            await distribution.save();
+            updatedDists.push(distribution);
+          })
           .catch((err) => errorHandler(res, 500, err));
       }
       //delete course id to user's year array
@@ -287,9 +303,9 @@ router.delete("/api/courses/:course_id", (req, res) => {
           }
         })
         .catch((err) => errorHandler(res, 404, err));
-      // return deleted course with modified distributions 
-      course.distribution_ids = updatedDists; 
-      course.fineReq_ids = updatedFines; 
+      // return deleted course with modified distributions
+      course.distribution_ids = updatedDists;
+      course.fineReq_ids = updatedFines;
       returnData(course, res);
     })
     .catch((err) => errorHandler(res, 400, err));

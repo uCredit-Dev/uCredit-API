@@ -1,5 +1,9 @@
 //routes related to Plan CRUD
-const { returnData, errorHandler, updateDistribution } = require("./helperMethods.ts");
+const {
+  returnData,
+  errorHandler,
+  updateDistribution,
+} = require("./helperMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const fineRequirements = require("../model/FineRequirement.js");
@@ -8,19 +12,19 @@ const majors = require("../model/Major.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 const reviews = require("../model/PlanReview.js");
-var ObjectId = require('mongodb').ObjectID;
+var ObjectId = require("mongodb").ObjectID;
 
 const getAPI = (window) => {
-  if (window.location.href.includes('http://localhost:3000')) {
-    return 'http://localhost:4567/api';
+  if (window.location.href.includes("http://localhost:3000")) {
+    return "http://localhost:4567/api";
   } else {
-    if (window.location.href.includes('https://ucredit.me')) {
-      return 'https://ucredit-api.herokuapp.com/api';
+    if (window.location.href.includes("https://ucredit.me")) {
+      return "https://ucredit-api.herokuapp.com/api";
     } else {
-      'https://ucredit-dev.herokuapp.com/api';
+      ("https://ucredit-dev.herokuapp.com/api");
     }
   }
-}
+};
 
 const express = require("express");
 const Course = require("../model/Course.js");
@@ -137,14 +141,16 @@ router.post("/api/plans", (req, res) => {
         retrievedPlan.year_ids.push(newYear._id);
       }
       retrievedPlan.save();
-      let distObjs = await distributions.find({plan_id: retrievedPlan._id}); 
-      let fineObjs = await fineRequirements.find({plan_id: retrievedPlan._id}); 
-      const resp = { 
-        ...retrievedPlan._doc, 
-        years: yearObjs, 
-        distributions: distObjs, 
-        fine_requirements: fineObjs, 
-        reviewers: [] 
+      let distObjs = await distributions.find({ plan_id: retrievedPlan._id });
+      let fineObjs = await fineRequirements.find({
+        plan_id: retrievedPlan._id,
+      });
+      const resp = {
+        ...retrievedPlan._doc,
+        years: yearObjs,
+        distributions: distObjs,
+        fine_requirements: fineObjs,
+        reviewers: [],
       };
       delete resp.year_ids;
       returnData(resp, res);
@@ -187,7 +193,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
   plans
     .findByIdAndDelete(plan_id)
     .then(async (plan) => {
-      //delete distributions, fineReqs, courses, and years 
+      //delete distributions, fineReqs, courses, and years
       await distributions.deleteMany({ plan_id: plan._id }).exec();
       await fineRequirements.deleteMany({ plan_id: plan._id }).exec();
       await courses.deleteMany({ plan_id: plan._id }).exec();
@@ -201,17 +207,17 @@ router.delete("/api/plans/:plan_id", (req, res) => {
         )
         .exec();
       let deletedPlan = {
-        ...plan._doc, 
-        distributions: [], 
-        fine_requirements: []
-      }
+        ...plan._doc,
+        distributions: [],
+        fine_requirements: [],
+      };
       returnData(deletedPlan, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });
 
 //***need to consider not allow user to change major for a plan ***/
-// updates a plan's major(s) and name 
+// updates a plan's major(s) and name
 router.patch("/api/plans/update", (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
@@ -233,37 +239,41 @@ router.patch("/api/plans/update", (req, res) => {
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then(async (plan) => {
-        // add dists for new major, if any  
+        // add dists for new major, if any
         await addMajorDistributions(plan);
         // remove dists and fineReqs for deleted major, if any
-        await distributions
-          .find({ plan_id: plan._id })
-          .then(async (dists) => {
-            for (let dist of dists) {
-              if (!plan._doc.major_ids.includes(dist.major_id)) {
-                // maintain courses array fields 
-                await courses.updateMany({ plan_id: id }, { $pull: { distribution_ids: dist._id } });
-                for (let f_id of dist.fineReq_ids) {
-                  await courses.updateMany({ plan_id: id }, { $pull: { fineReq_ids: f_id } });
-                } 
-                // delete documents 
-                await distributions.findByIdAndDelete(dist._id);
-                await fineRequirements.deleteMany({ distribution_id: dist._id });
+        await distributions.find({ plan_id: plan._id }).then(async (dists) => {
+          for (let dist of dists) {
+            if (!plan._doc.major_ids.includes(dist.major_id)) {
+              // maintain courses array fields
+              await courses.updateMany(
+                { plan_id: id },
+                { $pull: { distribution_ids: dist._id } }
+              );
+              for (let f_id of dist.fineReq_ids) {
+                await courses.updateMany(
+                  { plan_id: id },
+                  { $pull: { fineReq_ids: f_id } }
+                );
               }
+              // delete documents
+              await distributions.findByIdAndDelete(dist._id);
+              await fineRequirements.deleteMany({ distribution_id: dist._id });
             }
-          });
-        // return plan with reviews and distributions 
-        let distObjs = await distributions.find({plan_id: plan._id}); 
-        let fineObjs = await fineRequirements.find({plan_id: plan._id}); 
+          }
+        });
+        // return plan with reviews and distributions
+        let distObjs = await distributions.find({ plan_id: plan._id });
+        let fineObjs = await fineRequirements.find({ plan_id: plan._id });
         await reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
           .then((revs) => {
-            plan = { 
-              ...plan, 
-              distributions: distObjs, 
+            plan = {
+              ...plan,
+              distributions: distObjs,
               fine_requirements: fineObjs,
-              reviewers: revs 
+              reviewers: revs,
             };
             returnData(plan, res);
           });
@@ -275,8 +285,12 @@ router.patch("/api/plans/update", (req, res) => {
 // Adding new distributions if new major is added
 async function addMajorDistributions(plan) {
   for (let m_id of plan.major_ids) {
-    const dist = await distributions.find({ plan_id: plan._id, major_id: m_id });
-    if (dist.length == 0) { // new major 
+    const dist = await distributions.find({
+      plan_id: plan._id,
+      major_id: m_id,
+    });
+    if (dist.length == 0) {
+      // new major
       const major = await majors.findById(m_id).exec();
       for (let dist_object of major.distributions) {
         let distribution_to_post = {
@@ -288,13 +302,17 @@ async function addMajorDistributions(plan) {
           description: dist_object.description,
           criteria: dist_object.criteria,
           min_credits_per_course: dist_object.min_credits_per_course,
-        }
-        // optional fields 
-        if (dist_object.user_select) distribution_to_post.user_select = dist_object.user_select;
-        if (dist_object.pathing) distribution_to_post.pathing = dist_object.pathing;
-        if (dist_object.double_count) distribution_to_post.double_count = dist_object.double_count;
-        if (dist_object.exception) distribution_to_post.exception = dist_object.exception;
-        // create new distribution documents  
+        };
+        // optional fields
+        if (dist_object.user_select)
+          distribution_to_post.user_select = dist_object.user_select;
+        if (dist_object.pathing)
+          distribution_to_post.pathing = dist_object.pathing;
+        if (dist_object.double_count)
+          distribution_to_post.double_count = dist_object.double_count;
+        if (dist_object.exception)
+          distribution_to_post.exception = dist_object.exception;
+        // create new distribution documents
         await distributions
           .create(distribution_to_post)
           .then(async (retrievedDistribution) => {
@@ -306,38 +324,45 @@ async function addMajorDistributions(plan) {
                 plan_id: plan._id,
                 major_id: major._id,
                 distribution_id: retrievedDistribution._id,
-              }
+              };
               if (f_req.exception) fineReq_to_post.exception = f_req.exception;
-              if (f_req.double_count) fineReq_to_post.double_count = f_req.double_count;
-              // create new fine requirement documents  
+              if (f_req.double_count)
+                fineReq_to_post.double_count = f_req.double_count;
+              // create new fine requirement documents
               await fineRequirements
                 .create(fineReq_to_post)
                 .then(async (fineReq) => {
                   retrievedDistribution.fineReq_ids.push(fineReq._id);
-                  await retrievedDistribution.save(); 
+                  await retrievedDistribution.save();
                 });
             }
-          }); 
+          });
       }
       await addCourses(plan, m_id);
     }
   }
-};
+}
 
-
-// Adds each existing course in a plan to distributions of specified major   
+// Adds each existing course in a plan to distributions of specified major
 async function addCourses(plan, m_id) {
-  const coursesInPlan = await courses.findByPlanId(plan._id); 
-  let distObjs = await distributions.find({plan_id: plan._id, major_id: m_id});
+  const coursesInPlan = await courses.findByPlanId(plan._id);
+  let distObjs = await distributions.find({
+    plan_id: plan._id,
+    major_id: m_id,
+  });
   for (let course of coursesInPlan) {
-    let distDoubleCount = undefined; 
+    let distDoubleCount = undefined;
     for (let distObj of distObjs) {
-      if ((distDoubleCount === undefined || distDoubleCount.length === 0 || distDoubleCount.includes(distObj.name))) {
-        let updated = await updateDistribution(distObj._id, course._id); 
-        if (updated) distDoubleCount = distObj.double_counts; 
+      if (
+        distDoubleCount === undefined ||
+        distDoubleCount.length === 0 ||
+        distDoubleCount.includes(distObj.name)
+      ) {
+        let updated = await updateDistribution(distObj._id, course._id);
+        if (updated) distDoubleCount = distObj.double_counts;
       }
     }
   }
-};
+}
 
 module.exports = router;

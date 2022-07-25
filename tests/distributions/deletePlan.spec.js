@@ -3,7 +3,7 @@ const supertest = require("supertest");
 const majors = require("../../model/Major");
 const courses = require("../../model/Course");
 const distributions = require("../../model/Distribution");
-const fineRequirements = require("../../model/FineRequirement"); 
+const fineRequirements = require("../../model/FineRequirement");
 const years = require("../../model/Year");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
@@ -14,7 +14,7 @@ let deadPlan = {};
 
 const samplePlan = {
   name: "TEST_PLAN",
-  user_id: 'TEST_USER',
+  user_id: "TEST_USER",
   majors: [allMajors[0].name],
   expireAt: new Date(),
   year: "Junior",
@@ -34,11 +34,11 @@ beforeAll((done) => {
         credits: 4,
         year: "Junior",
         plan_id: plan1._id,
-      };      
+      };
       const response3 = await request.post("/api/courses").send(course);
       course1 = response3.body.data;
       deadPlan = await request.delete(`/api/plans/${plan1._id}`);
-      deadPlan = deadPlan.body.data; 
+      deadPlan = deadPlan.body.data;
       done();
     });
 });
@@ -56,7 +56,7 @@ describe("delete a plan", () => {
     deadPlan.year_ids.forEach(async (id) => {
       const search = await years.findById(id);
       expect(search).toBeFalsy();
-    })
+    });
   });
   it("should delete associated distribution objects", async () => {
     const search = await distributions.find({ plan_id: deadPlan._id });

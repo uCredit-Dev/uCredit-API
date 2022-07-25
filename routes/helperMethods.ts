@@ -3,8 +3,8 @@ const Notifications = require("../model/Notification.js");
 const Courses = require("../model/Course.js");
 const Distributions = require("../model/Distribution.js");
 const Majors = require("../model/Major.js");
-const FineRequirements = require("../model/FineRequirement.js")
-var ObjectId = require('mongoose').Types.ObjectId;
+const FineRequirements = require("../model/FineRequirement.js");
+var ObjectId = require("mongoose").Types.ObjectId;
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
@@ -26,37 +26,41 @@ function errorHandler(res, status, err) {
 }
 
 const updateDistribution = async (
-  distribution_id: string, 
+  distribution_id: string,
   course_id: string
-) : Promise<boolean> => {
-  let course = await Courses.findById(ObjectId(course_id)); 
-  return await Distributions // returns a promise 
-    .findById(ObjectId(distribution_id))
+): Promise<boolean> => {
+  let course = await Courses.findById(ObjectId(course_id));
+  return await Distributions.findById(ObjectId(distribution_id)) // returns a promise
     .then(async (distribution) => {
-      if (!distribution || !course) return false; 
-      // general distribution criteria  
+      if (!distribution || !course) return false;
+      // general distribution criteria
       const genCriteria: string = distribution.criteria;
       if (
         !distribution.satisfied &&
-        course.credits >= distribution.min_credits_per_course && 
+        course.credits >= distribution.min_credits_per_course &&
         checkCriteriaSatisfied(genCriteria, course)
       ) {
-        // update distribution credits  
-        // a distribution can have enough credits and still be unsatisfied 
-        if (distribution.planned < distribution.required_credits ||
-            (distribution.planned === 0 && distribution.required_credits === 0)) {
-              await requirementCreditUpdate(distribution, course, true);
+        // update distribution credits
+        // a distribution can have enough credits and still be unsatisfied
+        if (
+          distribution.planned < distribution.required_credits ||
+          (distribution.planned === 0 && distribution.required_credits === 0)
+        ) {
+          await requirementCreditUpdate(distribution, course, true);
         }
-        // add distribution id to course 
+        // add distribution id to course
         course.distribution_ids.push(distribution_id);
-        await course.save(); 
-        // update fine requirement credits 
-        let fineDoubleCount: string[] | undefined = undefined; 
+        await course.save();
+        // update fine requirement credits
+        let fineDoubleCount: string[] | undefined = undefined;
         for (let f_id of distribution.fineReq_ids) {
           let fine = await FineRequirements.findById(f_id);
           if (
-            (fine.planned < fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
-            (fineDoubleCount === undefined || fineDoubleCount.length === 0 || fineDoubleCount.includes(fine.description)) &&  
+            (fine.planned < fine.required_credits ||
+              (fine.required_credits === 0 && fine.planned === 0)) &&
+            (fineDoubleCount === undefined ||
+              fineDoubleCount.length === 0 ||
+              fineDoubleCount.includes(fine.description)) &&
             checkCriteriaSatisfied(fine.criteria, course)
           ) {
             await requirementCreditUpdate(fine, course, true);
@@ -67,23 +71,23 @@ const updateDistribution = async (
             await course.save();
           }
         }
-        // update satisfied with pathing 
+        // update satisfied with pathing
         if (distribution.planned >= distribution.required_credits) {
           if (distribution.pathing) {
-            await processPathing(distribution); 
+            await processPathing(distribution);
           } else {
-            distribution.satisfied = true; 
-            await distribution.save(); 
+            distribution.satisfied = true;
+            await distribution.save();
           }
         }
-        return true; 
+        return true;
       }
-      return false; 
-    }); 
+      return false;
+    });
 };
 
-// updates planned, current, and satisfied with added / removed course 
-// ***requirement can be distribution OR fine requirement 
+// updates planned, current, and satisfied with added / removed course
+// ***requirement can be distribution OR fine requirement
 async function requirementCreditUpdate(requirement, course, add) {
   if (add) {
     requirement.planned += course.credits;
@@ -96,45 +100,42 @@ async function requirementCreditUpdate(requirement, course, add) {
       requirement.current -= course.credits;
     }
   }
-  if (requirement.name) { // distribution 
+  if (requirement.name) {
+    // distribution
     if (requirement.planned < requirement.required_credits) {
       requirement.satisfied = false; // true check later with pathing
     }
-  } else { // finereq
+  } else {
+    // finereq
     if (requirement.planned >= requirement.required_credits) {
-      requirement.satisfied = true; 
+      requirement.satisfied = true;
     } else {
-      requirement.satisfied = false; 
+      requirement.satisfied = false;
     }
   }
-  await requirement.save(); 
+  await requirement.save();
 }
 
-// updates a distribution's satisfied, if pathing condition is met 
-const processPathing = async (
-  distribution: any
-) => {
-  let numPaths = distribution.pathing; 
-  await FineRequirements
-    .find({distribution_id: distribution._id})
-    .then(async (fineObjs) => {
+// updates a distribution's satisfied, if pathing condition is met
+const processPathing = async (distribution: any) => {
+  let numPaths = distribution.pathing;
+  await FineRequirements.find({ distribution_id: distribution._id }).then(
+    async (fineObjs) => {
       for (let fine of fineObjs) {
         if (fine.satisfied) {
-          numPaths -= 1; 
+          numPaths -= 1;
           if (numPaths <= 0) {
-            distribution.satisfied = true; 
+            distribution.satisfied = true;
           }
         }
       }
-    });
-  await distribution.save(); 
-}
+    }
+  );
+  await distribution.save();
+};
 
 // returns if a course satisfies a criteria
-const checkCriteriaSatisfied = (
-  criteria: string,
-  course: any,
-): boolean => {
+const checkCriteriaSatisfied = (criteria: string, course: any): boolean => {
   if (criteria === null || criteria.length === 0 || criteria === "N/A") {
     return true;
   }
@@ -147,29 +148,26 @@ const checkCriteriaSatisfied = (
   }
 };
 
-// returns a string expression of whether a course satisfies a criteria  
-const getCriteriaBoolExpr = (
-  criteria: string,
-  course: any,
-): string => {
-  let boolExpr: string = '';
+// returns a string expression of whether a course satisfies a criteria
+const getCriteriaBoolExpr = (criteria: string, course: any): string => {
+  let boolExpr: string = "";
   let index: number = 0;
-  let concat: string = '';
+  let concat: string = "";
   const splitArr: string[] = splitRequirements(criteria);
   if (course === null) {
     return concat;
   }
   while (index < splitArr.length) {
-    if (splitArr[index] === '(') {
-      concat = '(';
-    } else if (splitArr[index] === ')') {
-      concat = ')';
-    } else if (splitArr[index] === 'OR') {
-      concat = '||';
-    } else if (splitArr[index] === 'AND') {
-      concat = '&&';
-    } else if (splitArr[index] === 'NOT') {
-      concat = '&&!';
+    if (splitArr[index] === "(") {
+      concat = "(";
+    } else if (splitArr[index] === ")") {
+      concat = ")";
+    } else if (splitArr[index] === "OR") {
+      concat = "||";
+    } else if (splitArr[index] === "AND") {
+      concat = "&&";
+    } else if (splitArr[index] === "NOT") {
+      concat = "&&!";
     } else {
       concat = handleTagType(splitArr, index, course);
     }
@@ -181,76 +179,74 @@ const getCriteriaBoolExpr = (
   return boolExpr;
 };
 
-// handles different tags (C, T, D, Y, A, N, W, L) in criteria string 
+// handles different tags (C, T, D, Y, A, N, W, L) in criteria string
 const handleTagType = (
   splitArr: string[],
   index: number,
-  course: any,
+  course: any
 ): string => {
   let updatedConcat: string;
   switch (splitArr[index + 1]) {
-    case 'C': // Course Number
+    case "C": // Course Number
       updatedConcat = (
         course.number !== undefined && course.number.includes(splitArr[index])
       ).toString();
       break;
-    case 'T': // Tag
+    case "T": // Tag
       updatedConcat = (
         course?.tags !== undefined && course.tags.includes(splitArr[index])
       ).toString();
       break;
-    case 'D': // Department
+    case "D": // Department
       updatedConcat = (course.department === splitArr[index]).toString();
       break;
-    case 'Y': // Year
+    case "Y": // Year
       //TODO: implement for year.
-      updatedConcat = 'false';
+      updatedConcat = "false";
       break;
-    case 'A': // Area
+    case "A": // Area
       updatedConcat = (
         course.areas !== undefined && course.areas.includes(splitArr[index])
       ).toString();
       break;
-    case 'N': // Name
+    case "N": // Name
       updatedConcat = (
         course.title !== undefined && course.title.includes(splitArr[index])
-      ).toString(); 
-      break;
-    case 'W': //Written intensive
-      updatedConcat = (
-        course.wi !== undefined && course.wi
       ).toString();
       break;
-    case 'L': // Level
+    case "W": //Written intensive
+      updatedConcat = (course.wi !== undefined && course.wi).toString();
+      break;
+    case "L": // Level
       updatedConcat = handleLCase(splitArr, index, course);
       break;
     default:
-      updatedConcat = 'false';
+      updatedConcat = "false";
   }
   return updatedConcat;
 };
 
 // Handles the L case in the getBoolExpr function
 const handleLCase = (splitArr, index, course): string => {
-  if (course.number === undefined) return 'false';
-  let updatedConcat: string = '';
-  if (splitArr[index].includes('Upper')) {
-    if (course.number[7] >= '3') {
-      updatedConcat = 'true';
+  if (course.number === undefined) return "false";
+  let updatedConcat: string = "";
+  if (splitArr[index].includes("Upper")) {
+    if (course.number[7] >= "3") {
+      updatedConcat = "true";
     } else {
-      updatedConcat = 'false';
+      updatedConcat = "false";
     }
-  } else if (splitArr[index].includes('Lower')) {
-    if (course.number[7] <= '2') {
-      updatedConcat = 'false';
+  } else if (splitArr[index].includes("Lower")) {
+    if (course.number[7] <= "2") {
+      updatedConcat = "false";
     } else {
-      updatedConcat = 'true';
+      updatedConcat = "true";
     }
   } else if (course.number[7] === splitArr[index][0]) {
     // For solely 100, 200, etc. levels
-    updatedConcat = 'true';
+    updatedConcat = "true";
   } else {
-    updatedConcat = 'false';
+    updatedConcat = "false";
   }
   return updatedConcat;
 };
@@ -271,29 +267,29 @@ const splitRequirements = (expr: string): string[] => {
 // args: expr to parse, index that we are currently on
 // returns: the next piece, along with the index of start of the next next piece
 const getNextEntry = (expr: string, index: number): [string, number] => {
-  if (expr[index] === '(') {
-    return ['(', index + 1];
-  } else if (expr[index] === ')') {
-    return [')', index + 1];
-  } else if (expr[index] === '[') {
+  if (expr[index] === "(") {
+    return ["(", index + 1];
+  } else if (expr[index] === ")") {
+    return [")", index + 1];
+  } else if (expr[index] === "[") {
     return [expr[index + 1], index + 3];
-  } else if (expr[index] === '^') {
-    if (expr[index + 1] === 'O') {
-      return ['OR', index + 4];
-    } else if (expr[index + 1] === 'A') {
-      return ['AND', index + 5];
+  } else if (expr[index] === "^") {
+    if (expr[index + 1] === "O") {
+      return ["OR", index + 4];
+    } else if (expr[index + 1] === "A") {
+      return ["AND", index + 5];
     } else {
-      return ['NOT', index + 5];
+      return ["NOT", index + 5];
     }
   }
   let out = expr[index];
   index++;
   while (index < expr.length) {
     if (
-      expr[index] === '(' ||
-      expr[index] === ')' ||
-      expr[index] === '[' ||
-      expr[index] === '^'
+      expr[index] === "(" ||
+      expr[index] === ")" ||
+      expr[index] === "[" ||
+      expr[index] === "^"
     ) {
       return [out, index];
     }
@@ -309,9 +305,9 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
   }
   let notification: any;
   if (quick_link_id && link_type) {
-    notification = {message, user_id, quick_link_id, link_type};
+    notification = { message, user_id, quick_link_id, link_type };
   } else {
-    notification = {message, user_id};
+    notification = { message, user_id };
   }
   const n = await Notifications.create(notification);
   return n;
@@ -320,7 +316,7 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
 module.exports = {
   returnData,
   errorHandler,
-  checkCriteriaSatisfied, 
+  checkCriteriaSatisfied,
   getCriteriaBoolExpr,
   splitRequirements,
   updateDistribution,

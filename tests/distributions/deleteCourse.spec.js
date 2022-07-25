@@ -4,29 +4,28 @@ const majors = require("../../model/Major");
 const courses = require("../../model/Course");
 const users = require("../../model/User");
 const years = require("../../model/Year");
-const distributions = require("../../model/Distribution")
+const distributions = require("../../model/Distribution");
 const plans = require("../../model/Plan");
 const fineRequirements = require("../../model/FineRequirement");
 const createApp = require("../../app");
 const { allMajors } = require("../../data/majors");
 const request = supertest(createApp());
 
-
 let major1 = [];
 let major2 = [];
 let plan1 = [];
 let course1 = [];
-let deadCourse = []
+let deadCourse = [];
 
 beforeAll((done) => {
   mongoose
     .connect("mongodb://localhost:27017/dist", { useNewUrlParser: true })
     .then(async () => {
-      const response1 = await request.post("/api/majors").send(allMajors[3]); // cogsci 
+      const response1 = await request.post("/api/majors").send(allMajors[3]); // cogsci
       let cogsci = response1.body.data;
       const planBody = {
         name: "TEST_PLAN",
-        user_id: 'TEST_USER',
+        user_id: "TEST_USER",
         majors: [cogsci.degree_name],
         major_ids: [cogsci._id],
         expireAt: new Date(),
@@ -37,7 +36,7 @@ beforeAll((done) => {
 
       const course = {
         title: "TEST_COURSE",
-        user_id: 'TEST_USER',
+        user_id: "TEST_USER",
         term: "spring",
         credits: 4,
         year: "Junior",
@@ -95,8 +94,8 @@ describe("delete course from plan", () => {
       expect(
         dist.courses.find((courseId) => courseId === deadCourse._id).exists()
       ).toBeFalsy();
-      expect(dist.planned).toBe(0); 
-      expect(dist.satisfied).toBeFalsy(); 
+      expect(dist.planned).toBe(0);
+      expect(dist.satisfied).toBeFalsy();
     }
   });
 });
@@ -106,7 +105,7 @@ describe("Fine Requirement Testing", () => {
     const cogsNeuroBody = {
       title: "COGS-NEURO",
       user_id: "TEST_USER",
-      number: "adsf", // NOT upper elective due to double_count 
+      number: "adsf", // NOT upper elective due to double_count
       tags: ["COGS-NEURO"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
@@ -116,7 +115,7 @@ describe("Fine Requirement Testing", () => {
     const cogsCompcgBody = {
       title: "COGS-COMPCG",
       user_id: "TEST_USER",
-      number: "afds", // NOT upper elective due to double_count 
+      number: "afds", // NOT upper elective due to double_count
       tags: ["COGS-COMPCG"], // One Course from each Focal Area, Two Focal Areas
       term: "fall",
       year: "Senior",
@@ -124,7 +123,7 @@ describe("Fine Requirement Testing", () => {
       credits: 3,
     };
     let cogNeuro = await request.post("/api/courses").send(cogsNeuroBody);
-    cogNeuro = cogNeuro.body.data; 
+    cogNeuro = cogNeuro.body.data;
     await request.post("/api/courses").send(cogsNeuroBody);
     await request.post("/api/courses").send(cogsNeuroBody);
     await request.post("/api/courses").send(cogsNeuroBody);
@@ -138,34 +137,30 @@ describe("Fine Requirement Testing", () => {
     //const deadCompcg = await request.delete(`/api/courses/${compcg._id}`);
     expect(deadCogsNeuro.distribution_ids).toBeTruthy();
 
-    let found = false; 
+    let found = false;
     for (let d_id of deadCogsNeuro.distribution_ids) {
-      await distributions
-        .findById(d_id)
-        .then(async (dist) => {
-          if (dist.name === "Two Focal Areas") {
-            found = true; 
-            expect(dist.planned).toBe(9); // 3 credits less than 12
-            expect(dist.satisfied).toBeFalsy();
-            await fineRequirements
-              .find({plan_id: plan1._id, distribution_id: dist._id})
-              .then((fineObjs) => {
-                let names = [];
-                for (let fine of fineObjs) {
-                  if (fine.satisfied) {
-                    names.push(fine.criteria);
-                  }
+      await distributions.findById(d_id).then(async (dist) => {
+        if (dist.name === "Two Focal Areas") {
+          found = true;
+          expect(dist.planned).toBe(9); // 3 credits less than 12
+          expect(dist.satisfied).toBeFalsy();
+          await fineRequirements
+            .find({ plan_id: plan1._id, distribution_id: dist._id })
+            .then((fineObjs) => {
+              let names = [];
+              for (let fine of fineObjs) {
+                if (fine.satisfied) {
+                  names.push(fine.criteria);
                 }
-                expect(names.length).toBe(1);
-                expect(names).toContain("COGS-COMPCG[T]");
-
-              })
-          }
-        })
+              }
+              expect(names.length).toBe(1);
+              expect(names).toContain("COGS-COMPCG[T]");
+            });
+        }
+      });
     }
     expect(found).toBeTruthy();
-  }); 
-  
+  });
 });
 
 const data = { test: true };

@@ -29,7 +29,9 @@ describe("create new distribution for major", () => {
         });
         expect(major).toBeTruthy();
       });
-    const cs_minor = await majors.findOne({degree_name: 'B.S. Computer Science (OLD - Pre-2021)'});
+    const cs_minor = await majors.findOne({
+      degree_name: "B.S. Computer Science (OLD - Pre-2021)",
+    });
     const cs_reqs = cs_minor.distributions[0];
     const newDistribution = {
       name: cs_reqs.name,
@@ -37,14 +39,14 @@ describe("create new distribution for major", () => {
       min_credits_per_course: cs_reqs.min_credits_per_course,
       description: cs_reqs.description,
       criteria: cs_reqs.criteria,
-      pathing: cs_reqs.pathing, 
+      pathing: cs_reqs.pathing,
       user_select: cs_reqs.user_select,
       double_count: cs_reqs.double_count,
       fine_requirements: cs_reqs.fine_requirements,
-      plan_id: '62b407fbf4dae1c26277a420',
+      plan_id: "62b407fbf4dae1c26277a420",
       user_id: "CS_minor_user",
       major_id: cs_minor._id,
-    };    
+    };
     console.log(newDistribution);
     const resp = await request.post("/api/distributions").send(newDistribution);
     console.log(resp.body.data);

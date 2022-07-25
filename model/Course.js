@@ -21,7 +21,7 @@ const courseSchema = new Schema({
   number: String,
   department: String,
   tags: [{ type: String }],
-  areas: {type: String},
+  areas: { type: String },
   credits: { type: Number, required: true },
   wi: { type: Boolean, default: false },
   taken: { type: Boolean, default: false },
@@ -29,12 +29,8 @@ const courseSchema = new Schema({
   isPlaceholder: { type: Boolean, default: false },
   isTransfer: { type: Boolean, default: false },
   ratings: Array,
-  distribution_ids: [
-    { type: Schema.Types.ObjectId, ref: "Distribution" },
-  ],
-  fineReq_ids: [
-    { type: Schema.Types.ObjectId, ref: "FineRequirement" },
-  ],
+  distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
+  fineReq_ids: [{ type: Schema.Types.ObjectId, ref: "FineRequirement" }],
   year_id: { type: Schema.Types.ObjectId, ref: "Year" },
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
   user_id: { type: String, required: true },
