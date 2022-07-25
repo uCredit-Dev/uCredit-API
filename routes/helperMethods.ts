@@ -51,26 +51,24 @@ const updateDistribution = async (
         course.distribution_ids.push(distribution_id);
         await course.save(); 
         // update fine requirement credits 
-        await FineRequirements
-          .find({distribution_id: distribution._id})
-          .then(async (fineReqs) => {
-            let fineExclusive: string[] | undefined = undefined; 
-            for (let fine of fineReqs) {
-              if (
-                (fine.planned < fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
-                (fineExclusive === undefined || fineExclusive.length === 0 || fineExclusive.includes(fine.description)) &&  
-                checkCriteriaSatisfied(fine.criteria, course)
-              ) {
-                distributionCreditUpdate(fine, course, true);
-                await fine.save(); 
-                course.fineReq_ids.push(fine._id);
-                await course.save();
-                if (fine.exclusive && fine.exclusive.length > 0) {
-                  fineExclusive = fine.exclusive;
-                }
-              }
+        let fineExclusive: string[] | undefined = undefined; 
+        for (let f_id of distribution.fineReq_ids) {
+          let fine = await FineRequirements.findById(f_id);
+          if (
+            (fine.planned < fine.required_credits || (fine.required_credits === 0 && fine.planned === 0)) &&
+            (fineExclusive === undefined || fineExclusive.length === 0 || fineExclusive.includes(fine.description)) &&  
+            checkCriteriaSatisfied(fine.criteria, course)
+          ) {
+            distributionCreditUpdate(fine, course, true);
+            await fine.save(); 
+            course.fineReq_ids.push(fine._id);
+            await course.save();
+            if (fine.exclusive && fine.exclusive.length > 0) {
+              fineExclusive = fine.exclusive;
             }
-          })
+          }
+        }
+            
         if (distribution.planned >= distribution.required_credits) {
           if (distribution.pathing) {
             await processPathing(distribution); 
@@ -97,7 +95,7 @@ function distributionCreditUpdate(distribution, course, add) {
       distribution.current -= course.credits;
     }
   }
-  if (distribution.name) {
+  if (distribution.name) { // distributino 
     if (distribution.planned < distribution.required_credits) {
       distribution.satisfied = false; // true check later with pathing
     }

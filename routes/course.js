@@ -234,20 +234,17 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .then(async (course) => {
       for (let id of course.distribution_ids) {
         await distributions.findById(id).then(async (distribution) => {
-          distributionCreditUpdate(distribution, course, false)
-          await fineRequirements
-            .find({ distribution_id: distribution._id }) // should we use course.fineReq_ids at all? 
-            .then(async (fineReqs) => {
-              for (let fine of fineReqs) {
-                if (checkCriteriaSatisfied(fine.criteria, course)) {
-                  distributionCreditUpdate(fine, course, false);
-                  if (fine.planned < fine.required_credits) {
-                    fine.satisfied = false; 
-                  }
-                  await fine.save();
-                }
+          distributionCreditUpdate(distribution, course, false); 
+          for (let f_id of distribution.fineReq_ids) {
+            let fine = await fineRequirements.findById(f_id); 
+            if (checkCriteriaSatisfied(fine.criteria, course)) {
+              distributionCreditUpdate(fine, course, false);
+              if (fine.planned < fine.required_credits) {
+                fine.satisfied = false; 
               }
-            })
+              await fine.save();
+            }
+          }
           if (distribution.planned >= distribution.required_credits) {
             if (distribution.pathing) {
               await processPathing(distribution);

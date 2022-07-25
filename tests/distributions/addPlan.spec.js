@@ -73,7 +73,8 @@ describe("create a plan", () => {
     var count = 0;
     for (let dist of distObjs) {
       expect(dist.plan_id.toString()).toBe(planRes._id);
-      let fineReqs = await fineRequirements.find({ distribution_id: dist._id });
+      const fineReqs = await fineRequirements.find({ distribution_id: dist._id });
+      expect(fineReqs.length).toBe(dist.fineReq_ids.length);
       count += fineReqs.length;
       fineReqs.forEach((fine) => {
         expect(fine.distribution_id.toString()).toBe(dist._id.toString());

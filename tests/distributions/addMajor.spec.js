@@ -97,6 +97,28 @@ describe("Adding a major", () => {
     expect(csCount).toBe(9);
     expect(amsCount).toBe(15);
   });
+  it("should create associate fineReq objects with distribution objects", async () => {
+    const updatedPlan = await plans.findById(planRes._id);
+    expect(updatedPlan).toBeTruthy(); 
+    let csCount = 0; 
+    await distributions
+      .find({plan_id: updatedPlan._id, major_id: updatedPlan.major_ids[0]})
+      .then((dists) => {
+        for (let dist of dists) {
+          csCount += dist.fineReq_ids.length; 
+        }
+      });
+    let amsCount = 0; 
+    await distributions
+      .find({plan_id: updatedPlan._id, major_id: updatedPlan.major_ids[1]})
+      .then((dists) => {
+        for (let dist of dists) {
+          amsCount += dist.fineReq_ids.length; 
+        }
+      });
+    expect(csCount).toBe(9);
+    expect(amsCount).toBe(15);
+  });
   it("should should add existing courses to new distribution objects", async () => {
     java = await courses.findById(java._id);
     expect(java.distribution_ids.length).toBe(2); 
@@ -118,5 +140,4 @@ describe("Adding a major", () => {
     expect(fine.description.includes("Lower Level Undergraduate")).toBeTruthy(); 
     expect(fine.planned).toBe(4); 
   });
-  // check course has been added to distribution 
 });

@@ -111,13 +111,15 @@ describe("POST /api/courses", () => {
       expect(dist.name).toBe('Computer Science');
       expect(dist.planned).toBe(java.credits);
       expect(dist.satisfied).toBe(false);
-      // should update fine requirement about core CS courses 
-      const fine = await fineRequirements.findOne({required_credits: 21, distribution_id: dist._id}); 
-      expect(fine.criteria.includes(java.number)).toBeTruthy();
-      expect(fine).toBeTruthy(); 
-      expect(fine.planned).toBe(java.credits);
-      expect(fine.satisfied).toBe(false);
+      expect(dist.fineReq_ids.length).toBe(5);
     }
+    // should update fine requirement about core CS courses 
+    expect(java.fineReq_ids.length).toBe(1); 
+    const fine = await fineRequirements.findById(java.fineReq_ids[0]); 
+    expect(fine).toBeTruthy(); 
+    expect(fine.planned).toBe(java.credits);
+    expect(fine.satisfied).toBe(false);
+    expect(fine.criteria.includes(java.number)).toBeTruthy(); 
   });
   it("expos fulfills Liberal Arts and WI distributions", async () => {
     expect(expos.distribution_ids.length).toBe(2); 
@@ -129,14 +131,15 @@ describe("POST /api/courses", () => {
       expect(dist.satisfied).toBe(false);
       if (dist.required_credits === 6) {
         expect(dist.name).toBe('Writing Intensive');
-        const fine = await fineRequirements.findOne({distribution_id: dist._id}); 
-        expect(fine).toBeTruthy(); 
-        expect(fine.satisfied).toBeTruthy(); 
-        expect(fine.planned).toBe(expos.credits);
       } else {
         expect(dist.name).toBe('Liberal Arts');
       }
     }
+    expect(expos.fineReq_ids.length).toBe(1); 
+    const fine = await fineRequirements.findById(expos.fineReq_ids[0]); 
+    expect(fine).toBeTruthy(); 
+    expect(fine.satisfied).toBeTruthy(); 
+    expect(fine.planned).toBe(expos.credits);
   }); 
   it("should not add courses to a satisfied distribution", async () => {
     const exposBody = {

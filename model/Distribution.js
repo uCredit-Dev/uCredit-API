@@ -17,6 +17,7 @@ const distributionSchema = new Schema({
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
   major_id: { type: Schema.Types.ObjectId, ref: "Major", required: true},
+  fineReq_ids: [{ type: Schema.Types.ObjectId, ref: "FineRequirement"}],
   planned: { type: Number, default: 0 },
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
