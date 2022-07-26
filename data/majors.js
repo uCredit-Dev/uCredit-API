@@ -1317,7 +1317,6 @@ const bsCS_Old = {
         "of both probability and statistics, which can be satisfied in many ways, including " +
         "taking any of the 553.3xx combined Probability & Statistics courses.",
       criteria: "AS Mathematics[D]^OR^EN Applied Math and Statistics[D]",
-      exception: "EN.553.171[C]",
       fine_requirements: [
         {
           description:
@@ -1460,7 +1459,6 @@ const bsCS_New = {
         "of both probability and statistics, which can be satisfied in many ways, including " +
         "taking any of the 553.3xx combined Probability & Statistics courses.",
       criteria: "AS Mathematics[D]^OR^EN Applied Mathematics & Statistics[D]",
-      exception: "EN.553.171[C]",
       fine_requirements: [
         {
           description:
@@ -1577,7 +1575,6 @@ const baCS_New = {
         "may not count towards these math requirements. At least one course must be 200-level or above",
       criteria: "AS Mathematics[D]^OR^EN Applied Mathematics & Statistics[D]",
       double_count: ['Liberal Arts', 'Writing Intensive'],
-      exception: "EN.553.171[C]",
       fine_requirements: [
         {
           description:
@@ -1827,7 +1824,6 @@ const bsMolCell = {
         "Must complete General Chemistry (or AP equivalent) and Organic Chemistry in addition to their respective labs.",
       criteria: "AS Chemistry[D]",
       double_count: ['Writing Intensive', 'Humanities Distribution Requirement', 'Social Science Distribution Requirement'],
-      exception: "",
       fine_requirements: [
         {
           description: "<p>030.101 Introductory Chemistry I</p>",

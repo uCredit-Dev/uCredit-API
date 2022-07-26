@@ -5,7 +5,7 @@ const fineSchema = new Schema({
   description: { type: String, required: true },
   required_credits: { type: Number, required: true },
   criteria: { type: String, required: true },
-  plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+  plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
   major_id: { type: Schema.Types.ObjectId, ref: "Major", required: true },
   distribution_id: {
     type: Schema.Types.ObjectId,
@@ -15,7 +15,6 @@ const fineSchema = new Schema({
   planned: { type: Number, default: 0 },
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
-  exception: { type: String },
   double_count: [{ type: String }],
   expireAt: { type: Date },
 });

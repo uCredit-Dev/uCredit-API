@@ -310,8 +310,6 @@ async function addMajorDistributions(plan) {
           distribution_to_post.pathing = dist_object.pathing;
         if (dist_object.double_count)
           distribution_to_post.double_count = dist_object.double_count;
-        if (dist_object.exception)
-          distribution_to_post.exception = dist_object.exception;
         // create new distribution documents
         await distributions
           .create(distribution_to_post)
@@ -325,7 +323,6 @@ async function addMajorDistributions(plan) {
                 major_id: major._id,
                 distribution_id: retrievedDistribution._id,
               };
-              if (f_req.exception) fineReq_to_post.exception = f_req.exception;
               if (f_req.double_count)
                 fineReq_to_post.double_count = f_req.double_count;
               // create new fine requirement documents

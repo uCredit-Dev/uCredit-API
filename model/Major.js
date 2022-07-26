@@ -30,13 +30,11 @@ const majorSchema = new Schema({
       criteria: { type: String, required: true },
       user_select: { type: Boolean, default: false }, //if true, user can put any course into this distribution
       double_count: [{ type: String }], // whitelisted distributions that can double count; if undefined, all whitelisted
-      exception: { type: String }, //course that match the exception expression cannot be added toward this distirbution
       fine_requirements: [
         {
           description: { type: String, required: true },
           required_credits: { type: Number, required: true },
           criteria: { type: String, required: true },
-          exception: { type: String },
           double_count: [{ type: String }],
         },
       ],
