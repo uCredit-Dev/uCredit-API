@@ -280,7 +280,6 @@ router.delete("/api/courses/:course_id", (req, res) => {
             await distribution.save();
             updatedDists.push(distribution);
           })
-          .catch((err) => errorHandler(res, 500, err));
       }
       //delete course id to user's year array
       let query = {};
@@ -302,7 +301,6 @@ router.delete("/api/courses/:course_id", (req, res) => {
               .exec();
           }
         })
-        .catch((err) => errorHandler(res, 404, err));
       // return deleted course with modified distributions
       course.distribution_ids = updatedDists;
       course.fineReq_ids = updatedFines;
