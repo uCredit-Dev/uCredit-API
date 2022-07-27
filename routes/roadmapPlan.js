@@ -2,7 +2,7 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 const roadmapPlans = require("../model/RoadmapPlan.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
-const distributions = require("../model/Distribution.js");
+//const distributions = require("../model/Distribution.js");
 const courses = require("../model/Course.js");
 
 const express = require("express");
@@ -12,10 +12,9 @@ const router = express.Router();
 // based on that plan
 router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
   const old_id = req.body.id;
-  console.log(old_id);
   plans
     .findById(old_id)
-    .then((retrieved) => {
+    .then(async (retrieved) => {
       // extract simple fields from the plan
       let data = {
         original: retrieved.id,
@@ -29,49 +28,79 @@ router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
         // postedAt will default to Date.now by the schema
       };
       // now clone the linked year and distribution documents
-      newYears = [];
-      retrieved.year_ids.forEach((elem) => {
-        // TODO courses also need to be deep copied
-        years
-          .create(years.find({ _id: elem }, { _id: 0 }))
-          .then((created) => newYears.append(created._id))
-          .catch((err) => errorHandler(res, 400, err));
-      });
-      newDistributions = [];
-      retrieved.distribution_ids.forEach((elem) => {
-        // TODO courses also need to be deep copied
-        distributions
-          .create(distributions.find({ _id: elem }, { _id: 0 }))
-          .then((created) => newDistributions.append(created._id))
-          .catch((err) => errorHandler(res, 400, err));
-      });
-      data.year_ids = newYears;
-      data.distribution_ids = newDistributions;
-      roadmapPlans
-        .create(data)
-        .then((result) => {
-          newYears.forEach((id) => {
-            years.findByIdAndUpdate(id, { plan_id: result._id });
-          });
-          // create deep copy of courses
-          newDistributions.forEach((id) => {
-            dist = distributions.find({ _id: id });
-            dist.plan_id = result._id;
-            newCourses = [];
-            dist.courses.forEach((course) => {
-              courses.create(courses.find({ _id: course })).then((created) => {
-                created.distribution_id = dist._id;
-                created.plan_id = result._id;
-                // now need to do year, which is tougher
-              });
-            });
-          });
-          returnData(result, res);
+      let newYears = [];
+      let newYearIds = [];
+      let yearPromise = Promise.all(
+        retrieved.year_ids.map(async (elem) => {
+          let found = await years.find({ _id: elem }, { _id: 0 });
+          let yearData = {
+            name: found[0].name,
+            user_id: found[0].user_id,
+            expireAt: found[0].expireAt,
+            year: found[0].year,
+            courses: found[0].courses,
+          };
+          let created = await years.create(yearData);
+          // order is kept track of here to make things easier further down
+          newYears[yearNameToArrIndex(created.name)] = created;
+          newYearIds.push(created._id);
         })
-        .catch((err) => errorHandler(res, 400, err));
+      );
+      data.year_ids = newYearIds;
+      /* Not currently necessary as distributions aren't working yet
+      let newDistributions = [];
+      let distPromise = Promise.all(
+        retrieved.distribution_ids.map(async (elem) => {
+          let found = await distributions.find({ _id: elem }, { _id: 0 });
+          distData = {
+            name: found[0].name,
+            required: found[0].required,
+            planned: found[0].planned,
+            current: found[0].current,
+            satisfied: found[0].satisfied,
+            user_id: found[0].user_id,
+            expireAt: found[0].expireAt,
+          };
+          let created = await distributions.create(distData);
+          newDistributions.push(created._id);
+        })
+      ); // */
+      await Promise.all([yearPromise]); // add distPromise when applicable
+      roadmapPlans.create(data).then(async (result) => {
+        await Promise.all(
+          newYears.map(async (curYear) => {
+            curYear.plan_id = [result._id];
+            oldCourses = curYear.courses;
+            curYear.courses = [];
+            await Promise.all(
+              oldCourses.map(async (course_id) => {
+                let found = await courses.find({ _id: course_id }, { _id: 0 });
+                let inserted = await courses.insertMany(found);
+                curYear.courses.push(inserted.insertedIds[0]);
+              })
+            );
+          })
+        );
+        // when distributions are added the courses will need to be linked
+        returnData(result, res);
+      });
     })
     .catch((err) => errorHandler(res, 400, err));
 });
+
+const yearNameToArrIndex = (name) => {
+  if (name === "AP Equivalents") {
+    return 0;
+  } else if (name === "Freshman") {
+    return 1;
+  } else if (name === "Sophomore") {
+    return 2;
+  } else if (name === "Junior") {
+    return 3;
+  } else if (name === "Senior") {
+    return 4;
+  }
+};
 
 // gets and returns a roadmapPlan based on its id
 router.get("/api/roadmapPlans/get/:plan_id", (req, res) => {
