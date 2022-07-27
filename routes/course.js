@@ -93,16 +93,14 @@ router.post("/api/courses", async (req, res) => {
       // update plan's distribution objs
       const plan = await plans.findById(retrievedCourse.plan_id);
       for (let m_id of plan.major_ids) {
-        let distDoubleCount = undefined;
+        let distDoubleCount = ['All'];
         await distributions
           .find({ plan_id: retrievedCourse.plan_id, major_id: m_id })
           .then(async (distObjs) => {
             for (let distObj of distObjs) {
               if (
-                !distObjs.satisfied &&
-                (distDoubleCount === undefined ||
-                  distDoubleCount.length === 0 ||
-                  distDoubleCount.includes(distObj.name))
+                !distObjs.satisfied && distDoubleCount &&
+                  (distDoubleCount.includes('All') || distDoubleCount.includes(distObj.name))
               ) {
                 let isUpdated = await updateDistribution(
                   distObj._id,

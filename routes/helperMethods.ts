@@ -52,14 +52,14 @@ const updateDistribution = async (
         course.distribution_ids.push(distribution_id);
         await course.save();
         // update fine requirement credits
-        let fineDoubleCount: string[] | undefined = undefined;
+        let fineDoubleCount: string[] | undefined = ["All"];
         for (let f_id of distribution.fineReq_ids) {
           let fine = await FineRequirements.findById(f_id);
           if (
             (fine.planned < fine.required_credits ||
               (fine.required_credits === 0 && fine.planned === 0)) &&
-            (fineDoubleCount === undefined ||
-              fineDoubleCount.length === 0 ||
+            fineDoubleCount &&
+            (fineDoubleCount.includes("All") ||
               fineDoubleCount.includes(fine.description)) &&
             checkCriteriaSatisfied(fine.criteria, course)
           ) {
