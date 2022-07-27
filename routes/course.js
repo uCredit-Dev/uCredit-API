@@ -253,54 +253,17 @@ router.delete("/api/courses/:course_id", (req, res) => {
   courses
     .findByIdAndDelete(c_id)
     .then(async (course) => {
-      let updatedDists = [];
-      let updatedFines = [];
       // remove course from distributions
-      for (let id of course.distribution_ids) {
-        await distributions
-          .findById(id)
-          .then(async (distribution) => {
-            await requirementCreditUpdate(distribution, course, false);
-            // remove course from fineReqs
-            for (let f_id of distribution.fineReq_ids) {
-              let fine = await fineRequirements.findById(f_id);
-              if (checkCriteriaSatisfied(fine.criteria, course)) {
-                await requirementCreditUpdate(fine, course, false);
-                updatedFines.push(fine);
-              }
-            }
-            // determine distribution satisfied with pathing
-            if (distribution.planned >= distribution.required_credits) {
-              if (distribution.pathing) {
-                await processPathing(distribution);
-              } else {
-                distribution.satisfied = true;
-              }
-            }
-            await distribution.save();
-            updatedDists.push(distribution);
-          })
-      }
-      //delete course id to user's year array
+      const r_course = removeCourseFromDistribution(course);
+      let updatedDists = r_course[0];
+      let updatedFines = r_course[1];
+      
+      //delete course id from user's year array
       let query = {};
       query[course.year] = course._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
-      years
-        .findById(course.year_id)
-        .then(async (y) => {
-          const yearArr = y.courses;
-          const index = yearArr.indexOf(course._id);
-          if (index !== -1) {
-            yearArr.splice(index, 1);
-            await years
-              .findByIdAndUpdate(
-                course.year_id,
-                { courses: yearArr },
-                { new: true, runValidators: true }
-              )
-              .exec();
-          }
-        })
+      removeCourseFromYear(course);
+
       // return deleted course with modified distributions
       course.distribution_ids = updatedDists;
       course.fineReq_ids = updatedFines;
@@ -308,5 +271,59 @@ router.delete("/api/courses/:course_id", (req, res) => {
     })
     .catch((err) => errorHandler(res, 400, err));
 });
+
+function removeCourseFromDistribution(course) {
+  let updatedDists = [];
+  let updatedFines = [];
+
+  // remove course from distributions
+  for (let id of course.distribution_ids) {
+    await distributions
+      .findById(id)
+      .then(async (distribution) => {
+        await requirementCreditUpdate(distribution, course, false);
+        // remove course from fineReqs
+        for (let f_id of distribution.fineReq_ids) {
+          let fine = await fineRequirements.findById(f_id);
+          if (checkCriteriaSatisfied(fine.criteria, course)) {
+            await requirementCreditUpdate(fine, course, false);
+            updatedFines.push(fine);
+          }
+        }
+        // determine distribution satisfied with pathing
+        if (distribution.planned >= distribution.required_credits) {
+          if (distribution.pathing) {
+            await processPathing(distribution);
+          } else {
+            distribution.satisfied = true;
+          }
+        }
+        await distribution.save();
+        updatedDists.push(distribution);
+      })
+  }
+  return [updatedDists, updatedFines];
+
+}
+
+function removeCourseFromYear(course) {
+  //delete course id from user's year array
+  years
+  .findById(course.year_id)
+  .then(async (y) => {
+    const yearArr = y.courses;
+    const index = yearArr.indexOf(course._id);
+    if (index !== -1) {
+      yearArr.splice(index, 1);
+      await years
+        .findByIdAndUpdate(
+          course.year_id,
+          { courses: yearArr },
+          { new: true, runValidators: true }
+        )
+        .exec();
+    }
+  })
+}
 
 module.exports = router;
