@@ -1,9 +1,11 @@
 //routes related to Plan CRUD
 const {
-  returnData,
-  errorHandler,
+  returnData, 
+  errorHandler
+}= require("./helperMethods.js");
+const {
   updateDistribution,
-} = require("./helperMethods.ts");
+} = require("./distributionMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const fineRequirements = require("../model/FineRequirement.js");

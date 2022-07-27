@@ -2,8 +2,8 @@
 const {
   returnData,
   errorHandler,
-  distributionCreditUpdate,
 } = require("./helperMethods.js");
+const { requirementCreditUpdate } = require('./distributionMethods.ts');
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const plans = require("../model/Plan.js");
@@ -129,7 +129,7 @@ router.delete("/api/years/:year_id", (req, res) => {
                 { new: true, runValidators: true }
               )
               .then((distribution) =>
-                distributionCreditUpdate(distribution, course, false)
+                requirementCreditUpdate(distribution, course, false)
               );
           });
         });

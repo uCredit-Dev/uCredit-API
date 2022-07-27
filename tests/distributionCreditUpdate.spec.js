@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const distributions = require("../model/Distribution");
-const { distributionCreditUpdate } = require("../routes/helperMethods");
+const { requirementCreditUpdate } = require("../routes/distributionMethods.ts");
 const TEST_USER_1 = "User1";
 const TEST_MAJOR_1 = "Computer Science";
 const TEST_MAJOR_2 = "Math";
@@ -57,10 +57,10 @@ afterAll((done) => {
   });
 });
 
-describe("distributionCreditUpdate should update distribution credits", () => {
+describe("requirementCreditUpdate should update distribution credits", () => {
   it("should update first distributions planned credits to 2 with course 1 added", async () => {
     const distributionList = await distributions.find({});
-    await distributionCreditUpdate(distributionList[0], COURSE_1, true);
+    await requirementCreditUpdate(distributionList[0], COURSE_1, true);
     expect(distributionList[0].planned).toBe(2);
   });
 
@@ -76,7 +76,7 @@ describe("distributionCreditUpdate should update distribution credits", () => {
 
   it("should update first distribution planned credits to 3 with another 1 credit course added", async () => {
     const distributionList = await distributions.find({});
-    await distributionCreditUpdate(distributionList[0], COURSE_2, true);
+    await requirementCreditUpdate(distributionList[0], COURSE_2, true);
     expect(distributionList[0].planned).toBe(3);
   });
 
@@ -92,13 +92,13 @@ describe("distributionCreditUpdate should update distribution credits", () => {
 
   it("should be satisfied since credit count is more than required", async () => {
     const distributionList = await distributions.find({});
-    await distributionCreditUpdate(distributionList[0], COURSE_2, true);
+    await requirementCreditUpdate(distributionList[0], COURSE_2, true);
     expect(distributionList[0].satisfied).toBe(true);
   });
 
   it("should update first distributions current credits to 3 with 1 credit course subtracted", async () => {
     const distributionList = await distributions.find({});
-    await distributionCreditUpdate(distributionList[0], COURSE_2, false);
+    await requirementCreditUpdate(distributionList[0], COURSE_2, false);
     expect(distributionList[0].current).toBe(3);
   });
 
@@ -114,19 +114,19 @@ describe("distributionCreditUpdate should update distribution credits", () => {
 
   it("should be not satisfied since credit count is less than required", async () => {
     const distributionList = await distributions.find({});
-    await distributionCreditUpdate(distributionList[0], COURSE_1, false);
+    await requirementCreditUpdate(distributionList[0], COURSE_1, false);
     expect(distributionList[0].satisfied).toBe(false);
   });
 
   it("current should not be updated for courses not taken", async () => {
     const distributionList = await distributions.find({});
-    await distributionCreditUpdate(distributionList[0], COURSE_3, true);
+    await requirementCreditUpdate(distributionList[0], COURSE_3, true);
     expect(distributionList[0].satisfied).not.toBe(distributionList[0].current);
   });
 
   it("should throw error for invalid distribution", async () => {
     try {
-      await distributionCreditUpdate(null, COURSE_2, true);
+      await requirementCreditUpdate(null, COURSE_2, true);
       fail("should throw error");
     } catch (err) {
       expect(err).toBeTruthy();
@@ -136,7 +136,7 @@ describe("distributionCreditUpdate should update distribution credits", () => {
   it("should throw error for invalid course credits", async () => {
     const distributionList = await distributions.find({});
     try {
-      await distributionCreditUpdate(distributionList[0], {}, true);
+      await requirementCreditUpdate(distributionList[0], {}, true);
       fail("should throw error");
     } catch (err) {
       expect(err).toBeTruthy();
@@ -146,7 +146,7 @@ describe("distributionCreditUpdate should update distribution credits", () => {
   it("should throw error for invalid add or not", async () => {
     const distributionList = await distributions.find({});
     try {
-      await distributionCreditUpdate(distributionList[0], COURSE_2, null);
+      await requirementCreditUpdate(distributionList[0], COURSE_2, null);
       fail("should throw error");
     } catch (err) {
       expect(err).toBeTruthy();

@@ -3,12 +3,14 @@ const { addSampleUsers } = require("../data/userSamples.js");
 const { addSampleDistributions } = require("../data/distributionSamples.js");
 const { addSampleCourses } = require("../data/courseSamples.js");
 const {
-  returnData,
-  errorHandler,
+  returnData, 
+  errorHandler
+}= require("./helperMethods.js");
+const {
   updateDistribution,
   requirementCreditUpdate,
   checkCriteriaSatisfied,
-} = require("./helperMethods.ts");
+} = require("./distributionMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const fineRequirements = require("../model/FineRequirement.js");
