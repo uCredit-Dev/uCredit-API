@@ -23,13 +23,4 @@ router.post("/api/majors", async (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-// Once we add all majors to the majors.js file, we can use this code to add all majors to production DB
-router.post("/api/majors/all", async (req, res) => {
-  for (let m of allMajors) {
-    await majors
-    .create(m)
-    .catch((err) => errorHandler(res, 400, err));
-  }
-});
-
 module.exports = router;

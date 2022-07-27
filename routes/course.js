@@ -272,7 +272,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-function removeCourseFromDistribution(course) {
+async function removeCourseFromDistribution(course) {
   let updatedDists = [];
   let updatedFines = [];
 
@@ -306,7 +306,7 @@ function removeCourseFromDistribution(course) {
 
 }
 
-function removeCourseFromYear(course) {
+async function removeCourseFromYear(course) {
   //delete course id from user's year array
   years
   .findById(course.year_id)
