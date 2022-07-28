@@ -12,6 +12,7 @@ const router = express.Router();
 // based on that plan
 router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
   const old_id = req.body.id;
+  const desc = req.body.desc;
   plans
     .findById(old_id)
     .then(async (retrieved) => {
@@ -19,7 +20,7 @@ router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
       let data = {
         original: retrieved.id,
         name: retrieved.name,
-        description: "",
+        description: desc,
         num_likes: 0,
         majors: retrieved.majors.slice(),
         tags: [],
