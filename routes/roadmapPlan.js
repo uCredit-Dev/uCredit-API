@@ -78,7 +78,7 @@ router.patch("/api/roadmapPlans/description/:plan_id", (req, res) => {
       { description: newDesc },
       { new: true }
     )
-    .then((course) => returnData(course, res))
+    .then((roadmapPlan) => returnData(roadmapPlan, res))
     .catch((err) => errorHandler(res, 404, err));
 });
 
@@ -87,6 +87,14 @@ router.patch("/api/roadmapPlans/description/:plan_id", (req, res) => {
 router.patch("/api/roadmapPlans/addTags/:plan_id", (req, res) => {
   const newTagsStr = req.body.newTags;
   const newTags = newTagsStr.split(",");
+  roadmapPlans
+    .findByIdAndUpdate(
+      req.params.plan_id,
+      { $push: { tags: { $each: newTags } } },
+      { new: true }
+    )
+    .then((roadmapPlan) => returnData(roadmapPlan, res))
+    .catch((err) => errorHandler(res, 404, err));
 });
 
 module.exports = router;
