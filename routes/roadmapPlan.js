@@ -69,6 +69,15 @@ router.get("/api/roadmapPlans/search", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+// replaces the current plan name with the provided one
+router.patch("/api/roadmapPlans/name/:plan_id", (req, res) => {
+  const newName = req.body.newName;
+  roadmapPlans
+    .findByIdAndUpdate(req.params.plan_id, { name: newName }, { new: true })
+    .then((roadmapPlan) => returnData(roadmapPlan, res))
+    .catch((err) => errorHandler(res, 404, err));
+});
+
 // replaces the current plan description with the provided one
 router.patch("/api/roadmapPlans/description/:plan_id", (req, res) => {
   const newDesc = req.body.newDesc;
@@ -93,7 +102,7 @@ router.patch("/api/roadmapPlans/addTags/:plan_id", (req, res) => {
       { $push: { tags: { $each: newTags } } },
       { new: true }
     )
-    .then((roadmapPlan) => returnData(roadmapPlan, res))
+    .then((roadmapPlan) => returnData(roadmapPlanq, res))
     .catch((err) => errorHandler(res, 404, err));
 });
 
