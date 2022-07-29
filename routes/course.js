@@ -301,7 +301,7 @@ async function removeCourseFromDistribution(course) {
 
 }
 
-function removeCourseFromYear(course) {
+async function removeCourseFromYear(course) {
   //delete course id from user's year array
   years
   .findById(course.year_id)
