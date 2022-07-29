@@ -97,4 +97,19 @@ router.patch("/api/roadmapPlans/addTags/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 404, err));
 });
 
+// removes one or more tags from the list of tags for this plan
+// tags should be sent as a single string, seperated by commas (with no spaces)
+router.patch("/api/roadmapPlans/removeTags/:plan_id", (req, res) => {
+  const tagsStr = req.body.tags;
+  const removals = tagsStr.split(",");
+  roadmapPlans
+    .findByIdAndUpdate(
+      req.params.plan_id,
+      { $pull: { tags: { $in: removals } } },
+      { new: true }
+    )
+    .then((roadmapPlan) => returnData(roadmapPlan, res))
+    .catch((err) => errorHandler(res, 404, err));
+});
+
 module.exports = router;
