@@ -69,4 +69,22 @@ router.get("/api/roadmapPlans/search", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+// replaces the current plan description with the provided one
+router.patch("/api/roadmapPlans/description/:plan_id", (req, res) => {
+  const newDesc = req.body.newDesc;
+  roadmapPlans
+    .findByIdAndUpdate(
+      req.params.plan_id,
+      { description: newDesc },
+      { new: true }
+    )
+    .then((course) => returnData(course, res))
+    .catch((err) => errorHandler(res, 404, err));
+});
+
+// adds one or more tags to the list of tags for this plan
+router.patch("/api/roadmapPlans/addTags/:plan_id", (req, res) => {
+  const newTags = req.body.newTags;
+});
+
 module.exports = router;
