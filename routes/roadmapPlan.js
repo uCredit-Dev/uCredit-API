@@ -94,15 +94,22 @@ router.patch("/api/roadmapPlans/description/:plan_id", (req, res) => {
 // adds one or more tags to the list of tags for this plan
 // tags should be sent as a single string, seperated by commas (with no spaces)
 router.patch("/api/roadmapPlans/addTags/:plan_id", (req, res) => {
-  const newTagsStr = req.body.newTags;
-  const newTags = newTagsStr.split(",");
+  let newTags;
   roadmapPlans
-    .findByIdAndUpdate(
-      req.params.plan_id,
-      { $push: { tags: { $each: newTags } } },
-      { new: true }
-    )
-    .then((roadmapPlan) => returnData(roadmapPlanq, res))
+    .findById(req.params.plan_id)
+    .then((plan) => {
+      const newTagsStr = req.body.newTags;
+      newTags = newTagsStr.split(",").filter((elem) => {
+        return !plan.tags.includes(elem);
+      });
+      roadmapPlans
+        .findByIdAndUpdate(
+          req.params.plan_id,
+          { $push: { tags: { $each: newTags } } },
+          { new: true }
+        )
+        .then((roadmapPlan) => returnData(roadmapPlan, res));
+    })
     .catch((err) => errorHandler(res, 404, err));
 });
 
