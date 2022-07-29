@@ -13,7 +13,6 @@ const commentSchema = new Schema({
   },
   thread_id: { type: Schema.Types.ObjectId, ref: "Thread", required: true },
   message: { type: String, required: true },
-  upvoteCount: { type: Number, required: true },
   upvote_user_id: {
     type: [String],
     ref: "User",
