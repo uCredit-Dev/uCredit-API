@@ -14,7 +14,7 @@
 
 // https://e-catalogue.jhu.edu/arts-sciences/full-time-residential-programs/degree-programs/economics/economics-bachelor-arts/
 const baEcon = {
-  degree_name: "B.A. Economics",
+  _id: "B.A. Economics",
   department: "AS Economics",
   total_degree_credit: 120,
   wi_credit: 12,
@@ -156,7 +156,7 @@ const baEcon = {
 
 // https://www.bme.jhu.edu/academics/undergraduate/undergraduate-degree-requirements/
 const bsBME = {
-  degree_name: "B.S. Biomedical Engineering",
+  _id: "B.S. Biomedical Engineering",
   department: "EN Biomedical Engineering",
   total_degree_credit: 129,
   wi_credit: 6,
@@ -592,7 +592,7 @@ const bsBME = {
 
 // https://engineering.jhu.edu/chembe/undergraduate-studies/undergraduate-degree-program/
 const bsCBE = {
-  degree_name: "B.S. Chemical & Biomolecular Engineering",
+  _id: "B.S. Chemical & Biomolecular Engineering",
   department: "EN Chemical & Biomolecular Engineering",
   total_degree_credit: 128,
   wi_credit: 6,
@@ -885,7 +885,7 @@ const bsCBE = {
 
 // https://krieger.jhu.edu/internationalstudies/undergraduate/requirements/
 const baIS = {
-  degree_name: "B.A. International Studies",
+  _id: "B.A. International Studies",
   department: "AS International Studies",
   total_degree_credit: 120,
   wi_credit: 12,
@@ -1034,7 +1034,7 @@ const baIS = {
 
 // https://e-catalogue.jhu.edu/engineering/full-time-residential-programs/degree-programs/applied-mathematics-statistics/applied-mathematics-statistics-bs/#requirementstext
 const bsAMS = {
-  degree_name: "B.S. Applied Mathematics & Statistics",
+  _id: "B.S. Applied Mathematics & Statistics",
   department: "EN Applied Mathematics & Statistics",
   total_degree_credit: 120,
   wi_credit: 6,
@@ -1251,7 +1251,7 @@ const bsAMS = {
 
 // https://www.cs.jhu.edu/undergraduate-studies/academics/ugrad-advising-manual/
 const bsCS_Old = {
-  degree_name: "B.S. Computer Science (OLD - Pre-2021)",
+  _id: "B.S. Computer Science (OLD - Pre-2021)",
   department: "EN Computer Science",
   total_degree_credit: 126,
   wi_credit: 6,
@@ -1391,7 +1391,7 @@ const bsCS_Old = {
 
 // https://www.cs.jhu.edu/2021undergraduate-advising-manual/
 const bsCS_New = {
-  degree_name: "B.S. Computer Science (NEW - 2021 & after)",
+  _id: "B.S. Computer Science (NEW - 2021 & after)",
   department: "EN Computer Science",
   total_degree_credit: 120,
   wi_credit: 6,
@@ -1524,7 +1524,7 @@ const bsCS_New = {
 
 // https://www.cs.jhu.edu/undergraduate-studies/academics/ugrad-advising-manual/
 const baCS_New = {
-  degree_name: "B.A. Computer Science (NEW - 2021 & after)",
+  _id: "B.A. Computer Science (NEW - 2021 & after)",
   department: "EN Computer Science",
   total_degree_credit: 120,
   wi_credit: 12,
@@ -1648,7 +1648,7 @@ const baCS_New = {
 
 // https://www.cs.jhu.edu/undergraduate-studies/academics/cs-minor/
 const CS_Minor_New = {
-  degree_name: "Minor Computer Science (NEW - 2021 & after)",
+  _id: "Minor Computer Science (NEW - 2021 & after)",
   department: "EN Computer Science",
   total_degree_credit: 23,
   wi_credit: 0,
@@ -1686,7 +1686,7 @@ const CS_Minor_New = {
 
 // https://www.cs.jhu.edu/undergraduate-studies/academics/cs-minor/
 const CS_Minor_Old = {
-  degree_name: "Minor Computer Science (OLD - 2020 & before)",
+  _id: "Minor Computer Science (OLD - 2020 & before)",
   department: "EN Computer Science",
   total_degree_credit: 23,
   wi_credit: 0,
@@ -1756,7 +1756,7 @@ const CS_Minor_Old = {
   3. Potentially formatting updates
 */
 const bsMolCell = {
-  degree_name: "B.S. Molecular and Cellular Biology",
+  _id: "B.S. Molecular and Cellular Biology",
   department: "AS Biology",
   total_degree_credit: 120,
   wi_credit: 12,
@@ -2016,7 +2016,7 @@ const bsMolCell = {
 const getMajorFromCommonName = (name) => {
   let out = null;
   allMajors.forEach((major) => {
-    if (major.degree_name === name) {
+    if (major._id === name) {
       out = major;
     }
   });
@@ -2027,7 +2027,7 @@ const getMajorFromCommonName = (name) => {
 };
 
 const baCogSci = {
-  degree_name: 'B.A. Cognitive Science',
+  _id: 'B.A. Cognitive Science',
   abbrev: 'B.A. Cog Sci',
   department: 'AS Cognitive Science',
   total_degree_credit: 81,

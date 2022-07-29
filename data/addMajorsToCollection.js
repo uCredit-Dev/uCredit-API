@@ -25,12 +25,12 @@ async function addAllMajors() {
     await db.connect();   // comment out this line before running jest test
     let documentAdded = false;
     for (let major of allMajors) {
-        if (major.degree_name === majorName) {
+        if (major._id === majorName) {
             await majors
             .create(major)
             .then((majorDocument) => {
                 documentAdded = true;
-                console.log(majorDocument.degree_name + " added.");
+                console.log(majorDocument._id + " added.");
                 console.log("Done! Check DB to confirm the document has been added to the collection.");
             })
             .catch((err) => console.log(err));

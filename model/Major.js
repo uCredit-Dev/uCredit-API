@@ -15,7 +15,7 @@ const Schema = mongoose.Schema;
       [W] = WI
 */
 const majorSchema = new Schema({
-  degree_name: { type: String, required: true }, //e.g. B.S. Computer Science
+  _id: { type: String, required: true }, //e.g. B.S. Computer Science
   department: { type: String, required: true },
   total_degree_credit: { type: Number, required: true },
   wi_credit: { type: Number, required: true },

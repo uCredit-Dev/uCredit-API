@@ -28,7 +28,6 @@ beforeAll((done) => {
       const samplePlan = {
         name: "TEST_PLAN",
         user_id: "TEST_USER",
-        majors: [bsCS_Old.degree_name],
         major_ids: [bsCS_Old._id],
         expireAt: new Date(),
         year: "Junior",
@@ -50,7 +49,6 @@ beforeAll((done) => {
       // adding AMS
       const body = {
         plan_id: planRes._id,
-        majors: [bsCS_Old.degree_name, bsAMS.degree_name],
         major_ids: [bsCS_Old._id, bsAMS._id],
       };
       const response4 = await request.patch(`/api/plans/update/`).send(body);

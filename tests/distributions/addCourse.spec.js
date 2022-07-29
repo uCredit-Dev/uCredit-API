@@ -24,7 +24,6 @@ beforeAll((done) => {
       const planBody = {
         name: "TEST_PLAN",
         user_id: "TEST_USER",
-        majors: [bsCS.degree_name],
         major_ids: [bsCS._id],
         expireAt: new Date(),
         year: "Junior",

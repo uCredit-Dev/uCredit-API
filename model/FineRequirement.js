@@ -6,7 +6,7 @@ const fineSchema = new Schema({
   required_credits: { type: Number, required: true },
   criteria: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
-  major_id: { type: Schema.Types.ObjectId, ref: "Major", required: true },
+  major_id: { type: String, required: true },
   distribution_id: {
     type: Schema.Types.ObjectId,
     ref: "Distribution",

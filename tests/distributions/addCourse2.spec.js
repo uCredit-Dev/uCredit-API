@@ -22,7 +22,6 @@ beforeEach((done) => {
       const planBody = {
         name: "TEST_PLAN",
         user_id: "TEST_USER",
-        majors: [cogsci.degree_name],
         major_ids: [cogsci._id],
         expireAt: new Date(),
         year: "Junior",

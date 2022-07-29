@@ -30,7 +30,7 @@ describe("create new distribution for major", () => {
         expect(major).toBeTruthy();
       });
     const cs_minor = await majors.findOne({
-      degree_name: "B.S. Computer Science (OLD - Pre-2021)",
+      _id: "B.S. Computer Science (OLD - Pre-2021)",
     }).exec();
     const cs_reqs = cs_minor.distributions[0];
     const newDistribution = {

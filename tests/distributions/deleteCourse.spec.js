@@ -26,7 +26,6 @@ beforeAll((done) => {
       const planBody = {
         name: "TEST_PLAN",
         user_id: "TEST_USER",
-        majors: [cogsci.degree_name],
         major_ids: [cogsci._id],
         expireAt: new Date(),
         year: "Junior",
@@ -48,7 +47,7 @@ beforeAll((done) => {
 
       const body = {
         id: plan1._id,
-        majors: [plan1.majors[0]],
+        major_ids: [plan1.major_ids[0]],
         name: plan1.name,
       };
       request.patch(`/api/plans/update/`).send(body);

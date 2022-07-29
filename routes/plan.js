@@ -94,7 +94,6 @@ router.post("/api/plans", (req, res) => {
   const plan = {
     name: req.body.name,
     user_id: req.body.user_id,
-    majors: req.body.majors,
     major_ids: req.body.major_ids,
     expireAt: req.body.expireAt,
   };
@@ -222,17 +221,13 @@ router.delete("/api/plans/:plan_id", (req, res) => {
 // updates a plan's major(s) and name
 router.patch("/api/plans/update", (req, res) => {
   const id = req.body.plan_id;
-  const majors = req.body.majors;
   const major_ids = req.body.major_ids;
   const name = req.body.name;
-  if (!(majors || name)) {
+  if (!(major_ids || name)) {
     errorHandler(res, 400, "Must update majors or name.");
-  } else if ((majors && !major_ids) || (major_ids && !majors)) {
-    errorHandler(res, 400, "Must supply both major names and ids.");
   } else {
     let updateBody = {};
-    if (majors) {
-      updateBody.majors = majors;
+    if (major_ids) {
       updateBody.major_ids = major_ids;
     }
     if (name) {
