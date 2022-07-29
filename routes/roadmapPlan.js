@@ -83,8 +83,10 @@ router.patch("/api/roadmapPlans/description/:plan_id", (req, res) => {
 });
 
 // adds one or more tags to the list of tags for this plan
+// tags should be sent as a single string, seperated by commas (with no spaces)
 router.patch("/api/roadmapPlans/addTags/:plan_id", (req, res) => {
-  const newTags = req.body.newTags;
+  const newTagsStr = req.body.newTags;
+  const newTags = newTagsStr.split(",");
 });
 
 module.exports = router;
