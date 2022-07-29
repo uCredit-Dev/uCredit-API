@@ -134,30 +134,29 @@ describe("Fine Requirement Testing", () => {
     //delete course
     let deadCogsNeuro = await request.delete(`/api/courses/${cogNeuro._id}`);
     deadCogsNeuro = deadCogsNeuro.body.data;
+    console.log(deadCogsNeuro);
     //const deadCompcg = await request.delete(`/api/courses/${compcg._id}`);
-    expect(deadCogsNeuro.distribution_ids).toBeTruthy();
+    expect(deadCogsNeuro.distributions).toBeTruthy();
 
     let found = false;
-    for (let d_id of deadCogsNeuro.distribution_ids) {
-      await distributions.findById(d_id).then(async (dist) => {
-        if (dist.name === "Two Focal Areas") {
-          found = true;
-          expect(dist.planned).toBe(9); // 3 credits less than 12
-          expect(dist.satisfied).toBeFalsy();
-          await fineRequirements
-            .find({ plan_id: plan1._id, distribution_id: dist._id })
-            .then((fineObjs) => {
-              let names = [];
-              for (let fine of fineObjs) {
-                if (fine.satisfied) {
-                  names.push(fine.criteria);
-                }
+    for (let dist of deadCogsNeuro.distributions) {
+      if (dist.name === "Two Focal Areas") {
+        found = true;
+        expect(dist.planned).toBe(9); // 3 credits less than 12
+        expect(dist.satisfied).toBeFalsy();
+        await fineRequirements
+          .find({ plan_id: plan1._id, distribution_id: dist._id })
+          .then((fineObjs) => {
+            let names = [];
+            for (let fine of fineObjs) {
+              if (fine.satisfied) {
+                names.push(fine.criteria);
               }
-              expect(names.length).toBe(1);
-              expect(names).toContain("COGS-COMPCG[T]");
-            });
-        }
-      });
+            }
+            expect(names.length).toBe(1);
+            expect(names).toContain("COGS-COMPCG[T]");
+          });
+      }
     }
     expect(found).toBeTruthy();
   });

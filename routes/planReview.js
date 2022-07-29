@@ -1,4 +1,4 @@
-const { returnData, errorHandler, postNotification } = require("./helperMethods.ts");
+const { returnData, errorHandler, postNotification } = require("./helperMethods.js");
 const planReviews = require("../model/PlanReview.js");
 
 const express = require("express");
