@@ -999,7 +999,7 @@ const baIS = {
       description:
         "Four courses within a coherent field of interest. For more detail please visit " +
         "https://krieger.jhu.edu/internationalstudies/undergraduate/requirements/",
-      criteria: "",
+      criteria: " ",
       double_count: [],
       user_select: true,
     },
@@ -2228,7 +2228,7 @@ const allMajors = [
   CS_Minor_Old,
   bsMolCell,
   bsAMS,
-  baIS,
+  //     baIS,  DONE but missing some required fields, so I commented out
   // baPH,
   bsBME,
   // baHistory,

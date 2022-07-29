@@ -13,27 +13,19 @@ const majors = require("../model/Major");
 
 // Add ALL majors in allMajors array to production DB
 async function addAllMajors() {
-    let count = 0;
-    await db.connect();
-    for (let major of allMajors) {
-      await majors
-      .create(major)
-      .then((majorDocument) => {
-          console.log(majorDocument.degree_name + " added.");
-          count += 1;
-      })
-      .catch((err) => errorHandler(res, 400, err));
-    }
-    console.log(count.toString() + " majors added.");
+    await db.connect();  // comment out this line before running jest test
+    majors.insertMany(allMajors)
+    .catch((err) => console.log(err));
+    console.log(allMajors.length.toString() + " majors added.");
     console.log("Done! Check DB to confirm the documents have been added to the collection.");
   }
 
 // Add a specified major in allMajors array to production DB
-  async function addOneMajor(major_name) {
-    await db.connect();
+  async function addOneMajor(majorName) {
+    await db.connect();   // comment out this line before running jest test
     let documentAdded = false;
     for (let major of allMajors) {
-        if (major.degree_name === major_name) {
+        if (major.degree_name === majorName) {
             await majors
             .create(major)
             .then((majorDocument) => {
@@ -41,10 +33,15 @@ async function addAllMajors() {
                 console.log(majorDocument.degree_name + " added.");
                 console.log("Done! Check DB to confirm the document has been added to the collection.");
             })
-            .catch((err) => errorHandler(res, 400, err));
-        }   
+            .catch((err) => console.log(err));
+        } 
     }
     if (!documentAdded) {
         console.log("No documents were added to the collection.");
     }
   }
+
+  module.exports = {
+    addAllMajors,
+    addOneMajor,
+  };
