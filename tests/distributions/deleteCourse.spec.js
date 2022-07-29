@@ -66,11 +66,11 @@ afterAll((done) => {
 
 describe("delete course from plan", () => {
   it("should be deleted ", async () => {
-    expect(await courses.findById(deadCourse._id)).toBeFalsy();
+    expect(await courses.findById(deadCourse._id).exec()).toBeFalsy();
   });
   it("should not be associated with one of the plan's year objects", async () => {
     //const plan = await plans.findById(plan1._id);
-    const year = years.findById(deadCourse.year_id);
+    const year = years.findById(deadCourse.year_id).exec();
     var flag = true;
     if (year === null || year === undefined) {
       flag = false;
@@ -84,10 +84,10 @@ describe("delete course from plan", () => {
     expect(flag).toBeTruthy();
   });
   it("should not be associated with one or more of the plan's distribution objects", async () => {
-    const plan = await plans.findById(plan1._id);
+    const plan = await plans.findById(plan1._id).exec();
     const distIds = deadCourse.distributions_ids;
     for (let distId in distIds) {
-      let dist = await distributions.findById(distId);
+      let dist = await distributions.findById(distId).exec();
       expect(dist.plan_id).toBe(plan._id);
       expect(dist.user_id).toBe(plan.user_id);
       expect(dist.major_id).toBe(plan.major_id);

@@ -92,8 +92,8 @@ describe("POST /api/courses", () => {
     expect(expos.user_id).toBe(plan.user_id);
   });
   it("course year corresponds to year objects", async () => {
-    let planObj = await plans.findById(plan._id); // res does not have year_ids
-    let year = await years.findById(java.year_id);
+    let planObj = await plans.findById(plan._id).exec(); // res does not have year_ids
+    let year = await years.findById(java.year_id).exec();
     expect(year.name).toBe(java.year);
     expect(year.plan_id.toString()).toBe(planObj._id.toString());
     expect(
@@ -102,7 +102,7 @@ describe("POST /api/courses", () => {
     expect(
       year.courses.find((c) => c.toString() === java._id.toString())
     ).toBeTruthy();
-    year = await years.findById(expos.year_id);
+    year = await years.findById(expos.year_id).exec();
     expect(year.name).toBe(expos.year);
     expect(year.plan_id.toString()).toBe(planObj._id.toString());
     expect(
@@ -115,7 +115,7 @@ describe("POST /api/courses", () => {
   it("java fulfills the Computer Science distribution", async () => {
     expect(java.distribution_ids.length).toBe(1);
     for (let distId of java.distribution_ids) {
-      const dist = await distributions.findById(distId);
+      const dist = await distributions.findById(distId).exec();
       expect(dist.plan_id.toString()).toBe(java.plan_id.toString());
       expect(dist.user_id.toString()).toBe(java.user_id.toString());
       expect(dist.name).toBe("Computer Science");
@@ -125,7 +125,7 @@ describe("POST /api/courses", () => {
     }
     // should update fine requirement about core CS courses
     expect(java.fineReq_ids.length).toBe(1);
-    const fine = await fineRequirements.findById(java.fineReq_ids[0]);
+    const fine = await fineRequirements.findById(java.fineReq_ids[0]).exec();
     expect(fine).toBeTruthy();
     expect(fine.planned).toBe(java.credits);
     expect(fine.satisfied).toBe(false);
@@ -134,7 +134,7 @@ describe("POST /api/courses", () => {
   it("expos fulfills Liberal Arts and WI distributions", async () => {
     expect(expos.distribution_ids.length).toBe(2);
     for (let distId of expos.distribution_ids) {
-      const dist = await distributions.findById(distId);
+      const dist = await distributions.findById(distId).exec();
       expect(dist.plan_id.toString()).toBe(expos.plan_id.toString());
       expect(dist.user_id.toString()).toBe(expos.user_id.toString());
       expect(dist.planned).toBe(expos.credits);
@@ -146,7 +146,7 @@ describe("POST /api/courses", () => {
       }
     }
     expect(expos.fineReq_ids.length).toBe(1);
-    const fine = await fineRequirements.findById(expos.fineReq_ids[0]);
+    const fine = await fineRequirements.findById(expos.fineReq_ids[0]).exec();
     expect(fine).toBeTruthy();
     expect(fine.satisfied).toBeTruthy();
     expect(fine.planned).toBe(expos.credits);
@@ -170,7 +170,7 @@ describe("POST /api/courses", () => {
     expect(lastExpos.distribution_ids.length).toBe(2);
     expect(extraExpos.distribution_ids.length).toBe(1);
     for (let distId of lastExpos.distribution_ids) {
-      const dist = await distributions.findById(distId);
+      const dist = await distributions.findById(distId).exec();
       if (dist.required_credits === 6) {
         expect(dist.name).toBe("Writing Intensive");
         expect(dist.planned).toBe(6); // should not be 9
@@ -179,7 +179,7 @@ describe("POST /api/courses", () => {
         expect(!extraExpos.distribution_ids.includes(dist._id)).toBeTruthy();
         const fine = await fineRequirements.findOne({
           distribution_id: dist._id,
-        });
+        }).exec();
         expect(fine.satisfied).toBeTruthy();
         expect(fine.planned).toBe(3);
       } else {

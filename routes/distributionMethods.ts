@@ -9,7 +9,7 @@ const updateDistribution = async (
   distribution_id: string,
   course_id: string
 ): Promise<boolean> => {
-  let course = await Courses.findById(ObjectId(course_id));
+  let course = await Courses.findById(ObjectId(course_id)).exec();
   return await Distributions.findById(ObjectId(distribution_id)) // returns a promise
     .then(async (distribution) => {
       if (!distribution || !course) return false;
@@ -34,7 +34,7 @@ const updateDistribution = async (
         // update fine requirement credits
         let fineDoubleCount: string[] | undefined = ["All"];
         for (let f_id of distribution.fineReq_ids) {
-          let fine = await FineRequirements.findById(f_id);
+          let fine = await FineRequirements.findById(f_id).exec();
           if (
             (fine.planned < fine.required_credits ||
               (fine.required_credits === 0 && fine.planned === 0)) &&

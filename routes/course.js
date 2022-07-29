@@ -93,7 +93,7 @@ router.post("/api/courses", async (req, res) => {
           await retrievedCourse.save();
         });
       // update plan's distribution objs
-      const plan = await plans.findById(retrievedCourse.plan_id);
+      const plan = await plans.findById(retrievedCourse.plan_id).exec();
       for (let m_id of plan.major_ids) {
         let distDoubleCount = ['All'];
         await distributions
@@ -284,7 +284,7 @@ async function removeCourseFromDistribution(course) {
         await requirementCreditUpdate(distribution, course, false);
         // remove course from fineReqs
         for (let f_id of distribution.fineReq_ids) {
-          let fine = await fineRequirements.findById(f_id);
+          let fine = await fineRequirements.findById(f_id).exec();
           if (checkCriteriaSatisfied(fine.criteria, course)) {
             await requirementCreditUpdate(fine, course, false);
             updatedFines.push(fine);

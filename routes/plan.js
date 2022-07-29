@@ -15,6 +15,9 @@ const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 const reviews = require("../model/PlanReview.js");
 var ObjectId = require("mongodb").ObjectID;
+const express = require("express");
+const Course = require("../model/Course.js");
+const router = express.Router();
 
 const getAPI = (window) => {
   if (window.location.href.includes("http://localhost:3000")) {
@@ -28,9 +31,6 @@ const getAPI = (window) => {
   }
 };
 
-const express = require("express");
-const Course = require("../model/Course.js");
-const router = express.Router();
 
 //get plan by plan id
 router.get("/api/plans/:plan_id", (req, res) => {
@@ -64,7 +64,7 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
       let total = user.plan_ids.length;
       if (!user) errorHandler(res, 404, `${user} of ${user_id} User not found`);
       for (let plan_id of user.plan_ids) {
-        let plan = await plans.findById(plan_id).populate("year_ids");
+        let plan = await plans.findById(plan_id).populate("year_ids").exec();
         if (!plan) {
           total--;
           continue;
@@ -116,7 +116,7 @@ router.post("/api/plans", (req, res) => {
         .exec();
       // add distributions for selected major(s)
       await addMajorDistributions(retrievedPlan);
-      retrievedPlan.save();
+      await retrievedPlan.save();
       const yearName = [
         "AP/Transfer",
         "Freshman",
@@ -138,15 +138,15 @@ router.post("/api/plans", (req, res) => {
               ? Date.now() + 60 * 60 * 24 * 1000
               : undefined,
         };
-        const newYear = await years.create(retrievedYear);
+        const newYear = await years.create(retrievedYear).exec();
         yearObjs.push(newYear);
         retrievedPlan.year_ids.push(newYear._id);
       }
-      retrievedPlan.save();
-      let distObjs = await distributions.find({ plan_id: retrievedPlan._id });
+      await retrievedPlan.save();
+      let distObjs = await distributions.find({ plan_id: retrievedPlan._id }).exec();
       let fineObjs = await fineRequirements.find({
         plan_id: retrievedPlan._id,
-      });
+      }).exec();
       const resp = {
         ...retrievedPlan._doc,
         years: yearObjs,
@@ -251,22 +251,22 @@ router.patch("/api/plans/update", (req, res) => {
               await courses.updateMany(
                 { plan_id: id },
                 { $pull: { distribution_ids: dist._id } }
-              );
+              ).exec();
               for (let f_id of dist.fineReq_ids) {
                 await courses.updateMany(
                   { plan_id: id },
                   { $pull: { fineReq_ids: f_id } }
-                );
+                ).exec();
               }
               // delete documents
-              await distributions.findByIdAndDelete(dist._id);
-              await fineRequirements.deleteMany({ distribution_id: dist._id });
+              await distributions.findByIdAndDelete(dist._id).exec();
+              await fineRequirements.deleteMany({ distribution_id: dist._id }).exec();
             }
           }
         });
         // return plan with reviews and distributions
-        let distObjs = await distributions.find({ plan_id: plan._id });
-        let fineObjs = await fineRequirements.find({ plan_id: plan._id });
+        let distObjs = await distributions.find({ plan_id: plan._id }).exec();
+        let fineObjs = await fineRequirements.find({ plan_id: plan._id }).exec();
         await reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
@@ -290,7 +290,7 @@ async function addMajorDistributions(plan) {
     const dist = await distributions.find({
       plan_id: plan._id,
       major_id: m_id,
-    });
+    }).exec();
     if (dist.length == 0) {
       // new major
       const major = await majors.findById(m_id).exec();
@@ -344,11 +344,11 @@ async function addMajorDistributions(plan) {
 
 // Adds each existing course in a plan to distributions of specified major
 async function addCourses(plan, m_id) {
-  const coursesInPlan = await courses.findByPlanId(plan._id);
+  const coursesInPlan = await courses.findByPlanId(plan._id).exec();
   let distObjs = await distributions.find({
     plan_id: plan._id,
     major_id: m_id,
-  });
+  }).exec();
   for (let course of coursesInPlan) {
     let distDoubleCount = undefined;
     for (let distObj of distObjs) {

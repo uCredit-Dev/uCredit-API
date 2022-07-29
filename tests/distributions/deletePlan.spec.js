@@ -54,20 +54,20 @@ const request = supertest(createApp());
 describe("delete a plan", () => {
   it("should delete associated year objects", async () => {
     deadPlan.year_ids.forEach(async (id) => {
-      const search = await years.findById(id);
+      const search = await years.findById(id).exec();
       expect(search).toBeFalsy();
     });
   });
   it("should delete associated distribution objects", async () => {
-    const search = await distributions.find({ plan_id: deadPlan._id });
+    const search = await distributions.find({ plan_id: deadPlan._id }).exec();
     expect(search.length).toBe(0);
   });
   it("should delete associated fine requirement objects", async () => {
-    const search = await fineRequirements.find({ plan_id: deadPlan._id });
+    const search = await fineRequirements.find({ plan_id: deadPlan._id }).exec();
     expect(search.length).toBe(0);
   });
   it("should delete associated course objects", async () => {
-    const search = await courses.find({ plan_id: deadPlan._id });
+    const search = await courses.find({ plan_id: deadPlan._id }).exec();
     expect(search.length).toBe(0);
   });
 });

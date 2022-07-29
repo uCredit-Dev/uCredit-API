@@ -49,27 +49,27 @@ describe("create a plan", () => {
     expect(plans.findById(planRes._id)).toBeTruthy();
   });
   it("user object should contain new plan id", async () => {
-    const user = users.findById(planRes.user_id);
+    const user = users.findById(planRes.user_id).exec();
     expect(user).toBeTruthy();
     expect(planRes.user_id).toBe("TEST_USER");
-    const plan = await plans.findOne({ user_id: planRes.user_id });
+    const plan = await plans.findOne({ user_id: planRes.user_id }).exec();
     expect(plan.user_id).toBe(planRes.user_id);
   });
   it("should be associated with a major object", async () => {
     planRes.major_ids.forEach((m_id) => {
-      let major = majors.findById(m_id);
+      let major = majors.findById(m_id).exec();
       expect(major).toBeTruthy();
     });
   });
   it("should create associated year objects", async () => {
     planRes.years.forEach(async (y_id) => {
-      let year = await years.findById(y_id);
+      let year = await years.findById(y_id).exec();
       expect(year).toBeTruthy();
       expect(year.plan_id.toString()).toBe(planRes._id);
     });
   });
   it("should create associated distribution objects", async () => {
-    const distObjs = await distributions.find({ plan_id: planRes._id });
+    const distObjs = await distributions.find({ plan_id: planRes._id }).exec();
     expect(distObjs).toBeTruthy();
     expect(distObjs.length).toBe(5);
     var count = 0;
@@ -77,7 +77,7 @@ describe("create a plan", () => {
       expect(dist.plan_id.toString()).toBe(planRes._id);
       const fineReqs = await fineRequirements.find({
         distribution_id: dist._id,
-      });
+      }).exec();
       expect(fineReqs.length).toBe(dist.fineReq_ids.length);
       count += fineReqs.length;
       fineReqs.forEach((fine) => {

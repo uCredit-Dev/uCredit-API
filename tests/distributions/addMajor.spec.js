@@ -22,9 +22,9 @@ beforeAll((done) => {
     })
     .then(async () => {
       let majorRes = await request.post("/api/majors").send(allMajors[0]);
-      bsCS_Old = await majors.findById(majorRes.body.data._id);
+      bsCS_Old = await majors.findById(majorRes.body.data._id).exec();
       majorRes = await request.post("/api/majors").send(allMajors[7]);
-      bsAMS = await majors.findById(majorRes.body.data._id);
+      bsAMS = await majors.findById(majorRes.body.data._id).exec();
       const samplePlan = {
         name: "TEST_PLAN",
         user_id: "TEST_USER",
@@ -67,15 +67,15 @@ afterAll((done) => {
 
 describe("Adding a major", () => {
   it("should add a major to plan", async () => {
-    const updatedPlan = await plans.findById(planRes._id);
+    const updatedPlan = await plans.findById(planRes._id).exec();
     expect(updatedPlan).toBeTruthy();
     expect(updatedPlan.major_ids.length).toBe(2);
   });
   it("should be associated with one or more of the plan's distribution objects", async () => {
-    const distIds = await distributions.find({ plan_id: planRes._id });
+    const distIds = await distributions.find({ plan_id: planRes._id }).exec();
     expect(distIds.length).toBe(13); // 5 in bsCS, 8 in ams
     for (let distId of distIds) {
-      let dist = await distributions.findById(distId);
+      let dist = await distributions.findById(distId).exec();
       expect(dist.plan_id.toString()).toBe(planRes._id.toString());
       expect(
         planRes.major_ids.find(
@@ -85,7 +85,7 @@ describe("Adding a major", () => {
     }
   });
   it("should create associated distribution objects with new major_id", async () => {
-    const updatedPlan = await plans.findById(planRes._id);
+    const updatedPlan = await plans.findById(planRes._id).exec();
     expect(updatedPlan).toBeTruthy();
     expect(distributions.count({ plan_id: planRes._id }) > 0);
     const csCount = await distributions.count({
@@ -100,7 +100,7 @@ describe("Adding a major", () => {
     expect(amsCount).toBe(8);
   });
   it("should create associated fineReq objects with new major_id", async () => {
-    const updatedPlan = await plans.findById(planRes._id);
+    const updatedPlan = await plans.findById(planRes._id).exec();
     expect(updatedPlan).toBeTruthy();
     expect(fineRequirements.count({ plan_id: planRes._id }) > 0);
     const csCount = await fineRequirements.count({
@@ -115,7 +115,7 @@ describe("Adding a major", () => {
     expect(amsCount).toBe(15);
   });
   it("should create associate fineReq objects with distribution objects", async () => {
-    const updatedPlan = await plans.findById(planRes._id);
+    const updatedPlan = await plans.findById(planRes._id).exec();
     expect(updatedPlan).toBeTruthy();
     let csCount = 0;
     await distributions
@@ -137,10 +137,10 @@ describe("Adding a major", () => {
     expect(amsCount).toBe(15);
   });
   it("should should add existing courses to new distribution objects", async () => {
-    java = await courses.findById(java._id);
+    java = await courses.findById(java._id).exec();
     expect(java.distribution_ids.length).toBe(2);
     for (let distId of java.distribution_ids) {
-      const dist = await distributions.findById(distId);
+      const dist = await distributions.findById(distId).exec();
       expect(dist).toBeTruthy();
       expect(dist.major_id === bsCS_Old._id || dist.major_id === bsAMS._id);
       if (dist.major_id === bsCS_Old._id) {
@@ -152,7 +152,7 @@ describe("Adding a major", () => {
       expect(dist.planned).toBe(4);
     }
     expect(java.fineReq_ids.length).toBe(1);
-    const fine = await fineRequirements.findById(java.fineReq_ids[0]);
+    const fine = await fineRequirements.findById(java.fineReq_ids[0]).exec();
     expect(fine).toBeTruthy();
     expect(fine.description.includes("Lower Level Undergraduate")).toBeTruthy();
     expect(fine.planned).toBe(4);

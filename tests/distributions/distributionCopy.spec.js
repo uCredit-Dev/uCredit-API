@@ -26,12 +26,12 @@ describe("create new distribution for major", () => {
       .then(async () => {
         const major = await majors.findOne({
           department: "EN Computer Science",
-        });
+        }).exec();
         expect(major).toBeTruthy();
       });
     const cs_minor = await majors.findOne({
       degree_name: "B.S. Computer Science (OLD - Pre-2021)",
-    });
+    }).exec();
     const cs_reqs = cs_minor.distributions[0];
     const newDistribution = {
       name: cs_reqs.name,

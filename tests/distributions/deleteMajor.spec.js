@@ -21,9 +21,9 @@ beforeAll((done) => {
     })
     .then(async () => {
       let majorRes = await request.post("/api/majors").send(allMajors[0]);
-      bsCS_Old = await majors.findById(majorRes.body.data._id);
+      bsCS_Old = await majors.findById(majorRes.body.data._id).exec();
       majorRes = await request.post("/api/majors").send(allMajors[7]);
-      bsAMS = await majors.findById(majorRes.body.data._id);
+      bsAMS = await majors.findById(majorRes.body.data._id).exec();
       const samplePlan = {
         name: "TEST_PLAN",
         user_id: "TEST_USER",
@@ -68,7 +68,7 @@ const request = supertest(createApp());
 
 describe("Deleting a major", () => {
   it("should delete associated distribution objects", async () => {
-    const updatedPlan = plans.findById(planRes._id);
+    const updatedPlan = plans.findById(planRes._id).exec();
     expect(updatedPlan).toBeTruthy();
     distributions.find({ plan_id: updatedPlan._id }).then((dists) => {
       dists.forEach((dist) => {
@@ -78,18 +78,18 @@ describe("Deleting a major", () => {
     });
   });
   it("should not delete course objects", async () => {
-    let course = await courses.findById(java._id);
+    let course = await courses.findById(java._id).exec();
     expect(course).toBeTruthy();
   });
   it("should delete distributions and finereqs of major", async () => {
-    let course = await courses.findById(java._id);
+    let course = await courses.findById(java._id).exec();
     for (let id of course.distribution_ids) {
-      let dist = await distributions.findById(id);
+      let dist = await distributions.findById(id).exec();
       expect(dist).toBeTruthy();
       expect(dist.major_id.toString()).toBe(bsCS_Old._id.toString());
     }
     for (let id of course.fineReq_ids) {
-      let dist = await fineRequirements.findById(id);
+      let dist = await fineRequirements.findById(id).exec();
       expect(dist).toBeTruthy();
       expect(dist.major_id.toString()).toBe(bsCS_Old._id.toString());
     }

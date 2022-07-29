@@ -58,11 +58,11 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     let distNames = [];
     let fineNames = [];
     for (let d_id of course.distribution_ids) {
-      let distribution = await distributions.findById(d_id);
+      let distribution = await distributions.findById(d_id).exec();
       distNames.push(distribution.name);
     }
     for (let f_id of course.fineReq_ids) {
-      let fine = await fineRequirements.findById(f_id);
+      let fine = await fineRequirements.findById(f_id).exec();
       fineNames.push(fine.description);
     }
     expect(course.distribution_ids.length).toBe(2);
@@ -98,7 +98,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const course = response.body.data;
     let names = [];
     for (let d_id of course.distribution_ids) {
-      let distribution = await distributions.findById(d_id);
+      let distribution = await distributions.findById(d_id).exec();
       names.push(distribution.name);
     }
     expect(course.distribution_ids.length).toBe(2);
@@ -120,7 +120,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const course = response.body.data;
     let names = [];
     for (let d_id of course.distribution_ids) {
-      let distribution = await distributions.findById(d_id);
+      let distribution = await distributions.findById(d_id).exec();
       names.push(distribution.name);
     }
     expect(course.distribution_ids.length).toBe(1);
@@ -142,7 +142,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const course = response.body.data;
     let names = [];
     for (let d_id of course.distribution_ids) {
-      let distribution = await distributions.findById(d_id);
+      let distribution = await distributions.findById(d_id).exec();
       names.push(distribution.name);
     }
     expect(course.distribution_ids.length).toBe(2); // double_count works
@@ -164,7 +164,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const course = response.body.data;
     let names = [];
     for (let d_id of course.distribution_ids) {
-      let distribution = await distributions.findById(d_id);
+      let distribution = await distributions.findById(d_id).exec();
       names.push(distribution.name);
     }
     expect(course.distribution_ids.length).toBe(2); // double_count works
@@ -188,7 +188,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const course = response.body.data;
     let names = [];
     for (let d_id of course.distribution_ids) {
-      let distribution = await distributions.findById(d_id);
+      let distribution = await distributions.findById(d_id).exec();
       names.push(distribution.name);
     }
     expect(course.distribution_ids.length).toBe(4); // double_count works
@@ -214,7 +214,7 @@ describe("POST /api/courses: EXCLUSLIVE", () => {
     const course = response.body.data;
     let names = [];
     for (let d_id of course.distribution_ids) {
-      let distribution = await distributions.findById(d_id);
+      let distribution = await distributions.findById(d_id).exec();
       names.push(distribution.name);
     }
     expect(course.distribution_ids.length).toBe(4); // double_count works
