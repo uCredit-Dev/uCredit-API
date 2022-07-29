@@ -5,6 +5,8 @@ const Majors = require("../model/Major.js");
 const FineRequirements = require("../model/FineRequirement.js");
 var ObjectId = require("mongoose").Types.ObjectId;
 
+// updates a distribution object and its fineReqs if given course satisfies it 
+// return true if course updated distribution 
 const updateDistribution = async (
   distribution_id: string,
   course_id: string
@@ -32,13 +34,12 @@ const updateDistribution = async (
         course.distribution_ids.push(distribution_id);
         await course.save();
         // update fine requirement credits
-        let fineDoubleCount: string[] | undefined = ["All"];
+        let fineDoubleCount: string[] = ["All"];
         for (let f_id of distribution.fineReq_ids) {
           let fine = await FineRequirements.findById(f_id).exec();
           if (
             (fine.planned < fine.required_credits ||
               (fine.required_credits === 0 && fine.planned === 0)) &&
-            fineDoubleCount &&
             (fineDoubleCount.includes("All") ||
               fineDoubleCount.includes(fine.description)) &&
             checkCriteriaSatisfied(fine.criteria, course)

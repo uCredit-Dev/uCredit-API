@@ -138,7 +138,7 @@ router.post("/api/plans", (req, res) => {
               ? Date.now() + 60 * 60 * 24 * 1000
               : undefined,
         };
-        const newYear = await years.create(retrievedYear).exec();
+        const newYear = await years.create(retrievedYear);
         yearObjs.push(newYear);
         retrievedPlan.year_ids.push(newYear._id);
       }

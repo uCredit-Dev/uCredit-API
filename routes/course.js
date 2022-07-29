@@ -101,7 +101,7 @@ router.post("/api/courses", async (req, res) => {
           .then(async (distObjs) => {
             for (let distObj of distObjs) {
               if (
-                !distObjs.satisfied && distDoubleCount &&
+                !distObjs.satisfied &&
                   (distDoubleCount.includes('All') || distDoubleCount.includes(distObj.name))
               ) {
                 let isUpdated = await updateDistribution(
