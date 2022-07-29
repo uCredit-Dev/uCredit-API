@@ -116,23 +116,19 @@ router.post("/api/courses", async (req, res) => {
           });
       }
       // return up to date course (because modified in helper method)
-
-      // option 1: return distribution and fine objs separate from course obj
-      // const updatedCourse = await courses.findById(retrievedCourse._id);
-      // const resp = { ...updatedCourse._doc, distributions: updatedDists, fineReqs: updatedFines };
-
-      // option 2: include distribution and fine objs within course obj
-      await courses
-        .findById(retrievedCourse._id)
-        .populate({
-          path: "distribution_ids",
-          populate: {
-            path: "fineReq_ids",
-          },
-        })
-        .then((course) => {
-          returnData(course, res);
-        });
+      const updatedCourse = await courses.findById(retrievedCourse._id).exec(); 
+      const updatedDists = [];
+      const updatedFines = [];
+      for (let d_id of updatedCourse.distribution_ids) {
+        let dist = await distributions.findById(d_id).exec();
+        updatedDists.push(dist); 
+      }
+      for (let f_id of updatedCourse.fineReq_ids) {
+        let fine = await distributions.findById(f_id).exec();
+        updatedFines.push(fine); 
+      }
+      const resp = { ...updatedCourse._doc, distributions: updatedDists, fineReqs: updatedFines };
+      returnData(resp, res);
     })
     .catch((err) => {
       errorHandler(res, 400, err);
@@ -254,7 +250,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .findByIdAndDelete(c_id)
     .then(async (course) => {
       // remove course from distributions
-      const r_course = removeCourseFromDistribution(course);
+      const r_course = await removeCourseFromDistribution(course);
       let updatedDists = r_course[0];
       let updatedFines = r_course[1];
       
@@ -265,9 +261,8 @@ router.delete("/api/courses/:course_id", (req, res) => {
       removeCourseFromYear(course);
 
       // return deleted course with modified distributions
-      course.distribution_ids = updatedDists;
-      course.fineReq_ids = updatedFines;
-      returnData(course, res);
+      const resp = { ...course, distributions: updatedDists, fineReqs: updatedFines };
+      returnData(resp, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });

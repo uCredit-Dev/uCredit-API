@@ -142,11 +142,9 @@ router.post("/api/plans", (req, res) => {
         yearObjs.push(newYear);
         retrievedPlan.year_ids.push(newYear._id);
       }
-      await retrievedPlan.save();
-      let distObjs = await distributions.find({ plan_id: retrievedPlan._id }).exec();
-      let fineObjs = await fineRequirements.find({
-        plan_id: retrievedPlan._id,
-      }).exec();
+      retrievedPlan.save();
+      const distObjs = await distributions.find({ plan_id: retrievedPlan._id }).exec();
+      const fineObjs = await fineRequirements.find({ plan_id: retrievedPlan._id }).exec();
       const resp = {
         ...retrievedPlan._doc,
         years: yearObjs,
@@ -208,10 +206,12 @@ router.delete("/api/plans/:plan_id", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
+      const distObjs = await distributions.find({ plan_id: retrievedPlan._id }).exec();
+      const fineObjs = await fineRequirements.find({ plan_id: retrievedPlan._id }).exec();
       let deletedPlan = {
         ...plan._doc,
-        distributions: [],
-        fine_requirements: [],
+        distributions: distObjs,
+        fine_requirements: fineObjs,
       };
       returnData(deletedPlan, res);
     })
@@ -265,8 +265,8 @@ router.patch("/api/plans/update", (req, res) => {
           }
         });
         // return plan with reviews and distributions
-        let distObjs = await distributions.find({ plan_id: plan._id }).exec();
-        let fineObjs = await fineRequirements.find({ plan_id: plan._id }).exec();
+        const distObjs = await distributions.find({ plan_id: plan._id }).exec();
+        const fineObjs = await fineRequirements.find({ plan_id: plan._id }).exec();
         await reviews
           .find({ plan_id: id })
           .populate("reviewer_id")

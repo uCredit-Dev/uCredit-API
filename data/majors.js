@@ -1365,6 +1365,7 @@ const bsCS_Old = {
         "they don’t carry an ‘H’ or ‘S’ designator.",
       criteria:
         "AS Center for Language Education[D]^OR^AS Modern Languages and Literatures[D]^OR^H[A]^OR^S[A]",
+      double_count: ['All']
     },
     {
       name: "Writing Intensive",
@@ -1496,6 +1497,7 @@ const bsCS_New = {
         "they don’t carry an ‘H’ or ‘S’ designator.",
       criteria:
         "AS Center for Language Education[D]^OR^AS Modern Languages and Literatures[D]^OR^H[A]^OR^S[A]",
+      double_count: ['All']
     },
     {
       name: "Writing Intensive",
