@@ -142,7 +142,7 @@ router.post("/api/plans", (req, res) => {
         retrievedPlan.year_ids.push(newYear._id);
       }
       retrievedPlan.save();
-      const distObjs = await distributions
+      const distObjs = await distributions      // get all distributions 
         .find({ plan_id: retrievedPlan._id })
         .populate("fineReq_ids")
         .exec();

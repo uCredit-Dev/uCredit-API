@@ -94,8 +94,9 @@ router.post("/api/courses", async (req, res) => {
       // update plan's distribution objs
       await addCourseToDistributions(retrievedCourse);
 
-      // return up to date course (because modified in helper method)
+      // get updated course to return (because modified in helper method)
       const updatedCourse = await courses.findById(retrievedCourse._id).exec();
+      // get all distributions associated by course 
       const updatedDists = [];
       for (let d_id of updatedCourse.distribution_ids) {
         let dist = await distributions
@@ -230,7 +231,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
   courses
     .findByIdAndDelete(c_id)
     .then(async (course) => {
-      // remove course from distributions
+      // remove course from distributions and get updated distributions
       const updatedDists = await removeCourseFromDistribution(course);
 
       //delete course id from user's year array

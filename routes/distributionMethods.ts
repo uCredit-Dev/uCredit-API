@@ -10,11 +10,11 @@ var ObjectId = require("mongoose").Types.ObjectId;
 // can specify majors if necessary 
 async function addCourseToDistributions(course, majors?) {
   const plan = await Plans.findById(course.plan_id).exec();
-  // process distributions by major
   let major_ids = majors; 
-  if (!majors) {
+  if (!major_ids) {      // if undefined, add to all majors of plan
     major_ids = plan.major_ids;
   }
+  // process distributions by major
   for (let m_id of major_ids) {
     let distSatisfied = undefined; // store first satisfied distribution
     let distDoubleCount = ["All"];
@@ -23,8 +23,7 @@ async function addCourseToDistributions(course, majors?) {
       .find({ plan_id: course.plan_id, major_id: m_id })
       .then(async (distObjs) => {
         for (let distObj of distObjs) {
-          // check double_count rules
-          // check that course can satisfy distribution
+          // check that course can satisfy distribution w/ double_count rules
           if (
             (distDoubleCount.includes("All") ||
               distDoubleCount.includes(distObj.name)) &&
@@ -53,6 +52,8 @@ async function addCourseToDistributions(course, majors?) {
   }
 }
 
+// removes a course from all of its distributions and fine requirements 
+// sets satisfied and returns updated distributions 
 async function removeCourseFromDistribution(course) {
   let updatedDists : any[] = [];
   // remove course from fineReqs
@@ -140,24 +141,22 @@ const updateDistribution = async (
 // updates planned, current, and satisfied with added / removed course
 // ***requirement can be distribution OR fine requirement
 async function requirementCreditUpdate(requirement, course, add) {
-  if (add) {
+  if (add) {   // add 
     requirement.planned += course.credits;
     if (course.taken) {
       requirement.current += course.credits;
     }
-  } else {
+  } else {    // subtract 
     requirement.planned -= course.credits;
     if (course.taken) {
       requirement.current -= course.credits;
     }
   }
-  if (requirement.name) {
-    // distribution
+  if (requirement.name) {            // distribution
     if (requirement.planned < requirement.required_credits) {
       requirement.satisfied = false; // true check later with pathing
     }
-  } else {
-    // finereq
+  } else {                           // finereq
     if (requirement.planned >= requirement.required_credits) {
       requirement.satisfied = true;
     } else {
@@ -194,7 +193,7 @@ const checkAllFines = async (distribution: any) => {
       }
     });
   }
-  return true;
+  return true; // all fines satisfied 
 };
 
 // returns if a course satisfies a criteria
