@@ -2053,26 +2053,31 @@ const baCogSci = {
           description: '<b>Cognitive Psychology/Cognitive Neuropsychology</b>',
           required_credits: 3,
           criteria: 'COGS-COGPSY[T]',
+          double_count: ['All'],
         },
         {
           description: '<b>Linguistics</b>',
           required_credits: 3,
           criteria: 'COGS-LING[T]',
+          double_count: ['All'],
         },
         {
           description: '<b>Computational Approaches to Cognition</b>',
           required_credits: 3,
           criteria: 'COGS-COMPCG[T]',
+          double_count: ['All'],
         },
         {
           description: '<b>Philosophy of Mind</b>',
           required_credits: 3,
           criteria: 'COGS-PHLMND[T]',
+          double_count: ['All'],
         },
         {
           description: '<b>Neuroscience</b>',
           required_credits: 3,
           criteria: 'COGS-NEURO[T]',
+          double_count: ['All'],
         },
       ],
     },
@@ -2093,6 +2098,7 @@ const baCogSci = {
             'At least 2 courses must be at the 300 level or above.',
           required_credits: 12,
           criteria: 'COGS-COGPSY[T]',
+          double_count: ['All'],
         },
         {
           description:
@@ -2100,6 +2106,7 @@ const baCogSci = {
             'At least 2 courses must be at the 300 level or above.',
           required_credits: 12,
           criteria: 'COGS-LING[T]',
+          double_count: ['All'],
         },
         {
           description:
@@ -2107,6 +2114,7 @@ const baCogSci = {
             'At least 2 courses must be at the 300 level or above.',
           required_credits: 12,
           criteria: 'COGS-COMPCG[T]',
+          double_count: ['All'],
         },
         {
           description:
@@ -2114,6 +2122,7 @@ const baCogSci = {
             'At least 2 courses must be at the 300 level or above.',
           required_credits: 12,
           criteria: 'COGS-PHLMND[T]',
+          double_count: ['All'],
         },
         {
           description:
@@ -2121,6 +2130,7 @@ const baCogSci = {
             'At least 2 courses must be at the 300 level or above.',
           required_credits: 12,
           criteria: 'COGS-NEURO[T]',
+          double_count: ['All'],
         },
       ],
     },

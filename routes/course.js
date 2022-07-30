@@ -4,6 +4,8 @@ const { addSampleDistributions } = require("../data/distributionSamples.js");
 const { addSampleCourses } = require("../data/courseSamples.js");
 const { returnData, errorHandler } = require("./helperMethods.js");
 const {
+  addCourseToDistributions, 
+  removeCourseFromDistribution,
   updateDistribution,
   requirementCreditUpdate,
   checkCriteriaSatisfied,
@@ -246,81 +248,6 @@ router.delete("/api/courses/:course_id", (req, res) => {
     })
     .catch((err) => errorHandler(res, 400, err));
 });
-
-async function addCourseToDistributions(course) {
-  const plan = await plans.findById(course.plan_id).exec();
-  // process distributions by major
-  for (let m_id of plan.major_ids) {
-    let distSatisfied = undefined; // store first satisfied distribution
-    let distDoubleCount = ["All"];
-    // process all distributions of current major
-    await distributions
-      .find({ plan_id: course.plan_id, major_id: m_id })
-      .then(async (distObjs) => {
-        for (let distObj of distObjs) {
-          // check double_count rules
-          // check that course can satisfy distribution
-          if (
-            (distDoubleCount.includes("All") ||
-              distDoubleCount.includes(distObj.name)) &&
-            checkCriteriaSatisfied(distObj.criteria, course) &&
-            course.credits >= distObj.min_credits_per_course
-          ) {
-            if (distObj.satisfied) {
-              // store satisfied distribution
-              if (!distSatisfied) distSatisfied = distObj._id;
-            } else {
-              // add to any unsatisfied distribution
-              await updateDistribution(distObj._id, course._id);
-              distDoubleCount = distObj.double_count;
-            }
-          }
-        }
-      });
-    // if course belongs to no distributions and satisfies a satisfied distribution,
-    // add id to course but don't update distribution obj
-    await courses.findById(course._id).then((updatedCourse) => {
-      if (updatedCourse.distribution_ids.length == 0 && distSatisfied) {
-        updatedCourse.distribution_ids.push(distSatisfied);
-        updatedCourse.save();
-      }
-    });
-  }
-}
-
-async function removeCourseFromDistribution(course) {
-  let updatedDists = [];
-  // remove course from fineReqs
-  for (let f_id of course.fineReq_ids) {
-    let fine = await fineRequirements.findById(f_id).exec();
-    await requirementCreditUpdate(fine, course, false);
-  }
-  // remove course from distributions
-  for (let id of course.distribution_ids) {
-    await distributions
-      .findById(id)
-      .populate("fineReq_ids")
-      .then(async (distribution) => {
-        await requirementCreditUpdate(distribution, course, false);
-        // determine distribution satisfied with pathing
-        if (distribution.planned >= distribution.required_credits) {
-          if (distribution.pathing) {
-            await processPathing(distribution);
-          } else {
-            let allFinesSatisfied = await checkAllFines(distribution);
-            if (allFinesSatisfied) {
-              distribution.satisfied = true;
-            } else {
-              distribution.satisfied = false;
-            }
-          }
-        }
-        await distribution.save();
-        updatedDists.push(distribution);
-      });
-  }
-  return updatedDists;
-}
 
 async function removeCourseFromYear(course) {
   //delete course id from user's year array

@@ -44,13 +44,6 @@ beforeAll((done) => {
       const response3 = await request.post("/api/courses").send(course);
       course1 = response3.body.data;
       deadCourse = await request.delete(`/api/courses/${course1._id}`);
-
-      const body = {
-        id: plan1._id,
-        major_ids: [plan1.major_ids[0]],
-        name: plan1.name,
-      };
-      request.patch(`/api/plans/update/`).send(body);
       done();
     });
 });

@@ -32,7 +32,7 @@ beforeEach((done) => {
     });
 });
 
-afterAll((done) => {
+afterEach((done) => {
   mongoose.connection.db.dropDatabase(() => {
     mongoose.connection.close(() => done());
   });

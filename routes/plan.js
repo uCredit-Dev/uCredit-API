@@ -4,7 +4,7 @@ const {
   errorHandler
 }= require("./helperMethods.js");
 const {
-  updateDistribution,
+  addCourseToDistributions,
 } = require("./distributionMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
@@ -336,22 +336,8 @@ async function addMajorDistributions(plan) {
 // Adds each existing course in a plan to distributions of specified major
 async function addCourses(plan, m_id) {
   const coursesInPlan = await courses.findByPlanId(plan._id).exec();
-  let distObjs = await distributions.find({
-    plan_id: plan._id,
-    major_id: m_id,
-  }).exec();
   for (let course of coursesInPlan) {
-    let distDoubleCount = undefined;
-    for (let distObj of distObjs) {
-      if (
-        distDoubleCount === undefined ||
-        distDoubleCount.length === 0 ||
-        distDoubleCount.includes(distObj.name)
-      ) {
-        let updated = await updateDistribution(distObj._id, course._id);
-        if (updated) distDoubleCount = distObj.double_counts;
-      }
-    }
+    addCourseToDistributions(course, [m_id]);
   }
 }
 
