@@ -23,6 +23,7 @@ router.get("/api/distributionsByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   distributions
     .find({ plan_id: req.params.plan_id })
+    .populate("fineReq_ids")
     .then((distributions) => returnData(distributions, res))
     .catch((err) => errorHandler(res, 400, err));
 });

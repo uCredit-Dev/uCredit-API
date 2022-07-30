@@ -142,13 +142,14 @@ router.post("/api/plans", (req, res) => {
         retrievedPlan.year_ids.push(newYear._id);
       }
       retrievedPlan.save();
-      const distObjs = await distributions.find({ plan_id: retrievedPlan._id }).exec();
-      const fineObjs = await fineRequirements.find({ plan_id: retrievedPlan._id }).exec();
+      const distObjs = await distributions
+        .find({ plan_id: retrievedPlan._id })
+        .populate("fineReq_ids")
+        .exec();
       const resp = {
         ...retrievedPlan._doc,
         years: yearObjs,
         distributions: distObjs,
-        fine_requirements: fineObjs,
         reviewers: [],
       };
       delete resp.year_ids;
@@ -205,13 +206,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
           { new: true, runValidators: true }
         )
         .exec();
-      const distObjs = await distributions.find({ plan_id: retrievedPlan._id }).exec();
-      const fineObjs = await fineRequirements.find({ plan_id: retrievedPlan._id }).exec();
-      let deletedPlan = {
-        ...plan._doc,
-        distributions: distObjs,
-        fine_requirements: fineObjs,
-      };
+      let deletedPlan = { ...plan._doc };
       returnData(deletedPlan, res);
     })
     .catch((err) => errorHandler(res, 400, err));
@@ -260,8 +255,10 @@ router.patch("/api/plans/update", (req, res) => {
           }
         });
         // return plan with reviews and distributions
-        const distObjs = await distributions.find({ plan_id: plan._id }).exec();
-        const fineObjs = await fineRequirements.find({ plan_id: plan._id }).exec();
+        const distObjs = await distributions
+          .find({ plan_id: plan._id })
+          .populate("fineReq_ids")
+          .exec();
         await reviews
           .find({ plan_id: id })
           .populate("reviewer_id")
@@ -269,7 +266,6 @@ router.patch("/api/plans/update", (req, res) => {
             plan = {
               ...plan,
               distributions: distObjs,
-              fine_requirements: fineObjs,
               reviewers: revs,
             };
             returnData(plan, res);
