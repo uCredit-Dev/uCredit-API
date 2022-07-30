@@ -229,8 +229,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .findByIdAndDelete(c_id)
     .then(async (course) => {
       // remove course from distributions
-      const r_course = await removeCourseFromDistribution(course);
-      const updatedDists = r_course;
+      const updatedDists = await removeCourseFromDistribution(course);
 
       //delete course id from user's year array
       let query = {};
@@ -250,26 +249,28 @@ router.delete("/api/courses/:course_id", (req, res) => {
 
 async function addCourseToDistributions(course) {
   const plan = await plans.findById(course.plan_id).exec();
-  // process distributions by major 
+  // process distributions by major
   for (let m_id of plan.major_ids) {
-    let distSatisfied = undefined;        // store first satisfied distribution 
+    let distSatisfied = undefined; // store first satisfied distribution
     let distDoubleCount = ["All"];
-    // process all distributions of current major 
+    // process all distributions of current major
     await distributions
       .find({ plan_id: course.plan_id, major_id: m_id })
       .then(async (distObjs) => {
         for (let distObj of distObjs) {
-          // check double_count rules 
-          // check that course can satisfy distribution 
+          // check double_count rules
+          // check that course can satisfy distribution
           if (
             (distDoubleCount.includes("All") ||
               distDoubleCount.includes(distObj.name)) &&
-            checkCriteriaSatisfied(distObj.criteria, course) && 
-              course.credits >= distObj.min_credits_per_course
+            checkCriteriaSatisfied(distObj.criteria, course) &&
+            course.credits >= distObj.min_credits_per_course
           ) {
-            if (distObj.satisfied) {      // store satisfied distribution 
+            if (distObj.satisfied) {
+              // store satisfied distribution
               if (!distSatisfied) distSatisfied = distObj._id;
-            } else {                      // add to any unsatisfied distribution 
+            } else {
+              // add to any unsatisfied distribution
               await updateDistribution(distObj._id, course._id);
               distDoubleCount = distObj.double_count;
             }
@@ -289,31 +290,34 @@ async function addCourseToDistributions(course) {
 
 async function removeCourseFromDistribution(course) {
   let updatedDists = [];
+  // remove course from fineReqs
+  for (let f_id of course.fineReq_ids) {
+    let fine = await fineRequirements.findById(f_id).exec();
+    await requirementCreditUpdate(fine, course, false);
+  }
   // remove course from distributions
   for (let id of course.distribution_ids) {
     await distributions
       .findById(id)
       .populate("fineReq_ids")
       .then(async (distribution) => {
-      await requirementCreditUpdate(distribution, course, false);
-      // remove course from fineReqs
-      for (let f_id of distribution.fineReq_ids) {
-        let fine = await fineRequirements.findById(f_id).exec();
-        if (checkCriteriaSatisfied(fine.criteria, course)) {
-          await requirementCreditUpdate(fine, course, false);
+        await requirementCreditUpdate(distribution, course, false);
+        // determine distribution satisfied with pathing
+        if (distribution.planned >= distribution.required_credits) {
+          if (distribution.pathing) {
+            await processPathing(distribution);
+          } else {
+            let allFinesSatisfied = await checkAllFines(distribution);
+            if (allFinesSatisfied) {
+              distribution.satisfied = true;
+            } else {
+              distribution.satisfied = false;
+            }
+          }
         }
-      }
-      // determine distribution satisfied with pathing
-      if (distribution.planned >= distribution.required_credits) {
-        if (distribution.pathing) {
-          await processPathing(distribution);
-        } else {
-          distribution.satisfied = true;
-        }
-      }
-      await distribution.save();
-      updatedDists.push(distribution);
-    });
+        await distribution.save();
+        updatedDists.push(distribution);
+      });
   }
   return updatedDists;
 }

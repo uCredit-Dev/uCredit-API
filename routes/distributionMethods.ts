@@ -16,8 +16,10 @@ const updateDistribution = async (
     .then(async (distribution) => {
       if (!distribution || !course) return false;
       if (course.credits >= distribution.min_credits_per_course) {
-        // update distribution credits
-        await requirementCreditUpdate(distribution, course, true);
+        // update distribution credits if no overflow 
+        if (distribution.planned < distribution.required_credits) {
+          await requirementCreditUpdate(distribution, course, true);
+        }
         // add distribution id to course
         course.distribution_ids.push(distribution_id);
         await course.save();
