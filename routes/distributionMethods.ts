@@ -5,8 +5,8 @@ const Majors = require("../model/Major.js");
 const FineRequirements = require("../model/FineRequirement.js");
 var ObjectId = require("mongoose").Types.ObjectId;
 
-// updates a distribution object and its fineReqs if given course satisfies it 
-// return true if course updated distribution 
+// updates a distribution object and its fineReqs if given course satisfies it
+// return true if course updated distribution
 const updateDistribution = async (
   distribution_id: string,
   course_id: string
@@ -15,21 +15,9 @@ const updateDistribution = async (
   return await Distributions.findById(ObjectId(distribution_id)) // returns a promise
     .then(async (distribution) => {
       if (!distribution || !course) return false;
-      // general distribution criteria
-      const genCriteria: string = distribution.criteria;
-      if (
-        !distribution.satisfied &&
-        course.credits >= distribution.min_credits_per_course &&
-        checkCriteriaSatisfied(genCriteria, course)
-      ) {
+      if (course.credits >= distribution.min_credits_per_course) {
         // update distribution credits
-        // a distribution can have enough credits and still be unsatisfied
-        if (
-          distribution.planned < distribution.required_credits ||
-          (distribution.planned === 0 && distribution.required_credits === 0)
-        ) {
-          await requirementCreditUpdate(distribution, course, true);
-        }
+        await requirementCreditUpdate(distribution, course, true);
         // add distribution id to course
         course.distribution_ids.push(distribution_id);
         await course.save();
@@ -57,7 +45,12 @@ const updateDistribution = async (
           if (distribution.pathing) {
             await processPathing(distribution);
           } else {
-            distribution.satisfied = true;
+            let allFinesSatisfied = await checkAllFines(distribution);
+            if (allFinesSatisfied) {
+              distribution.satisfied = true;
+            } else {
+              distribution.satisfied = false;
+            }
             await distribution.save();
           }
         }
@@ -113,6 +106,18 @@ const processPathing = async (distribution: any) => {
     }
   );
   await distribution.save();
+};
+
+// returns true if all fine requirements of a distribution are satisfied
+const checkAllFines = async (distribution: any) => {
+  for (let f_id of distribution.fineReq_ids) {
+    await FineRequirements.findById(f_id).then((fine) => {
+      if (!fine.satisfied) {
+        return false;
+      }
+    });
+  }
+  return true;
 };
 
 // returns if a course satisfies a criteria
