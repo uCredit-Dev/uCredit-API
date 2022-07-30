@@ -6,9 +6,6 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 const {
   addCourseToDistributions, 
   removeCourseFromDistribution,
-  updateDistribution,
-  requirementCreditUpdate,
-  checkCriteriaSatisfied,
 } = require("./distributionMethods.ts");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");

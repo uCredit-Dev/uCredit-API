@@ -6,6 +6,69 @@ const Plans = require("../model/Plan.js");
 const FineRequirements = require("../model/FineRequirement.js");
 var ObjectId = require("mongoose").Types.ObjectId;
 
+
+// Adding new distributions if new major is added
+async function addMajorDistributions(plan) {
+  for (let m_id of plan.major_ids) {
+    const dist = await Distributions.find({
+      plan_id: plan._id,
+      major_id: m_id,
+    }).exec();
+    if (dist.length == 0) {
+      // new major
+      const major = await Majors.findById(m_id).exec();
+      for (let dist_object of major.distributions) {
+        let distribution_to_post = {
+          major_id: major._id,
+          plan_id: plan._id,
+          user_id: plan.user_id,
+          name: dist_object.name,
+          required_credits: dist_object.required_credits,
+          description: dist_object.description,
+          criteria: dist_object.criteria,
+          min_credits_per_course: dist_object.min_credits_per_course,
+          // optional fields
+          user_select: dist_object.user_select, 
+          pathing: dist_object.pathing, 
+          double_count: dist_object.double_count,
+        };
+        // create new distribution documents
+        await Distributions
+          .create(distribution_to_post)
+          .then(async (retrievedDistribution) => {
+            for (let f_req of dist_object.fine_requirements) {
+              let fineReq_to_post = {
+                description: f_req.description,
+                required_credits: f_req.required_credits,
+                criteria: f_req.criteria,
+                plan_id: plan._id,
+                major_id: major._id,
+                distribution_id: retrievedDistribution._id,
+                double_count: f_req.double_count,            // optional
+              };
+              // create new fine requirement documents
+              await FineRequirements
+                .create(fineReq_to_post)
+                .then(async (fineReq) => {
+                  retrievedDistribution.fineReq_ids.push(fineReq._id);
+                  await retrievedDistribution.save();
+                });
+            }
+          });
+      }
+      await addCourses(plan, m_id);
+    }
+  }
+}
+
+// Adds each existing course in a plan to distributions of specified major
+async function addCourses(plan, m_id) {
+  const coursesInPlan = await Courses.findByPlanId(plan._id).exec();
+  for (let course of coursesInPlan) {
+    addCourseToDistributions(course, [m_id]);
+  }
+}
+
 // add courses to distributions of a plan 
 // can specify majors if necessary 
 async function addCourseToDistributions(course, majors?) {
@@ -367,4 +430,6 @@ module.exports = {
   checkCriteriaSatisfied,
   updateDistribution,
   requirementCreditUpdate,
+  addMajorDistributions, 
+  addCourses
 };
