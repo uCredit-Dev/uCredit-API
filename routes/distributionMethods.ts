@@ -8,7 +8,7 @@ var ObjectId = require("mongoose").Types.ObjectId;
 
 
 // Adding new distributions if new major is added
-async function addMajorDistributions(plan) {
+async function addMajorDistributions(plan: any) {
   for (let m_id of plan.major_ids) {
     const dist = await Distributions.find({
       plan_id: plan._id,
@@ -35,7 +35,7 @@ async function addMajorDistributions(plan) {
         // create new distribution documents
         await Distributions
           .create(distribution_to_post)
-          .then(async (retrievedDistribution) => {
+          .then(async (retrievedDistribution: any) => {
             for (let f_req of dist_object.fine_requirements) {
               let fineReq_to_post = {
                 description: f_req.description,
@@ -49,7 +49,7 @@ async function addMajorDistributions(plan) {
               // create new fine requirement documents
               await FineRequirements
                 .create(fineReq_to_post)
-                .then(async (fineReq) => {
+                .then(async (fineReq: any) => {
                   retrievedDistribution.fineReq_ids.push(fineReq._id);
                   await retrievedDistribution.save();
                 });
@@ -62,7 +62,7 @@ async function addMajorDistributions(plan) {
 }
 
 // Adds each existing course in a plan to distributions of specified major
-async function addCourses(plan, m_id) {
+async function addCourses(plan: any, m_id: string) {
   const coursesInPlan = await Courses.findByPlanId(plan._id).exec();
   for (let course of coursesInPlan) {
     addCourseToDistributions(course, [m_id]);
@@ -71,7 +71,7 @@ async function addCourses(plan, m_id) {
 
 // add courses to distributions of a plan 
 // can specify majors if necessary 
-async function addCourseToDistributions(course, majors?) {
+async function addCourseToDistributions(course: any, majors: string[]) {
   const plan = await Plans.findById(course.plan_id).exec();
   let major_ids = majors; 
   if (!major_ids) {      // if undefined, add to all majors of plan
@@ -79,12 +79,12 @@ async function addCourseToDistributions(course, majors?) {
   }
   // process distributions by major
   for (let m_id of major_ids) {
-    let distSatisfied = undefined; // store first satisfied distribution
-    let distDoubleCount = ["All"];
+    let distSatisfied : string | undefined = undefined; // store first satisfied distribution
+    let distDoubleCount : string[] = ["All"];
     // process all distributions of current major
     await Distributions
       .find({ plan_id: course.plan_id, major_id: m_id })
-      .then(async (distObjs) => {
+      .then(async (distObjs: any[]) => {
         for (let distObj of distObjs) {
           // check that course can satisfy distribution w/ double_count rules
           if (
@@ -106,7 +106,7 @@ async function addCourseToDistributions(course, majors?) {
       });
     // if course belongs to no distributions and satisfies a satisfied distribution,
     // add id to course but don't update distribution obj
-    await Courses.findById(course._id).then((updatedCourse) => {
+    await Courses.findById(course._id).then((updatedCourse: any) => {
       if (updatedCourse.distribution_ids.length == 0 && distSatisfied) {
         updatedCourse.distribution_ids.push(distSatisfied);
         updatedCourse.save();
@@ -117,7 +117,7 @@ async function addCourseToDistributions(course, majors?) {
 
 // removes a course from all of its distributions and fine requirements 
 // sets satisfied and returns updated distributions 
-async function removeCourseFromDistribution(course) {
+async function removeCourseFromDistribution(course: any) {
   let updatedDists : any[] = [];
   // remove course from fineReqs
   for (let f_id of course.fineReq_ids) {
@@ -129,7 +129,7 @@ async function removeCourseFromDistribution(course) {
     await Distributions
       .findById(id)
       .populate("fineReq_ids")
-      .then(async (distribution) => {
+      .then(async (distribution: any) => {
         await requirementCreditUpdate(distribution, course, false);
         // determine distribution satisfied with pathing
         if (distribution.planned >= distribution.required_credits) {
@@ -159,7 +159,7 @@ const updateDistribution = async (
 ) => {
   let course = await Courses.findById(ObjectId(course_id)).exec();
   await Distributions.findById(ObjectId(distribution_id)) 
-    .then(async (distribution) => {
+    .then(async (distribution: any) => {
       if (!distribution || !course) return;
       // update distribution credits if no overflow 
       if (distribution.planned < distribution.required_credits) {
@@ -203,7 +203,7 @@ const updateDistribution = async (
 
 // updates planned, current, and satisfied with added / removed course
 // ***requirement can be distribution OR fine requirement
-async function requirementCreditUpdate(requirement, course, add) {
+async function requirementCreditUpdate(requirement: any, course: any, add: any) {
   if (add) {   // add 
     requirement.planned += course.credits;
     if (course.taken) {
@@ -233,7 +233,7 @@ async function requirementCreditUpdate(requirement, course, add) {
 const processPathing = async (distribution: any) => {
   let numPaths = distribution.pathing;
   await FineRequirements.find({ distribution_id: distribution._id }).then(
-    async (fineObjs) => {
+    async (fineObjs: any[]) => {
       for (let fine of fineObjs) {
         if (fine.satisfied) {
           numPaths -= 1;
@@ -250,7 +250,7 @@ const processPathing = async (distribution: any) => {
 // returns true if all fine requirements of a distribution are satisfied
 const checkAllFines = async (distribution: any) => {
   for (let f_id of distribution.fineReq_ids) {
-    await FineRequirements.findById(f_id).then((fine) => {
+    await FineRequirements.findById(f_id).then((fine: any) => {
       if (!fine.satisfied) {
         return false;
       }
@@ -352,7 +352,7 @@ const handleTagType = (
 };
 
 // Handles the L case in the getBoolExpr function
-const handleLCase = (splitArr, index, course): string => {
+const handleLCase = (splitArr: any[], index: number, course: any): string => {
   if (course.number === undefined) return "false";
   let updatedConcat: string = "";
   if (splitArr[index].includes("Upper")) {
