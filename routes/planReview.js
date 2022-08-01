@@ -4,6 +4,7 @@ const {
   postNotification,
 } = require("./helperMethods.js");
 const planReviews = require("../model/PlanReview.js");
+const users = require("../model/User.js");
 const nodemailer = require("nodemailer");
 
 const express = require("express");
@@ -38,14 +39,21 @@ router.post("/api/planReview/request", async (req, res) => {
       };
       planReviews
         .create(planReview)
-        .then((review) => {
+        .then(async (review) => {
           postNotification(
             `${reviewee_name} has requested you to review a plan.`,
             [reviewer_id],
             review._id,
             "PLANREVIEW"
           );
-          sendReviewMail(reviewee_id, reviewer_id, plan_id);
+          const reviewer = await users.findById(reviewer_id);
+          const reviewee = await users.findById(reviewee_id);
+          await sendReviewMail(
+            reviewer.name,
+            reviewee.name,
+            reviewer.email,
+            review.plan_id
+          );
           returnData(review, res);
         })
         .catch((err) => errorHandler(res, 500, err));
@@ -144,7 +152,7 @@ router.post("/api/planReview/changeStatus", (req, res) => {
   }
   planReviews
     .findById(review_id)
-    .then((review) => {
+    .then(async (review) => {
       if (!review) {
         errorHandler(res, 404, { message: "planReview not found." });
       } else if (review.status === "PENDING") {
@@ -152,8 +160,15 @@ router.post("/api/planReview/changeStatus", (req, res) => {
       } else {
         review.status = status;
         if (status === "UNDERREVIEW") review.requestTime = Date.now();
+        const reviewer = await users.findById(reviewer_id);
+        const reviewee = await users.findById(reviewee_id);
+        await sendReviewMail(
+          reviewer.name,
+          reviewee.name,
+          reviewer.email,
+          review.plan_id
+        );
         review.save();
-        sendReviewMail(review.reviewee_id, review.reviewer_id, review.plan_id);
         postNotification(
           `A plan review status has changed to ${status}.`,
           [review.reviewee_id],
@@ -167,7 +182,7 @@ router.post("/api/planReview/changeStatus", (req, res) => {
 });
 
 // async..await is not allowed in global scope, must use a wrapper
-async function sendReviewMail(reviewee_id, reviewer_id, plan_id) {
+async function sendReviewMail(revieweeName, reviewerName, email, plan_id) {
   // Generate test SMTP service account from ethereal.email
   // Only needed if you don't have a real mail account for testing
   // let testAccount = await nodemailer.createTestAccount();
@@ -193,9 +208,9 @@ async function sendReviewMail(reviewee_id, reviewer_id, plan_id) {
   // send mail with defined transport object
   await transporter.sendMail({
     from: "uCredit", // sender address
-    to: `${reviewer_id}@jh.edu`, // list of receivers
-    subject: `Invitation to Review uCredit Plan from ${reviewee_id}`, // Subject line
-    html: `<div><p>Hello ${reviewer_id},</p><p>You have recieved a request to review ${reviewee_id}'s uCredit Plan:</p><p>Please click the following link to accept.</p><p>https://ucredit.me/reviewer/${plan_id}</p><p>Best wishes,</p><p>uCredit</p</div>`, // html body
+    to: email, // list of receivers
+    subject: `Invitation to Review uCredit Plan from ${revieweeName}`, // Subject line
+    html: `<div><p>Hello ${reviewerName},</p><p>You have recieved a request to review ${revieweeName}'s uCredit Plan:</p><p>Please click the following link to accept.</p><p>https://ucredit.me/reviewer/${plan_id}</p><p>Best wishes,</p><p>uCredit</p</div>`, // html body
   });
 }
 
