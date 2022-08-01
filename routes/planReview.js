@@ -193,8 +193,8 @@ async function sendReviewMail(reviewee_id, reviewer_id, plan_id) {
   // send mail with defined transport object
   await transporter.sendMail({
     from: "uCredit", // sender address
-    to: "mattliujhu@gmail.com", // list of receivers
-    subject: `Invitation to review from ${reviewee_id}`, // Subject line
+    to: `${reviewer_id}@jh.edu`, // list of receivers
+    subject: `Invitation to Review uCredit Plan from ${reviewee_id}`, // Subject line
     html: `<div><p>Hello ${reviewer_id},</p><p>You have recieved a request to review ${reviewee_id}'s uCredit Plan:</p><p>Please click the following link to accept.</p><p>https://ucredit.me/reviewer/${plan_id}</p><p>Best wishes,</p><p>uCredit</p</div>`, // html body
   });
 }
