@@ -49,8 +49,8 @@ router.post("/api/planReview/request", async (req, res) => {
           const reviewer = await users.findById(reviewer_id);
           const reviewee = await users.findById(reviewee_id);
           await sendReviewMail(
-            reviewer.name,
             reviewee.name,
+            reviewer.name,
             reviewer.email,
             review.plan_id
           );
@@ -163,8 +163,8 @@ router.post("/api/planReview/changeStatus", (req, res) => {
         const reviewer = await users.findById(reviewer_id);
         const reviewee = await users.findById(reviewee_id);
         await sendReviewMail(
-          reviewer.name,
           reviewee.name,
+          reviewer.name,
           reviewer.email,
           review.plan_id
         );
