@@ -45,6 +45,7 @@ router.post("/api/planReview/request", async (req, res) => {
             review._id,
             "PLANREVIEW"
           );
+          sendReviewMail(reviewee_id, reviewer_id, plan_id);
           returnData(review, res);
         })
         .catch((err) => errorHandler(res, 500, err));
