@@ -19,6 +19,8 @@ const roadmapPlanSchema = new Schema({
   expireAt: { type: Date },
   postedAt: { type: Date, default: Date.now, required: true },
   graduatesAt: { type: Date },
+  views: { type: Number, default: 0 },
+  
 });
 
 const RoadmapPlan = mongoose.model("RoadmapPlan", roadmapPlanSchema);

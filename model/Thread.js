@@ -14,6 +14,7 @@ const threadSchema = new Schema({
   },
   location_id: { type: String, required: true },
   resolved: { type: Boolean, default: false },
+  comments: [{ type: Schema.Types.ObjectId, ref: "Comment", required: true }],
 });
 
 const Thread = mongoose.model("Thread", threadSchema);
