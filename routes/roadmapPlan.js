@@ -8,7 +8,9 @@ const router = express.Router();
 // given the id of a plan already created, generates a roadmapPlan document
 // based on that plan
 router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
-  const old_id = req.body.id;
+  const old_id = req.body.old_id;
+  const description = req.body.description;
+  const tags = req.body.tags;
   plans
     .findById(old_id)
     .then((retrieved) => {
@@ -16,9 +18,12 @@ router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
         original: retrieved.id,
         name: retrieved.name,
         majors: retrieved.majors.slice(),
-        tags: [],
+        year_ids: retrieved.year_ids,
+        distribution_ids : retrieved.distribution_ids,
+        tags: tags,
         user_id: retrieved.user_id,
         expireAt: retrieved.expireAt,
+        description: description,
       };
       roadmapPlans
         .create(data)
