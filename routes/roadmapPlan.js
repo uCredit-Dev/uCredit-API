@@ -129,6 +129,13 @@ router.patch("/api/roadmapPlans/removeTags/:plan_id", (req, res) => {
     .catch((err) => errorHandler(res, 404, err));
 });
 
+router.patch("/api/roadmapPlans/allowComments/:plan_id", (req, res) => {
+  const plan_id = req.params.plan_id;
+  roadmapPlans
+    .findByIdAndUpdate(plan_id, { allowComments: true })
+    .then((found) => returnData(found, res));
+});
+
 // likes/unlikes a roadmap plan
 // user_id required in body
 // returns the number of likes the plan has
