@@ -136,6 +136,27 @@ router.patch("/api/roadmapPlans/allowComments/:plan_id", (req, res) => {
     .then((found) => returnData(found, res));
 });
 
+router.patch("/api/roadmapPlans/disallowComments/:plan_id", (req, res) => {
+  const plan_id = req.params.plan_id;
+  roadmapPlans
+    .findByIdAndUpdate(plan_id, { allowComments: false })
+    .then((found) => returnData(found, res));
+});
+
+router.patch("/api/roadmapPlans/makeAnonymous/:plan_id", (req, res) => {
+  const plan_id = req.params.plan_id;
+  roadmapPlans
+    .findByIdAndUpdate(plan_id, { anonymous: true })
+    .then((found) => returnData(found, res));
+});
+
+router.patch("/api/roadmapPlans/makeNonAnonymous/:plan_id", (req, res) => {
+  const plan_id = req.params.plan_id;
+  roadmapPlans
+    .findByIdAndUpdate(plan_id, { anonymous: false })
+    .then((found) => returnData(found, res));
+});
+
 // likes/unlikes a roadmap plan
 // user_id required in body
 // returns the number of likes the plan has
