@@ -11,6 +11,7 @@ router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
   const old_id = req.body.old_id;
   const description = req.body.description;
   const tags = req.body.tags;
+  const comments = req.body.allowComment;
   plans
     .findById(old_id)
     .then((retrieved) => {
@@ -24,6 +25,7 @@ router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
         user_id: retrieved.user_id,
         expireAt: retrieved.expireAt,
         description: description,
+        comments: comments,
       };
       roadmapPlans
         .create(data)
