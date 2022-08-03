@@ -10,6 +10,8 @@ const users = require("../model/User.js");
 const { allMajors } = require("./majors");
 const majors = require("../model/Major");
 
+addAllMajors();
+
 // Add ALL majors in allMajors array to production DB
 async function addAllMajors() {
   await db.connect(); // comment out this line before running jest test
@@ -43,7 +45,7 @@ async function addOneMajor(majorName) {
   }
 }
 
-module.exports = {
-  addAllMajors,
-  addOneMajor,
-};
+// module.exports = {
+//   addAllMajors,
+//   addOneMajor,
+// };

@@ -16,6 +16,7 @@ const Schema = mongoose.Schema;
 */
 const majorSchema = new Schema({
   _id: { type: String, required: true }, //e.g. B.S. Computer Science
+  abbrev: { type: String },
   department: { type: String, required: true },
   total_degree_credit: { type: Number, required: true },
   wi_credit: { type: Number, required: true },
