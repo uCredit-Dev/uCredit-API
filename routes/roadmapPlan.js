@@ -1,6 +1,7 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const roadmapPlans = require("../model/RoadmapPlan.js");
 const plans = require("../model/Plan.js");
+const users = require("../model/User.js");
 
 const express = require("express");
 const router = express.Router();
@@ -125,6 +126,40 @@ router.patch("/api/roadmapPlans/removeTags/:plan_id", (req, res) => {
       { new: true }
     )
     .then((roadmapPlan) => returnData(roadmapPlan, res))
+    .catch((err) => errorHandler(res, 404, err));
+});
+
+// likes/unlikes a roadmap plan
+// user_id required in body
+// returns the number of likes the plan has
+router.patch("/api/roadmapPlans/like/:plan_id", (req, res) => {
+  const plan_id = req.params.plan_id;
+  const user_id = req.body.user_id;
+  users
+    .findById(user_id)
+    .then((found) => {
+      if (!found.liked_roadmap_plans) {
+        found.liked_roadmap_plans = [];
+      }
+      const index = found.liked_roadmap_plans.indexOf(plan_id);
+      if (index > -1) {
+        found.liked_roadmap_plans.splice(index, 1);
+        found.save();
+        roadmapPlans
+          .findByIdAndUpdate(
+            plan_id,
+            { $inc: { num_likes: -1 } },
+            { new: true }
+          )
+          .then((roadmapPlan) => returnData(roadmapPlan.num_likes, res));
+      } else {
+        found.liked_roadmap_plans.push(plan_id);
+        found.save();
+        roadmapPlans
+          .findByIdAndUpdate(plan_id, { $inc: { num_likes: 1 } }, { new: true })
+          .then((roadmapPlan) => returnData(roadmapPlan.num_likes, res));
+      }
+    })
     .catch((err) => errorHandler(res, 404, err));
 });
 
