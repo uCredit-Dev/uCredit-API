@@ -132,28 +132,28 @@ router.patch("/api/roadmapPlans/removeTags/:plan_id", (req, res) => {
 router.patch("/api/roadmapPlans/allowComments/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   roadmapPlans
-    .findByIdAndUpdate(plan_id, { allowComments: true })
+    .findByIdAndUpdate(plan_id, { allowComments: true }, { new: true })
     .then((found) => returnData(found, res));
 });
 
 router.patch("/api/roadmapPlans/disallowComments/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   roadmapPlans
-    .findByIdAndUpdate(plan_id, { allowComments: false })
+    .findByIdAndUpdate(plan_id, { allowComments: false }, { new: true })
     .then((found) => returnData(found, res));
 });
 
 router.patch("/api/roadmapPlans/makeAnonymous/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   roadmapPlans
-    .findByIdAndUpdate(plan_id, { anonymous: true })
+    .findByIdAndUpdate(plan_id, { anonymous: true }, { new: true })
     .then((found) => returnData(found, res));
 });
 
 router.patch("/api/roadmapPlans/makeNonAnonymous/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
   roadmapPlans
-    .findByIdAndUpdate(plan_id, { anonymous: false })
+    .findByIdAndUpdate(plan_id, { anonymous: false }, { new: true })
     .then((found) => returnData(found, res));
 });
 
