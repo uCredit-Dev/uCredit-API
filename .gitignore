@@ -153,3 +153,6 @@ dist
 
 # Unit testing database
 testdb/
+
+#Idea
+.idea/
