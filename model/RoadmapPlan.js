@@ -11,7 +11,7 @@ const roadmapPlanSchema = new Schema({
   name: { type: String, required: true },
   description: { type: String },
   majors: { type: [String] },
-  tags: { type: [String] },
+  tags: { type: [String], default: [] },
   num_likes: { type: Number, default: 0 },
   year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],

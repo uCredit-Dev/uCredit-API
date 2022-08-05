@@ -2,7 +2,7 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 const roadmapPlans = require("../model/RoadmapPlan.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
-//const distributions = require("../model/Distribution.js");
+const distributions = require("../model/Distribution.js");
 const courses = require("../model/Course.js");
 
 const express = require("express");
@@ -11,96 +11,129 @@ const router = express.Router();
 // given the id of a plan already created, generates a roadmapPlan document
 // based on that plan
 router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
-  const old_id = req.body.id;
-  const desc = req.body.desc;
+  const old_plan_id = req.body.id;
+  const roadmap_description = req.body.desc;
   plans
-    .findById(old_id)
-    .then(async (retrieved) => {
+    .findById(old_plan_id)
+    .then(async (original_plan) => {
       // extract simple fields from the plan
-      let data = {
-        original: retrieved.id,
-        name: retrieved.name,
-        description: desc,
-        num_likes: 0,
-        majors: retrieved.majors.slice(),
-        tags: [],
-        user_id: retrieved.user_id,
-        expireAt: retrieved.expireAt,
-        // postedAt will default to Date.now by the schema
-      };
-      // now clone the linked year and distribution documents
-      let newYears = [];
-      let newYearIds = [];
-      let yearPromise = Promise.all(
-        retrieved.year_ids.map(async (elem) => {
-          let found = await years.find({ _id: elem }, { _id: 0 });
-          let yearData = {
-            name: found[0].name,
-            user_id: found[0].user_id,
-            expireAt: found[0].expireAt,
-            year: found[0].year,
-            courses: found[0].courses,
-          };
-          let created = await years.create(yearData);
-          // order is kept track of here to make things easier further down
-          newYears[yearNameToArrIndex(created.name)] = created;
-          newYearIds.push(created._id);
-        })
-      );
-      data.year_ids = newYearIds;
-      /* Not currently necessary as distributions aren't working yet
-      let newDistributions = [];
-      let distPromise = Promise.all(
-        retrieved.distribution_ids.map(async (elem) => {
-          let found = await distributions.find({ _id: elem }, { _id: 0 });
-          distData = {
-            name: found[0].name,
-            required: found[0].required,
-            planned: found[0].planned,
-            current: found[0].current,
-            satisfied: found[0].satisfied,
-            user_id: found[0].user_id,
-            expireAt: found[0].expireAt,
-          };
-          let created = await distributions.create(distData);
-          newDistributions.push(created._id);
-        })
-      ); // */
-      await Promise.all([yearPromise]); // add distPromise when applicable
-      roadmapPlans.create(data).then(async (result) => {
-        await Promise.all(
-          newYears.map(async (curYear) => {
-            curYear.plan_id = [result._id];
-            oldCourses = curYear.courses;
-            curYear.courses = [];
-            await Promise.all(
-              oldCourses.map(async (course_id) => {
-                let found = await courses.find({ _id: course_id }, { _id: 0 });
-                let inserted = await courses.insertMany(found);
-                curYear.courses.push(inserted.insertedIds[0]);
-              })
-            );
-          })
+      let roadmap_data = getPlanDataForClone(original_plan);
+      roadmap_data.description = roadmap_description;
+      // now clone the linked distribution documents, and courses within them
+      let new_distributions = [];
+      // below is used to preserve the many-many relation between distributions
+      // and courses, and the fact that the same courses are related to years
+      let old_to_new_course_map = new Map();
+      // for used instead of forEach because it handles await better
+      const old_distribution_ids = original_plan.distribution_ids;
+      for (let i = 0; i < old_distribution_ids.length; i++) {
+        const old_dist_id = old_distribution_ids[i];
+        const old_dist = await distributions.findById(old_dist_id);
+        if (old_dist === null) {
+          continue;
+        }
+        const distribution_data = getDistributionDataForClone(old_dist);
+        let created_dist = await distributions.create(distribution_data);
+        new_distributions.push(created_dist._id);
+        await cloneEmbeddedCourses(
+          old_to_new_course_map,
+          old_dist.courses,
+          new_dist.courses
         );
-        // when distributions are added the courses will need to be linked
-        returnData(result, res);
+      }
+      roadmap_data.distribution_ids = new_distributions;
+      // now clone the linked year documents, and courses within them
+      let new_years = [];
+      const old_year_ids = original_plan.year_ids;
+      for (let i = 0; i < old_year_ids.length; i++) {
+        const old_year = await years.findById(old_year_ids[i]);
+        const year_data = getYearDataForClone(old_year);
+        let created_year = await years.create(year_data);
+        new_years.push(created_year._id);
+        await cloneEmbeddedCourses(
+          old_to_new_course_map,
+          old_year.courses,
+          created_year.courses
+        );
+      }
+      roadmap_data.year_ids = new_years;
+      // now create the plan, and set references in subdocuments
+      roadmapPlans.create(roadmap_data).then(async (created_roadmap_plan) => {
+        const new_course_ids = Array.from(old_to_new_course_map.values());
+        const courseUpdate = courses.updateMany(
+          { _id: { $in: new_course_ids } },
+          { $set: { plan_id: created_roadmap_plan._id } }
+        );
+        const yearUpdate = years.updateMany(
+          { _id: { $in: new_years } },
+          { $set: { plan_id: [created_roadmap_plan._id] } }
+        );
+        const distUpdate = distributions.updateMany(
+          { _id: { $in: new_distributions } },
+          { $set: { plan_id: created_roadmap_plan._id } }
+        );
+        await Promise.all([courseUpdate, yearUpdate, distUpdate]);
+        returnData(created_roadmap_plan, res);
       });
     })
     .catch((err) => errorHandler(res, 400, err));
 });
 
-const yearNameToArrIndex = (name) => {
-  if (name === "AP Equivalents") {
-    return 0;
-  } else if (name === "Freshman") {
-    return 1;
-  } else if (name === "Sophomore") {
-    return 2;
-  } else if (name === "Junior") {
-    return 3;
-  } else if (name === "Senior") {
-    return 4;
+const cloneEmbeddedCourses = async (
+  old_to_new_course_map,
+  old_course_ids,
+  new_course_array
+) => {
+  for (let j = 0; j < old_course_ids.length; j++) {
+    // if the course has already been cloned, use that. Else, clone it
+    if (old_to_new_course_map.has(old_course_ids[j])) {
+      new_course_array.push(old_to_new_course_map.get(old_course_ids[j]));
+    } else {
+      const old_course = await courses.findById(old_course_ids[j], {
+        _id: 0,
+      });
+      const insert_result = await courses.insertMany(old_course);
+      const new_course_id = insert_result._id;
+      new_course_array.push(new_course_id);
+      old_to_new_course_map.set(old_course_ids[j], new_course_id);
+    }
   }
+};
+
+const getPlanDataForClone = (plan) => {
+  let data = {
+    original: plan.id,
+    name: plan.name,
+    majors: plan.majors.slice(),
+    user_id: plan.user_id,
+    expireAt: plan.expireAt,
+  };
+  return data;
+};
+
+const getDistributionDataForClone = (distribution) => {
+  let data = {
+    name: distribution.name,
+    required: distribution.required,
+    planned: distribution.planned,
+    current: distribution.current,
+    satisfied: distribution.satisfied,
+    courses: distribution.courses,
+    user_id: distribution.user_id,
+    expireAt: distribution.expireAt,
+  };
+  return data;
+};
+
+const getYearDataForClone = (year) => {
+  let data = {
+    name: year.name,
+    user_id: year.user_id,
+    expireAt: year.expireAt,
+    year: year.year,
+    courses: year.courses,
+  };
+  return data;
 };
 
 // gets and returns a roadmapPlan based on its id
