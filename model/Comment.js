@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
     This model refers to a specific comment(including replies). Every comment belongs to a thread.
 */
 const commentSchema = new Schema({
-  commenter_id: { type: String, ref: "User", required: true },
+  commenter_id: { type: String, required: true },
   visible_user_id: {
     type: [String],
     ref: "User",

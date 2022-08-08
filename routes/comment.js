@@ -18,7 +18,6 @@ router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
         threads[i] = {
           ...threads[i]._doc,
           comments: await Comments.find({ thread_id: threads[i]._id })
-            .populate("commenter_id", "name")
             .sort({ date: 1 })
             .exec(),
         };
