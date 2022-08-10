@@ -11,13 +11,14 @@ router.post("/api/roadmapPlans/createFromPlan", (req, res) => {
   const old_id = req.body.old_id;
   const description = req.body.description;
   const tags = req.body.tags;
+  const planName = req.body.planName;
   const comments = req.body.allowComment;
   plans
     .findById(old_id)
     .then((retrieved) => {
       let data = {
         original: retrieved.id,
-        name: retrieved.name,
+        name: planName,
         majors: retrieved.majors.slice(),
         year_ids: retrieved.year_ids,
         distribution_ids : retrieved.distribution_ids,
