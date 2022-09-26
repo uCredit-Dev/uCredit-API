@@ -3,7 +3,6 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 const { auth } = require("../util/token");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
-const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 
 const express = require("express");

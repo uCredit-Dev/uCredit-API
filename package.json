@@ -15,8 +15,10 @@
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "helmet": "^4.3.1",
+    "jest": "^27.5.1",
     "mongoose": "^5.11.10",
     "morgan": "^1.10.0",
+    "nodemailer": "^6.7.7",
     "nodemon": "^2.0.6",
     "passport": "^0.4.1",
     "passport-saml": "^2.2.0",
@@ -25,9 +27,6 @@
   "scripts": {
     "start": "nodemon",
     "test": "jest"
-  },
-  "jest": {
-    "testEnvironment": "node"
   },
   "repository": {
     "type": "git",

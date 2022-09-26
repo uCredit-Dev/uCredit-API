@@ -10,6 +10,7 @@ function returnData(data, res) {
 
 //set status code of the response and send error info to the user in json
 function errorHandler(res, status, err) {
+  if (res.headersSent) return; 
   res.status(status).json({
     errors: [
       {
@@ -20,7 +21,8 @@ function errorHandler(res, status, err) {
   });
 }
 
-function distributionCreditUpdate(distribution, course, add) {
+async function distributionCreditUpdate(distribution, course, add) {
+  if (!distribution) return; 
   if (add) {
     distribution.planned += course.credits;
     if (course.taken) {
@@ -34,7 +36,7 @@ function distributionCreditUpdate(distribution, course, add) {
   }
   distribution.satisfied =
     distribution.planned >= distribution.required ? true : false;
-  distribution.save();
+  await distribution.save();
 }
 
 async function postNotification(message, user_id, quick_link_id, link_type) {

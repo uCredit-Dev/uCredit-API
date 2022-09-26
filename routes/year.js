@@ -18,8 +18,12 @@ router.get("/api/years/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findById(plan_id)
-    .populate({ path: "year_ids" })
-    .then((plan) => returnData(plan.year_ids, res))
+    .populate("year_ids")
+    .then((plan) => {
+      plan.populate("year_ids.courses", () => {
+        returnData(plan.year_ids, res);
+      });
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -50,6 +54,10 @@ router.post("/api/years", auth, async (req, res) => {
 router.patch("/api/years/changeOrder", auth, async (req, res) => {
   const year_ids = req.body.year_ids;
   const plan_id = req.body.plan_id;
+  if (!year_ids || !plan_id) {
+    errorHandler(res, 400, "Missing required fields");
+    return;
+  }
   plans
     .findByIdAndUpdate(
       plan_id,
@@ -65,7 +73,12 @@ router.patch("/api/years/updateName", auth, (req, res) => {
   const name = req.body.name;
   const year_id = req.body.year_id;
   if (!name) {
-    errorHandler(err, 400, "must specify a new name");
+    errorHandler(res, 400, "must specify a new name");
+    return;
+  }
+  if (!year_id) {
+    errorHandler(res, 400, "must specify a year_id");
+    return;
   }
   years
     .findByIdAndUpdate(year_id, { name }, { new: true, runValidators: true })
@@ -81,7 +94,12 @@ router.patch("/api/years/updateYear", auth, (req, res) => {
   const year = req.body.year;
   const year_id = req.body.year_id;
   if (!year) {
-    errorHandler(err, 400, "must specify a new year");
+    errorHandler(res, 400, "must specify a new year");
+    return;
+  }
+  if (!year_id) {
+    errorHandler(res, 400, "must specify a year_id");
+    return;
   }
   years
     .findByIdAndUpdate(year_id, { year }, { new: true, runValidators: true })
@@ -95,11 +113,15 @@ router.patch("/api/years/updateYear", auth, (req, res) => {
 //delete plan and its associated courses, remove year_id from the associated plan document
 router.delete("/api/years/:year_id", auth, (req, res) => {
   const year_id = req.params.year_id;
-  years.findByIdAndDelete(year_id).then(async (year) => {
-    year.courses.forEach((c_id) => {
-      courses
-        .findByIdAndDelete(c_id)
-        .then((course) => {
+  if (!year_id || year_id.length < 2) {
+    errorHandler(res, 400, "must specify a valid year_id");
+    return;
+  }
+  years
+    .findByIdAndDelete(year_id)
+    .then(async (year) => {
+      year.courses.forEach((c_id) => {
+        courses.findByIdAndDelete(c_id).then((course) => {
           course.distribution_ids.forEach((id) => {
             distributions
               .findByIdAndUpdate(
@@ -109,23 +131,22 @@ router.delete("/api/years/:year_id", auth, (req, res) => {
               )
               .then((distribution) =>
                 distributionCreditUpdate(distribution, course, false)
-              )
-              .catch((err) => errorHandler(res, 500, err));
+              );
           });
-        })
-        .catch((err) => errorHandler(res, 500, err));
-    });
-    let plan = await plans.findById(year.plan_id);
-    plan.year_ids = plan.year_ids.filter((y) => y != year._id); //remove year_id from plan
-    if (year.year) {
-      //not a preUniversity year, delete last year
-      plan.year_ids.pop();
-    } else {
-      plan.year_ids.shift();
-    }
-    plan.save();
-    returnData(year, res);
-  });
+        });
+      });
+      let plan = await plans.findById(year.plan_id);
+      plan.year_ids = plan.year_ids.filter((y) => y != year._id); //remove year_id from plan
+      if (year.year) {
+        //not a preUniversity year, delete last year
+        plan.year_ids.pop();
+      } else {
+        plan.year_ids.shift();
+      }
+      plan.save();
+      returnData(year, res);
+    })
+    .catch((err) => errorHandler(res, 500, err));
 });
 
 module.exports = router;

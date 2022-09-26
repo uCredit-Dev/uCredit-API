@@ -35,6 +35,7 @@ const courseSchema = new Schema({
   year_id: { type: Schema.Types.ObjectId, ref: "Year" },
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
   user_id: { type: String, required: true },
+  level: { type: String, required: true },
   forceSatisfied: { type: String, required: false },
   expireAt: { type: Date },
 });

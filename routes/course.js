@@ -48,7 +48,9 @@ router.get("/api/coursesByTerm/:plan_id", auth, (req, res) => {
   years
     .findOne({ plan_id, name: year })
     .populate({ path: "courses", match: term })
-    .then((retrievedYear) => returnData(retrievedYear.courses, res))
+    .then((retrievedYear) => {
+      returnData(retrievedYear.courses, res);
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -60,29 +62,28 @@ router.post("/api/courses", auth, async (req, res) => {
     .findById(course.plan_id)
     .then((plan) => {
       course.distribution_ids.forEach((id) => {
-        if (!plan.distribution_ids.includes(id)) {
+        if (!plan.distribution_ids.includes(id)) 
           errorHandler(res, 400, {
             message: "Invalid combination of plan_id and distribution_ids.",
           });
-        }
       });
     })
-    .catch((err) => errorHandler(res, 500, err));
+    .catch((err) => {
+      errorHandler(res, 500, err);
+    });
   courses
     .create(course)
-    .then((retrievedCourse) => {
-      retrievedCourse.distribution_ids.forEach((id) => {
-        distributions
+    .then(async (retrievedCourse) => {
+      for (let id of retrievedCourse.distribution_ids) {
+        const distribution = await distributions
           .findByIdAndUpdate(
             id,
             { $push: { courses: retrievedCourse._id } },
             { new: true, runValidators: true }
           )
-          .then((distribution) =>
-            distributionCreditUpdate(distribution, retrievedCourse, true)
-          )
-          .catch((err) => errorHandler(res, 500, err));
-      });
+        await distributionCreditUpdate(distribution, retrievedCourse, true);
+      }
+      
       //add course id to user plan's year array
       let query = {};
       query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
@@ -120,7 +121,9 @@ router.patch("/api/courses/changeStatus/:course_id", auth, (req, res) => {
         });
         returnData(course, res);
       })
-      .catch((err) => errorHandler(res, 404, err));
+      .catch((err) => {
+        errorHandler(res, 404, err);
+      });
   }
 });
 
@@ -149,7 +152,6 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
         { $pull: { courses: c_id } },
         { new: true, runValidators: true }
       )
-      .then(() => console.log("course_id deleted from old year."))
       .catch((err) => errorHandler(res, 500, err));
 
     years
@@ -159,7 +161,6 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
         { new: true, runValidators: true }
       )
       .then((y) => {
-        console.log("course_id added to new year.");
         courses
           .findByIdAndUpdate(
             c_id,
