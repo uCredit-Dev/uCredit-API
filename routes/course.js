@@ -104,7 +104,7 @@ router.post("/api/courses", async (req, res) => {
           });
       }
       const resp = {
-        ...updatedCourse._doc,
+        course: updatedCourse._doc,
         distributions: updatedDists,
       };
       returnData(resp, res);
@@ -227,19 +227,19 @@ router.delete("/api/courses/:course_id", (req, res) => {
   const c_id = ObjectId(req.params.course_id);
   courses
     .findByIdAndDelete(c_id)
-    .then(async (course) => {
+    .then(async (deletedCourse) => {
       // remove course from distributions and get updated distributions
-      const updatedDists = await removeCourseFromDistribution(course);
+      const updatedDists = await removeCourseFromDistribution(deletedCourse);
 
       //delete course id from user's year array
       let query = {};
-      query[course.year] = course._id; //e.g. { freshman: id }
+      query[deletedCourse.year] = deletedCourse._id; //e.g. { freshman: id }
       plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
-      removeCourseFromYear(course);
+      removeCourseFromYear(deletedCourse);
 
       // return deleted course with modified distributions
       const resp = {
-        ...course,
+        course: deletedCourse,
         distributions: updatedDists,
       };
       returnData(resp, res);
