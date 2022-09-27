@@ -7,7 +7,7 @@ const Schema = mongoose.Schema;
 */
 const planSchema = new Schema({
   name: { type: String, required: true },
-  major_ids: [{ type: String }],
+  major_ids: [{ type: String, required: true }],
   year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   user_id: { type: String, required: true },
   expireAt: { type: Date },
