@@ -10,6 +10,8 @@ const nodemailer = require("nodemailer");
 const express = require("express");
 const router = express.Router();
 const DEBUG = process.env.DEBUG === "True";
+const appPassword = process.env.APP_PASSWORD
+
 
 router.post("/api/planReview/request", async (req, res) => {
   const plan_id = req.body.plan_id;
@@ -188,26 +190,16 @@ async function sendReviewMail(revieweeName, reviewerName, email, plan_id) {
   // let testAccount = await nodemailer.createTestAccount();
 
   let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    service: 'gmail',
     auth: {
-      type: "OAuth2",
-      user: "ucreditdev@gmail.com",
-      clientId:
-        "258377223314-218vsftjcq46a2l43e81hesoo4unmdjg.apps.googleusercontent.com",
-      clientSecret: "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",
-      refreshToken:
-        "1//04imE9pIG-khOCgYIARAAGAQSNwF-L9IrTuI4rKvAo2l8oPA0_HIZhUB98vmO0pvH__GOqn7n3bvNK-s-DcQcaFBr-77OdcsOtj4",
-      accessToken:
-        "ya29.A0AVA9y1sHpW6M88rODXcxlIA7CLXZzT6wyk8Co9HLo8-Da7--qGXnnXJaIDBpB6uUM1BIKa9Jt0VXtorob7HwBTQjHaINxz0uHON0pDgVFdc9CwKNc46DCNJFo5DvthPzvAPnJlCIh2a0G_zL8mHIX_cLZbJ5YUNnWUtBVEFTQVRBU0ZRRTY1ZHI4TDFnMmlYVVhpZGpYNW9SdW5EWFUtdw0163",
-      expires: 1484314697598,
-    },
+      user: 'ucreditdev@gmail.com',
+      pass: appPassword
+    }
   });
 
   // send mail with defined transport object
   await transporter.sendMail({
-    from: "uCredit", // sender address
+    from: "ucreditdev@gmail.com", // sender address
     to: email, // list of receivers
     subject: `Invitation to Review uCredit Plan from ${revieweeName}`, // Subject line
     html: `<div><p>Hello ${reviewerName},</p><p>You have recieved a request to review ${revieweeName}'s uCredit Plan:</p><p>Please click the following link to accept.</p><p>https://ucredit.me/reviewer/${plan_id}</p><p>Best wishes,</p><p>uCredit</p</div>`, // html body
