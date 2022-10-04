@@ -54,7 +54,8 @@ router.post("/api/planReview/request", async (req, res) => {
             reviewee.name,
             reviewer.name,
             reviewer.email,
-            review.plan_id
+            review.plan_id,
+            res
           );
           returnData(review, res);
         })
@@ -184,7 +185,7 @@ router.post("/api/planReview/changeStatus", (req, res) => {
 });
 
 // async..await is not allowed in global scope, must use a wrapper
-async function sendReviewMail(revieweeName, reviewerName, email, plan_id) {
+async function sendReviewMail(revieweeName, reviewerName, email, plan_id, res) {
   // Generate test SMTP service account from ethereal.email
   // Only needed if you don't have a real mail account for testing
   // let testAccount = await nodemailer.createTestAccount();
@@ -196,14 +197,20 @@ async function sendReviewMail(revieweeName, reviewerName, email, plan_id) {
       pass: appPassword
     }
   });
-
-  // send mail with defined transport object
-  await transporter.sendMail({
-    from: "ucreditdev@gmail.com", // sender address
-    to: email, // list of receivers
-    subject: `Invitation to Review uCredit Plan from ${revieweeName}`, // Subject line
-    html: `<div><p>Hello ${reviewerName},</p><p>You have recieved a request to review ${revieweeName}'s uCredit Plan:</p><p>Please click the following link to accept.</p><p>https://ucredit.me/reviewer/${plan_id}</p><p>Best wishes,</p><p>uCredit</p</div>`, // html body
-  });
+  // const reviewer_id = await users.findOne({ email: email })._id.exec();
+  // if (reviewer_id == null) {
+  //   errorHandler(res, 404, { message: "Reviewer not found." });
+  // } else {
+    // const planreview_id = PlanReview.findOne({plan_id: plan_id, reviewer_id: reviewer_id});
+    // const planreviewstring = ObjectID.toString(planreview_id);
+    // send mail with defined transport object
+    await transporter.sendMail({
+      from: "ucreditdev@gmail.com", // sender address
+      to: email, // list of receivers
+      subject: `Invitation to Review uCredit Plan from ${revieweeName}`, // Subject line
+      html: `<div><p>Hello ${reviewerName},</p><p>You have recieved a request to review ${revieweeName}'s uCredit Plan:</p><p>Please click the following link to accept.</p><p>https://ucredit.me/reviewer/${plan_id}</p><p>Best wishes,</p><p>uCredit</p</div>`, // html body
+    });
+  // }
 }
 
 router.delete("/api/planReview/removeReview", (req, res) => {
