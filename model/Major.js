@@ -26,16 +26,16 @@ const majorSchema = new Schema({
       name: { type: String, required: true },
       required_credits: { type: Number, required: true },
       min_credits_per_course: { type: Number, required: true },
-      pathing: { type: Number, default: false },
+      pathing: { type: Number },
       description: { type: String, required: true },
-      criteria: { type: String, required: true },
+      criteria: { type: String },
       user_select: { type: Boolean, default: false }, //if true, user can put any course into this distribution
       double_count: [{ type: String }], // whitelisted distributions that can double count; if undefined, all whitelisted
       fine_requirements: [
         {
           description: { type: String, required: true },
           required_credits: { type: Number, required: true },
-          criteria: { type: String, required: true },
+          criteria: { type: String },
           double_count: [{ type: String }],
         },
       ],
