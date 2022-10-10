@@ -198,7 +198,6 @@ async function sendReviewMail(revieweeName, reviewerName, email, review_id, res)
       pass: appPassword
     }
   });
-  console.log(review_id);
   // send mail with defined transport object
   await transporter.sendMail({
     from: "ucreditdev@gmail.com", // sender address
