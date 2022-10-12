@@ -41,7 +41,7 @@ function createApp() {
     plugins: [BugsnagPluginExpress],
   });
 
-  Bugsnag.notify("test bug notification");
+  Bugsnag.notify("lanching app");
   const middleware = Bugsnag.getPlugin("express");
 
   //use middleware functions
