@@ -17,6 +17,8 @@ const evalRouter = require("./routes/evaluation.js");
 const sisRouter = require("./routes/sisData.js");
 const experimentsRouter = require("./routes/experiments.js");
 const commentRouter = require("./routes/comment.js");
+const Bugsnag = require("@bugsnag/js");
+const BugsnagPluginExpress = require("@bugsnag/plugin-express");
 
 function createApp() {
   const corsOptions = {
@@ -33,7 +35,17 @@ function createApp() {
     credentials: true,
   };
 
+  //error report
+  Bugsnag.start({
+    apiKey: process.env.BUGSNAG_API_KEY,
+    plugins: [BugsnagPluginExpress],
+  });
+
+  Bugsnag.notify("test bug notification");
+  const middleware = Bugsnag.getPlugin("express");
+
   //use middleware functions
+  app.use(middleware.requestHandler); //must keep as the first piece of middleware in the stack
   app.use(cors(corsOptions));
   app.use(helmet());
   app.use(morgan("dev"));
@@ -52,7 +64,9 @@ function createApp() {
   app.use(sisRouter);
   app.use(experimentsRouter);
   app.use(commentRouter);
-
+  // This handles any errors that Express catches. This needs to go before other
+  // error handlers. Bugsnag will call the `next` error handler if it exists.
+  app.use(middleware.errorHandler);
   return app;
 }
 
