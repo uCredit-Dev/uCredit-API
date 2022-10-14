@@ -4,6 +4,10 @@ const { returnData, errorHandler } = require("./helperMethods.js");
 const express = require("express");
 const router = express.Router();
 
+router.get("/api/test", (req, res) => {
+  returnData("test passed", res);
+});
+
 router.get("/api/majors/all", (req, res) => {
   majors
     .find({})
