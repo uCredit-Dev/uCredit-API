@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
@@ -47,7 +48,8 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
   const id = req.params.id;
   users.findById(id).then(async (user) => {
     if (user) {
-      returnData(user, res);
+      const token = createToken(user);
+      returnData({ user, token }, res);
     } else {
       user = {
         _id: id,
