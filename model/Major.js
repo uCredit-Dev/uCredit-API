@@ -35,7 +35,7 @@ const majorSchema = new Schema({
         {
           description: { type: String, required: true },
           required_credits: { type: Number, required: true },
-          criteria: { type: String },
+          criteria: { type: String, default: '' },
           double_count: [{ type: String }],
         },
       ],
