@@ -3,7 +3,7 @@ const {
   returnData,
   errorHandler,
 } = require("./helperMethods.js");
-const { requirementCreditUpdate } = require('./distributionMethods.ts');
+const { requirementCreditUpdate } = require('./distributionMethods.js');
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const plans = require("../model/Plan.js");

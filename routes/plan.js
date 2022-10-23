@@ -6,7 +6,7 @@ const {
 const {
   addMajorDistributions,
   addCourse,
-} = require("./distributionMethods.ts");
+} = require("./distributionMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const fineRequirements = require("../model/FineRequirement.js");
