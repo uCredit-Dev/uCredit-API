@@ -155,20 +155,30 @@ function sendCourseVersion(query, version, res) {
     .catch((err) => errorHandler(res, 400, err));
 }
 
-router.get("/api/getYearRange", (req, res) => {
-  SISCV.find().then((resp) => {
-    let years = { min: Infinity, max: -Infinity };
-    resp.forEach((course) => {
-      course.terms.forEach((term) => {
-        if (parseInt(term.substring(term.length - 4, term.length)) < years.min)
-          years.min = parseInt(term.substring(term.length - 4, term.length));
-        if (parseInt(term.substring(term.length - 4, term.length)) > years.max)
-          years.max = parseInt(term.substring(term.length - 4, term.length));
-      });
-    });
+router.get("/api/getYearRange", async (req, res) => {
+  let years = { min: null, max: null };
 
-    returnData(years, res);
-  });
+  let smallest = 2016;
+  let largest = new Date().getFullYear();
+
+  const terms = ["Fall", "Intersession", "Spring", "Summer"];
+
+  for (let i = smallest; i <= largest; i++) {
+    for (const term of terms) {
+      const resp = await SISCV.findOne({
+        "versions.term": { $in: [term + " " + i] },
+      });
+      if (resp) {
+        if (!years.min) {
+          years.min = i;
+        } else if (!years.max || years.max < i) {
+          years.max = i;
+        }
+      }
+    }
+  }
+
+  returnData(years, res);
 });
 
 module.exports = router;
