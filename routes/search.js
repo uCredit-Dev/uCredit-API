@@ -159,7 +159,7 @@ router.get("/api/getYearRange", async (req, res) => {
   let years = { min: null, max: null };
 
   let smallest = 2016;
-  let largest = new Date().getFullYear();
+  let largest = new Date().getFullYear() + 1;
 
   const terms = ["Fall", "Intersession", "Spring", "Summer"];
 
