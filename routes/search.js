@@ -165,7 +165,8 @@ router.get("/api/getYearRange", (req, res) => {
         years.max = parseInt(term.substring(term.length - 4, term.length));
     })
     returnData(years, res);
-  }); 
+  })
+  .catch((err) => errorHandler(res, 400, err));
 });
 
 module.exports = router;
