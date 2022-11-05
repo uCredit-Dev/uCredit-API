@@ -9,11 +9,13 @@ const plans = require("../model/Plan.js");
 const users = require("../model/User.js");
 const courses = require("../model/Course.js"); 
 const SISCV = require("../model/SISCourseV"); 
+const years = require("../model/Year.js");
 
 //addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
-setLevelInCourses();
+// setLevelInCourses();
+setVersionInCourses();
 
 async function addFieldsToCollection(model) {
   await db.connect();
@@ -79,5 +81,28 @@ async function setLevelInCourses() {
     console.log('matched: %d', res.length); 
     console.log('updated from SISCourseV: %d', updated); 
     console.log('updated from course number: %d', res.length - updated); 
+  }); 
+}
+
+
+/* 
+  Script to add the 'version' field based on term and year fields 
+*/ 
+async function setVersionInCourses() {
+  await db.connect();
+  let updated = 0; 
+  courses.find({ version: { $exists: false } }).then(async (res) => {
+    console.log(res.length);
+    for (let course of res) {
+      updated++; 
+      let version = course.term.toLowerCase(); 
+      const year = await years.findById(course.year_id);
+      version = version.charAt(0).toUpperCase() + version.slice(1) + " " + year.year;
+      course.version = version; 
+      console.log(course.title + ": " + course.version);
+      course.save(); 
+    }
+    console.log('matched: %d', res.length); 
+    console.log('updated: %d', updated); 
   }); 
 }
