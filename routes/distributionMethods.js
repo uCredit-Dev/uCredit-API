@@ -207,11 +207,12 @@ async function requirementCreditUpdate(requirement, course, add) {
     if (course.taken) {
       requirement.current += course.credits;
     }
-  } else {
-    // subtract
-    requirement.planned -= course.credits;
-    if (course.taken) {
-      requirement.current -= course.credits;
+  } else {    // subtract 
+    if (requirement.planned >= course.credits) {
+      requirement.planned -= course.credits;
+      if (course.taken) {
+        requirement.current -= course.credits;
+      }
     }
   }
   if (requirement.name) {
@@ -266,6 +267,8 @@ const checkCriteriaSatisfied = (criteria, course) => {
     return true;
   }
   const boolExpr = getCriteriaBoolExpr(criteria, course);
+  // console.log(criteria);
+  // console.log(boolExpr);
   if (boolExpr.length !== 0) {
     //eslint-disable-next-line no-eval
     return eval(boolExpr);

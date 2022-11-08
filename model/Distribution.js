@@ -12,7 +12,7 @@ const distributionSchema = new Schema({
   name: { type: String, required: true },
   required_credits: { type: Number, required: true },
   description: { type: String, required: true },
-  criteria: { type: String, required: true },
+  criteria: { type: String, default: '' },
   min_credits_per_course: { type: Number, required: true },
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },

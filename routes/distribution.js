@@ -2,7 +2,6 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
-const plans = require("../model/Plan.js");
 
 const express = require("express");
 const router = express.Router();
@@ -19,10 +18,11 @@ router.get("/api/distributions/:distribution_id", (req, res) => {
 });
 
 //get all distributions in a plan
-router.get("/api/distributionsByPlan/:plan_id", (req, res) => {
-  const plan_id = req.params.plan_id;
+router.get("/api/distributionsByPlan", (req, res) => {
+  const plan_id = req.query.plan_id;
+  const major_id = req.query.major_id;
   distributions
-    .find({ plan_id: req.params.plan_id })
+    .find({ plan_id, major_id })
     .populate("fineReq_ids")
     .then((distributions) => returnData(distributions, res))
     .catch((err) => errorHandler(res, 400, err));

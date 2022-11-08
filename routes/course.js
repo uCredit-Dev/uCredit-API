@@ -234,7 +234,7 @@ router.delete("/api/courses/:course_id", (req, res) => {
       //delete course id from user's year array
       let query = {};
       query[deletedCourse.year] = deletedCourse._id; //e.g. { freshman: id }
-      plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
+      plans.findByIdAndUpdate(deletedCourse.plan_id, { $pull: query }).exec();
       removeCourseFromYear(deletedCourse);
 
       // return deleted course with modified distributions
