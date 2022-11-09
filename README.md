@@ -1,7 +1,3 @@
-# Matt and Brayden's STAD Submission
-Please read or open up the STAD Project Submission pdf on your browser to read the details and instructions of all of our testing.
-Alternatively, for a better viewing experience, you can go to this Google Drive Link: https://docs.google.com/document/d/1ienJd1hVtJws5pcoPwKkkFEEJ8L4Ux1cR6I8UMQAFPE/edit?usp=sharing
-
 # uCredit-API
 
 To run program from a fresh clone:
