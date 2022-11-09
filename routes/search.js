@@ -155,9 +155,12 @@ function sendCourseVersion(query, version, res) {
     .catch((err) => errorHandler(res, 400, err));
 }
 
+// return min and max possible years for current courses in db 
 router.get("/api/getYearRange", (req, res) => {
+  // .distinct returns an array of all possible elements in the "terms" array 
   SISCV.distinct("terms").then((resp) => {
     let years = { min: Infinity, max: -Infinity };
+    // parse term for year value and update min / max 
     resp.forEach((term) => {
       if (parseInt(term.substring(term.length - 4, term.length)) < years.min)
         years.min = parseInt(term.substring(term.length - 4, term.length));
