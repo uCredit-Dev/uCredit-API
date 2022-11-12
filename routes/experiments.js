@@ -5,6 +5,10 @@ const ApiError = require("../model/ApiError");
 const router = express.Router();
 const experiments = new ExperimentDao();
 
+router.get("/api/test", (req, res) => {
+  returnData("test passed", res);
+});
+
 router.get("/api/experiments/allExperiments", async (req, res, next) => {
   try {
     const data = await experiments.retrieveAll();
