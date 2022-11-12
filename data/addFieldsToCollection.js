@@ -7,10 +7,52 @@
 const db = require("./db");
 const plans = require("../model/Plan.js");
 const users = require("../model/User.js");
+const siscoursev = require("../model/SISCourseV.js");
 
 //addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
+// removeTerms(); 
+
+// functions that makes sure terms and versions are unique per term offered 
+// takes ~10 minutes to run 
+async function removeTerms() {
+  await db.connect();
+  console.log("db connected~\n");
+  // aggregate assigns correct terms field with no duplicate terms 
+  siscoursev.aggregate([
+    {"$addFields": {
+      "terms": {"$setUnion": ["$terms", []]}
+    }}
+  ]).then(async (res) => {
+    console.log("Finished aggregating!\n");
+    let count = 0; 
+    for (let c of res) {
+      // get corresponding course 
+      const course = await siscoursev.findById(c._id); 
+      if (course.terms.length != c.terms.length) {
+        // update with unique terms 
+        course.terms = c.terms; 
+        // update with unique versions 
+        const terms = []; 
+        const versions = [];
+        course.versions.forEach((v) => {
+          if (!terms.includes(v.term)) {
+            terms.push(v.term);
+            versions.push(v);
+          }
+        })
+        course.versions = versions; 
+        // save document 
+        course.save(); 
+        count++; 
+        console.log(c.title + " updated!\n"); 
+      }
+    }
+    console.log(count + " courses successfully updated!\n")
+  })
+  .catch((err) => console.log(err));
+}
 
 async function addFieldsToCollection(model) {
   await db.connect();
