@@ -2,8 +2,11 @@ require("dotenv").config(); //search for env variables
 const mongoose = require("mongoose");
 
 //set up db connection link
+//if debug, connect to local docker container
+//else, connect to dev or prod db URI in .env file
 const debug = process.env.DEBUG === "True";
 const URI = debug ? "mongodb://db:27017/debug" : process.env.URI; 
+
 //config connect options
 const option = {
   useNewUrlParser: true,
