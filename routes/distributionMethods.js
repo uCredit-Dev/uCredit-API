@@ -6,7 +6,6 @@ const Plans = require("../model/Plan.js");
 const FineRequirements = require("../model/FineRequirement.js");
 var ObjectId = require("mongoose").Types.ObjectId;
 
-
 // Adding new distributions if new major is added
 async function addMajorDistributions(plan) {
   for (let m_id of plan.major_ids) {
@@ -28,14 +27,13 @@ async function addMajorDistributions(plan) {
           criteria: dist_object.criteria,
           min_credits_per_course: dist_object.min_credits_per_course,
           // optional fields
-          user_select: dist_object.user_select, 
-          pathing: dist_object.pathing, 
+          user_select: dist_object.user_select,
+          pathing: dist_object.pathing,
           double_count: dist_object.double_count,
         };
         // create new distribution documents
-        await Distributions
-          .create(distribution_to_post)
-          .then(async (retrievedDistribution) => {
+        await Distributions.create(distribution_to_post).then(
+          async (retrievedDistribution) => {
             for (let f_req of dist_object.fine_requirements) {
               let fineReq_to_post = {
                 description: f_req.description,
@@ -44,17 +42,18 @@ async function addMajorDistributions(plan) {
                 plan_id: plan._id,
                 major_id: major._id,
                 distribution_id: retrievedDistribution._id,
-                double_count: f_req.double_count,            // optional
+                double_count: f_req.double_count, // optional
               };
               // create new fine requirement documents
-              await FineRequirements
-                .create(fineReq_to_post)
-                .then(async (fineReq) => {
+              await FineRequirements.create(fineReq_to_post).then(
+                async (fineReq) => {
                   retrievedDistribution.fineReq_ids.push(fineReq._id);
                   await retrievedDistribution.save();
-                });
+                }
+              );
             }
-          });
+          }
+        );
       }
       await addCourses(plan, m_id);
     }
@@ -69,12 +68,13 @@ async function addCourses(plan, m_id) {
   }
 }
 
-// add courses to distributions of a plan 
-// can specify majors if necessary 
+// add courses to distributions of a plan
+// can specify majors if necessary
 async function addCourseToDistributions(course, majors) {
   const plan = await Plans.findById(course.plan_id).exec();
-  let major_ids = majors; 
-  if (!major_ids) {      // if undefined, add to all majors of plan
+  let major_ids = majors;
+  if (!major_ids) {
+    // if undefined, add to all majors of plan
     major_ids = plan.major_ids;
   }
   // process distributions by major
@@ -82,9 +82,8 @@ async function addCourseToDistributions(course, majors) {
     let distSatisfied = undefined; // store first satisfied distribution
     let distDoubleCount = ["All"];
     // process all distributions of current major
-    await Distributions
-      .find({ plan_id: course.plan_id, major_id: m_id })
-      .then(async (distObjs) => {
+    await Distributions.find({ plan_id: course.plan_id, major_id: m_id }).then(
+      async (distObjs) => {
         for (let distObj of distObjs) {
           // check that course can satisfy distribution w/ double_count rules
           if (
@@ -103,7 +102,8 @@ async function addCourseToDistributions(course, majors) {
             }
           }
         }
-      });
+      }
+    );
     // if course belongs to no distributions and satisfies a satisfied distribution,
     // add id to course but don't update distribution obj
     await Courses.findById(course._id).then((updatedCourse) => {
@@ -115,8 +115,8 @@ async function addCourseToDistributions(course, majors) {
   }
 }
 
-// removes a course from all of its distributions and fine requirements 
-// sets satisfied and returns updated distributions 
+// removes a course from all of its distributions and fine requirements
+// sets satisfied and returns updated distributions
 async function removeCourseFromDistribution(course) {
   let updatedDists = [];
   // remove course from fineReqs
@@ -126,8 +126,7 @@ async function removeCourseFromDistribution(course) {
   }
   // remove course from distributions
   for (let id of course.distribution_ids) {
-    await Distributions
-      .findById(id)
+    await Distributions.findById(id)
       .populate("fineReq_ids")
       .then(async (distribution) => {
         await requirementCreditUpdate(distribution, course, false);
@@ -155,10 +154,10 @@ async function removeCourseFromDistribution(course) {
 // return true if course updated distribution
 const updateDistribution = async (distribution_id, course_id) => {
   let course = await Courses.findById(ObjectId(course_id)).exec();
-  await Distributions.findById(ObjectId(distribution_id)) 
-    .then(async (distribution) => {
+  await Distributions.findById(ObjectId(distribution_id)).then(
+    async (distribution) => {
       if (!distribution || !course) return;
-      // update distribution credits if no overflow 
+      // update distribution credits if no overflow
       if (distribution.planned < distribution.required_credits) {
         await requirementCreditUpdate(distribution, course, true);
       }
@@ -181,7 +180,7 @@ const updateDistribution = async (distribution_id, course_id) => {
           await course.save();
         }
       }
-      // update satisfied with pathing or fine requirements 
+      // update satisfied with pathing or fine requirements
       if (distribution.planned >= distribution.required_credits) {
         if (distribution.pathing) {
           await processPathing(distribution);
@@ -195,28 +194,33 @@ const updateDistribution = async (distribution_id, course_id) => {
           await distribution.save();
         }
       }
-    });
+    }
+  );
 };
 
 // updates planned, current, and satisfied with added / removed course
 // ***requirement can be distribution OR fine requirement
 async function requirementCreditUpdate(requirement, course, add) {
-  if (add) {   // add 
+  if (add) {
+    // add
     requirement.planned += course.credits;
     if (course.taken) {
       requirement.current += course.credits;
     }
-  } else {    // subtract 
+  } else {
+    // subtract
     requirement.planned -= course.credits;
     if (course.taken) {
       requirement.current -= course.credits;
     }
   }
-  if (requirement.name) {            // distribution
+  if (requirement.name) {
+    // distribution
     if (requirement.planned < requirement.required_credits) {
       requirement.satisfied = false; // true check later with pathing
     }
-  } else {                           // finereq
+  } else {
+    // finereq
     if (requirement.planned >= requirement.required_credits) {
       requirement.satisfied = true;
     } else {
@@ -253,7 +257,7 @@ const checkAllFines = async (distribution) => {
       }
     });
   }
-  return true; // all fines satisfied 
+  return true; // all fines satisfied
 };
 
 // returns if a course satisfies a criteria
@@ -302,7 +306,7 @@ const getCriteriaBoolExpr = (criteria, course) => {
 };
 
 // handles different tags (C, T, D, Y, A, N, W, L) in criteria string
-const handleTagType = (splitArr,index, course) => {
+const handleTagType = (splitArr, index, course) => {
   let updatedConcat;
   switch (splitArr[index + 1]) {
     case "C": // Course Number
@@ -423,6 +427,6 @@ module.exports = {
   checkCriteriaSatisfied,
   updateDistribution,
   requirementCreditUpdate,
-  addMajorDistributions, 
-  addCourses
+  addMajorDistributions,
+  addCourses,
 };
