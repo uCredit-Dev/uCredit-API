@@ -3,7 +3,7 @@ const plans = require("../model/Plan.js");
 const Users = require("../model/User.js");
 const siscoursev = require("../model/SISCourseV.js");
 
-deleteRemovedPlansFromUser();
+// deleteRemovedPlansFromUser();
 // deleteDupVersionsFromCourse();
 
 /* Remove plan ids that no longer exist in the Plan collection from users's plan_ids field */
@@ -30,31 +30,32 @@ async function deleteRemovedPlansFromUser() {
 
 /* 
     Function that removes duplicate terms and versions of a SISCourse with versions 
-    Takes up to 10 minutes to run 
 */ 
 async function deleteDupVersionsFromCourse() {
     await db.connect();
     console.log("db connected~\n");
     // aggregate assigns correct terms field with no duplicate terms 
-    siscoursev.aggregate([
-      {"$addFields": {
-        "terms": {"$setUnion": ["$terms", []]}
-      }}
-    ]).then(async (res) => {
-      console.log("Finished aggregating!\n");
+    siscoursev.find({}).then(async (res) => {
+      console.log("Fetched all courses!\n");
       let count = 0; 
-      for (let c of res) {
-        // get corresponding course 
-        const course = await siscoursev.findById(c._id); 
-        if (course.terms.length != c.terms.length) {
+      for (let course of res) {
+        // get terms array with no duplicates 
+        const terms = [];
+        course.terms.forEach((term) => {
+          if (!terms.includes(term)) {
+            terms.push(term);
+          }
+        });
+        // if there were duplicates, 
+        if (course.terms.length != terms.length) {
           // update with unique terms 
-          course.terms = c.terms; 
+          course.terms = terms; 
           // update with unique versions 
-          const terms = []; 
+          const newTerms = []; 
           const versions = [];
           course.versions.forEach((v) => {
-            if (!terms.includes(v.term)) {
-              terms.push(v.term);
+            if (!newTerms.includes(v.term)) {
+              newTerms.push(v.term);
               versions.push(v);
             }
           })
@@ -62,7 +63,7 @@ async function deleteDupVersionsFromCourse() {
           // save document 
           course.save(); 
           count++; 
-          console.log(c.title + " updated!\n"); 
+          console.log(course.title + " updated!\n"); 
         }
       }
       console.log(count + " courses successfully updated!\n")
