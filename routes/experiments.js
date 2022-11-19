@@ -9,9 +9,9 @@ const experiments = new ExperimentDao();
 
 // health check path that allows render to confirm server is up 
 // restart app automatically if unresponsive or errors
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   // simple fail proof db query 
-  majors
+  await majors
     .findOne({})
     .then((major) => returnData("Welcome to uCredit backend!", res))
     .catch((err) => errorHandler(res, 500, err));
