@@ -13,6 +13,7 @@ router.get("/api/distributions/:distribution_id", (req, res) => {
   const d_id = req.params.distribution_id;
   distributions
     .findById(d_id)
+    .populate("fineReq_ids")
     .then((distribution) => returnData(distribution, res))
     .catch((err) => errorHandler(res, 400, err));
 });

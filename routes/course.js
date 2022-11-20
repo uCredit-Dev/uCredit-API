@@ -73,18 +73,15 @@ router.post("/api/courses", async (req, res) => {
     .create(courseBody)
     .then(async (retrievedCourse) => {
       // find year obj and insert course id to array
+      console.log(retrievedCourse);
       await years
-        .findOneAndUpdate(
-          {
-            $and: [
-              { plan_id: retrievedCourse.plan_id },
-              { name: retrievedCourse.year },
-            ],
-          },
+        .findByIdAndUpdate(
+          retrievedCourse.year_id, 
           { $push: { courses: retrievedCourse._id } },
           { new: true, runValidators: true }
         )
         .then(async (year) => {
+          console.log(year);
           retrievedCourse.year_id = year._id; // set year_id
           await retrievedCourse.save();
         });
