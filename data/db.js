@@ -2,10 +2,10 @@ require("dotenv").config(); //search for env variables
 const mongoose = require("mongoose");
 
 //set up db connection link
-const password = process.env.DB_ADMIN_PASSWORD;
-const dbname = "ucredit-db";
+//if debug, connect to local docker container
+//else, connect to dev or prod db URI in .env file
 const debug = process.env.DEBUG === "True";
-const URI = debug ? "mongodb://db:27017/debug" : `mongodb+srv://ucredit-admin:${password}@cluster0.ccsle.mongodb.net/${dbname}?retryWrites=true&w=majority`;
+const URI = debug ? "mongodb://db:27017/debug" : process.env.URI; 
 //config connect options
 const option = {
   useNewUrlParser: true,
