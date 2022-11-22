@@ -25,6 +25,8 @@ const terms = [
   "Fall 2021",
   "Intersession 2022",
   "Spring 2022",
+  "Fall 2022",
+  "Spring 2023",
 ]; //, "Fall 2019", "Spring 2020", "Spring 2021", "Spring 2022"]; //specify the terms you want to cache
 
 cache();
@@ -63,9 +65,9 @@ async function cleanDup(term) {
       console.log("length before filter dup is " + data.length);
       for (let i in data) {
         const course = data[i];
-        //check if course is a dup
+        // check if course is a dup: same title and number 
         const index = filteredCourses.findIndex(
-          (e) => e.OfferingName == course.OfferingName
+          (e) => (e.OfferingName == course.OfferingName && e.Title == course.Title)
         );
         if (index == -1) {
           filteredCourses.push(course);
@@ -92,12 +94,12 @@ async function extractProperty(courses, term) {
       if (courseFromDB == null) {
         pushNewCourse(course.OfferingName, course.SectionName, briefCourses, term);
       } else {
-        //update terms offered and add version
-        //console.log("-----found dup in db: ", courseFromDB.title);
-        //courseFromDB.terms.splice(0, 1);
-        courseFromDB.terms.unshift(course.Term);
-        pushNewVersion(course.OfferingName, course.SectionName, courseFromDB, term);
-        dupCount++;
+        // if course version not already in db: 
+        if (!courseFromDB.terms.includes(course.Term)) {
+          courseFromDB.terms.unshift(course.Term);
+          pushNewVersion(course.OfferingName, course.SectionName, courseFromDB, term);
+          dupCount++;
+        } 
       }
     } else {
       console.log("******bypassed ", course.Title, course.OfferingName, course.Credits);
@@ -106,7 +108,7 @@ async function extractProperty(courses, term) {
   }
   await sleep(10000);
   console.log("new course amount saved to db: " + briefCourses.length);
-  console.log("dupCount across db: " + dupCount);
+  console.log("courses with new versions across db: " + dupCount);
   console.log("bypassed: " + bp);
   return briefCourses;
 }
@@ -156,10 +158,10 @@ async function pushNewCourse(offeringName, section, briefCourses, TERM) {
           },
         ],
       };
-      if (brief.title != undefined) {
+      if (brief.title !== undefined) {
         briefCourses.push(brief);
       }
-      console.log("$$$$$new course:", brief.title);
+      console.log("$$$$$$new course:", brief.title);
     })
     .catch((err) => console.log(err));
 }
@@ -187,7 +189,7 @@ async function pushNewVersion(offeringName, section, courseFromDB, TERM) {
         restrictions: details.Restrictions,
         tags: details.PosTags.length == 0 ? [] : getField(details.PosTags, "Tag"),
       };
-      if (version.wi != undefined) {
+      if (version.wi !== undefined) {
         courseFromDB.versions.unshift(version);
         courseFromDB.save();
       }
