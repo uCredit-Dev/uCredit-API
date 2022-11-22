@@ -18,8 +18,8 @@ const PvK = process.env.PRIVATE_KEY;
 const DEBUG = process.env.DEBUG === "True";
 
 const JHU_SSO_URL = "https://idp.jh.edu/idp/profile/SAML2/Redirect/SSO";
-const SP_NAME = "https://ucredit-api.herokuapp.com";
-const BASE_URL = "https://ucredit-api.herokuapp.com";
+const SP_NAME = "https://ucredit-api.onrender.com";
+const BASE_URL = "https://ucredit-api.onrender.com";
 
 const displayName = "urn:oid:2.16.840.1.113730.3.1.241";
 const grade = "user_field_job_title";
