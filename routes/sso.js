@@ -109,8 +109,6 @@ router.post(
       user.school = req.user[school];
       user.save();
     }
-    // TODO: store token in session 
-    const token = createToken(user);
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
     await sessions.findByIdAndUpdate(
       id,
@@ -126,7 +124,7 @@ router.post(
 );
 
 //retrieve user object from db
-router.get("/api/verifyLogin/:hash", auth, (req, res) => {
+router.get("/api/verifyLogin/:hash", (req, res) => {
   const hash = req.params.hash;
   sessions.findOne({ hash }).then((user) => {
     if (user === null) {
@@ -134,7 +132,10 @@ router.get("/api/verifyLogin/:hash", auth, (req, res) => {
     } else {
       users
         .findById(user._id)
-        .then((retrievedUser) => returnData(retrievedUser, res))
+        .then((retrievedUser) => {
+          const token = createToken(retrievedUser);
+          returnData({retrievedUser, token}, res)
+        })
         .catch((err) => errorHandler(res, 500, res));
     }
   });
