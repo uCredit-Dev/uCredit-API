@@ -12,6 +12,7 @@ const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
+const { auth } = require("../util/token");
 
 const express = require("express");
 const router = express.Router();
@@ -24,7 +25,7 @@ router.get("/api/addSamples", (req, res) => {
   addSampleCourses(courses).catch((err) => errorHandler(res, 500, err));
 });*/
 //return all courses of the user's plan
-router.get("/api/coursesByPlan/:plan_id", (req, res) => {
+router.get("/api/coursesByPlan/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   courses
     .findByPlanId(plan_id)
@@ -33,7 +34,7 @@ router.get("/api/coursesByPlan/:plan_id", (req, res) => {
 });
 
 //if distribution_id is not found data field would be an empty array
-router.get("/api/coursesByDistribution/:distribution_id", (req, res) => {
+router.get("/api/coursesByDistribution/:distribution_id", auth, (req, res) => {
   const d_id = req.params.distribution_id;
   courses
     .findByDistributionId(d_id)
@@ -50,7 +51,7 @@ router.get("/api/courses/:course_id", (req, res) => {
 });
 
 // get courses in a plan by term. provide plan id, year, and term
-router.get("/api/coursesByTerm/:plan_id", (req, res) => {
+router.get("/api/coursesByTerm/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   const year = req.query.year;
   const term = req.query.term;
@@ -65,7 +66,7 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
 
 //add course, need to provide course info as json object in request body
 //distribution field is also updated
-router.post("/api/courses", async (req, res) => {
+router.post("/api/courses", auth, async (req, res) => {
   const course = req.body;
   await plans
     .findById(course.plan_id)
@@ -109,7 +110,7 @@ router.post("/api/courses", async (req, res) => {
 
 //switch the "taken" status of a course, need to provide status in req body
 //update distribution credits accordingly
-router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
+router.patch("/api/courses/changeStatus/:course_id", auth, (req, res) => {
   const c_id = req.params.course_id;
   const taken = req.body.taken;
   if (typeof taken !== "boolean") {
@@ -137,7 +138,7 @@ router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
 });
 
 // Updates course
-router.patch("/api/courses/dragged", (req, res) => {
+router.patch("/api/courses/dragged", auth, (req, res) => {
   const c_id = req.body.courseId;
   const newYear_id = req.body.newYear;
   const oldYear_id = req.body.oldYear;
@@ -213,7 +214,7 @@ router.patch("/api/courses/changeDistribution/:course_id"),
 
 //delete a course given course id
 //update associated distribution credits
-router.delete("/api/courses/:course_id", (req, res) => {
+router.delete("/api/courses/:course_id", auth, (req, res) => {
   const c_id = req.params.course_id;
   courses
     .findByIdAndDelete(c_id)

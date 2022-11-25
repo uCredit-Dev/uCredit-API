@@ -1,6 +1,7 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const Threads = require("../model/Thread.js");
 const Comments = require("../model/Comment.js");
+const { auth } = require("../util/token");
 
 const express = require("express");
 const router = express.Router();
@@ -9,7 +10,7 @@ const router = express.Router();
   Returns all threads of a plan with comments populated
   Comments of a thread are sorted by timestamp in ascending order
 */
-router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
+router.get("/api/thread/getByPlan/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   console.log(plan_id);
   Threads.find({ plan_id })
@@ -31,7 +32,7 @@ router.get("/api/thread/getByPlan/:plan_id", (req, res) => {
 /*
   Create a new comment(which results in creating a new thread)
 */
-router.post("/api/thread/new", async (req, res) => {
+router.post("/api/thread/new", auth, async (req, res) => {
   const thread = req.body.thread;
   const comment = req.body.comment;
   console.log(thread, comment);
@@ -55,7 +56,7 @@ router.post("/api/thread/new", async (req, res) => {
 /*
   Add a reply to a thread
 */
-router.post("/api/thread/reply", async (req, res) => {
+router.post("/api/thread/reply", auth, async (req, res) => {
   const comment = req.body.comment;
   Comments.create(comment)
     .then((c) => returnData(c, res))
@@ -65,7 +66,7 @@ router.post("/api/thread/reply", async (req, res) => {
 /*
   Resolve a thread
 */
-router.patch("/api/thread/resolve", (req, res) => {
+router.patch("/api/thread/resolve", auth, (req, res) => {
   const thread_id = req.body.thread_id;
   Threads.findByIdAndUpdate(
     thread_id,
@@ -79,7 +80,7 @@ router.patch("/api/thread/resolve", (req, res) => {
 /*
   Edit a comment
 */
-router.patch("/api/comment", (req, res) => {
+router.patch("/api/comment", auth, (req, res) => {
   const comment_id = req.body.comment_id;
   const message = req.body.message;
   Comments.findByIdAndUpdate(
@@ -94,7 +95,7 @@ router.patch("/api/comment", (req, res) => {
 /*
   Delete a comment
 */
-router.delete("/api/comment", (req, res) => {
+router.delete("/api/comment", auth, (req, res) => {
   const comment_id = req.body.comment_id;
   if (!comment_id) errorHandler(res, 400, { message: "Missing comment_id." });
   else
@@ -106,7 +107,7 @@ router.delete("/api/comment", (req, res) => {
 /*
   Delete a thread and its comments
 */
-router.delete("/api/thread", (req, res) => {
+router.delete("/api/thread", auth, (req, res) => {
   const thread_id = req.body.thread_id;
   if (!thread_id) {
     errorHandler(res, 400, { message: "Missing thread_id." });

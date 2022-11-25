@@ -5,6 +5,7 @@ const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const cryptoRandomString = require("crypto-random-string");
+const { createToken, auth } = require("../util/token");
 
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
@@ -108,6 +109,8 @@ router.post(
       user.school = req.user[school];
       user.save();
     }
+    // TODO: store token in session 
+    const token = createToken(user);
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
     await sessions.findByIdAndUpdate(
       id,
@@ -123,7 +126,7 @@ router.post(
 );
 
 //retrieve user object from db
-router.get("/api/verifyLogin/:hash", (req, res) => {
+router.get("/api/verifyLogin/:hash", auth, (req, res) => {
   const hash = req.params.hash;
   sessions.findOne({ hash }).then((user) => {
     if (user === null) {

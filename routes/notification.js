@@ -1,11 +1,12 @@
 const { returnData, errorHandler } = require("./helperMethods.js");
 const Notifications = require("../model/Notification.js");
+const { auth } = require("../util/token");
 
 const express = require("express");
 const router = express.Router();
 
 /* Get a user's notification */
-router.get("/api/notifications/:user_id", (req, res) => {
+router.get("/api/notifications/:user_id", auth, (req, res) => {
   const user_id = req.params.user_id;
   if (!user_id) {
     errorHandler(res, 400, { message: "Must provide user_id." });
@@ -20,7 +21,7 @@ router.get("/api/notifications/:user_id", (req, res) => {
 });
 
 /* Create a notification */
-router.post("/api/notifications", (req, res) => {
+router.post("/api/notifications", auth, (req, res) => {
   const notification = req.body;
   Notifications.create(notification)
     .then((result) => {
@@ -30,7 +31,7 @@ router.post("/api/notifications", (req, res) => {
 });
 
 /* Read a notification */
-router.post("/api/notifications/read/:notification_id", (req, res) => {
+router.post("/api/notifications/read/:notification_id", auth, (req, res) => {
   const notification_id = req.params.notification_id;
   Notifications.findById(notification_id)
     .then((notification) => {
@@ -46,7 +47,7 @@ router.post("/api/notifications/read/:notification_id", (req, res) => {
 });
 
 /* Delete a notification */
-router.delete("/api/notifications/:notification_id", (req, res) => {
+router.delete("/api/notifications/:notification_id", auth, (req, res) => {
   const notification_id = req.params.notification_id;
   if (!notification_id) {
     errorHandler(res, 400, { message: "Must provide notification_id." });

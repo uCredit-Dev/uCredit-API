@@ -5,13 +5,14 @@ const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
+const { auth } = require("../util/token");
 const reviews = require("../model/PlanReview.js");
 
 const express = require("express");
 const router = express.Router();
 
 //get plan by plan id
-router.get("/api/plans/:plan_id", (req, res) => {
+router.get("/api/plans/:plan_id", auth, (req, res) => {
   const p_id = req.params.plan_id;
   plans
     .findById(p_id)
@@ -33,7 +34,7 @@ router.get("/api/plans/:plan_id", (req, res) => {
 });
 
 //get all plans of a user
-router.get("/api/plansByUser/:user_id", (req, res) => {
+router.get("/api/plansByUser/:user_id", auth, (req, res) => {
   const user_id = req.params.user_id;
   const plansTotal = [];
   users
@@ -68,7 +69,7 @@ router.get("/api/plansByUser/:user_id", (req, res) => {
 
 //create plan and add the plan id to user
 //require user_id in body
-router.post("/api/plans", (req, res) => {
+router.post("/api/plans", auth, (req, res) => {
   const plan = {
     name: req.body.name,
     user_id: req.body.user_id,
@@ -154,7 +155,7 @@ const getStartYear = (year) => {
 
 //delete a plan and its years, distributions and courses
 //return deleted courses
-router.delete("/api/plans/:plan_id", (req, res) => {
+router.delete("/api/plans/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findByIdAndDelete(plan_id)
@@ -178,7 +179,7 @@ router.delete("/api/plans/:plan_id", (req, res) => {
 });
 
 //***need to consider not allow user to change major for a plan ***/
-router.patch("/api/plans/update", (req, res) => {
+router.patch("/api/plans/update", auth, (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
   const name = req.body.name;

@@ -1,6 +1,8 @@
+require("dotenv").config();
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
+const { createToken, auth } = require("../util/token");
 const years = require("../model/Plan.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
@@ -11,7 +13,7 @@ const router = express.Router();
 
 const DEBUG = process.env.DEBUG === "True";
 
-router.get("/api/user", (req, res) => {
+router.get("/api/user", auth, (req, res) => {
   const username = req.query.username || "";
   const affiliation = req.query.affiliation || "";
   const query = {
@@ -46,7 +48,8 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
   const id = req.params.id;
   users.findById(id).then(async (user) => {
     if (user) {
-      returnData(user, res);
+      const token = createToken(user);
+      returnData({ user, token }, res);
     } else {
       user = {
         _id: id,
@@ -57,12 +60,13 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
         school: "jooby hooby",
       };
       user = await users.create(user);
-      returnData(user, res);
+      const token = createToken(user);
+      returnData({ user, token }, res);
     }
   });
 });
 
-router.delete("/api/user/:id", async (req, res) => {
+router.delete("/api/user/:id", auth, async (req, res) => {
   const id = req.params.id;
   const user = await users.findByIdAndDelete(id);
   if (user) {
@@ -76,6 +80,5 @@ router.delete("/api/user/:id", async (req, res) => {
     errorHandler(res, 404, "User not found.");
   }
 });
-// }
 
 module.exports = router;

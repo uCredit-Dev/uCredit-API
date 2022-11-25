@@ -1,5 +1,6 @@
 //routes related to distirbutions CRUD
 const { returnData, errorHandler } = require("./helperMethods.js");
+const { auth } = require("../util/token");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const plans = require("../model/Plan.js");
@@ -10,7 +11,7 @@ const router = express.Router();
 module.exports = router;
 
 //get distribution by id
-router.get("/api/distributions/:distribution_id", (req, res) => {
+router.get("/api/distributions/:distribution_id", auth, (req, res) => {
   const d_id = req.params.distribution_id;
   distributions
     .findById(d_id)
@@ -19,7 +20,7 @@ router.get("/api/distributions/:distribution_id", (req, res) => {
 });
 
 //get all distributions in a plan
-router.get("/api/distributionsByPlan/:plan_id", (req, res) => {
+router.get("/api/distributionsByPlan/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findById(plan_id)
@@ -29,7 +30,7 @@ router.get("/api/distributionsByPlan/:plan_id", (req, res) => {
 });
 
 //create distribution and update its plan
-router.post("/api/distributions", (req, res) => {
+router.post("/api/distributions", auth, (req, res) => {
   const distribution = req.body;
   distributions
     .create(distribution)
@@ -48,7 +49,7 @@ router.post("/api/distributions", (req, res) => {
 });
 
 //change required credit setting for distribution
-router.patch("/api/distributions/updateRequiredCredits", (req, res) => {
+router.patch("/api/distributions/updateRequiredCredits", auth, (req, res) => {
   const required = req.query.required;
   const id = req.query.id;
   distributions
@@ -65,7 +66,7 @@ router.patch("/api/distributions/updateRequiredCredits", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-router.patch("/api/distributions/updateName", (req, res) => {
+router.patch("/api/distributions/updateName", auth, (req, res) => {
   const name = req.query.name;
   const id = req.query.id;
   distributions
@@ -76,7 +77,7 @@ router.patch("/api/distributions/updateName", (req, res) => {
 
 //delete a distribution and its associated courses(if that is the only distirbution the course belongs to) and update it's plan
 //return the deleted courses
-router.delete("/api/distributions/:d_id", (req, res) => {
+router.delete("/api/distributions/:d_id", auth, (req, res) => {
   const d_id = req.params.d_id;
   distributions
     .findByIdAndDelete(d_id)
