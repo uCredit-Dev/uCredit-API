@@ -11,7 +11,7 @@ const planSchema = new Schema({
   year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
-  expireAt: { type: Date },
+  expireAt: { type: Date,  expires: 60*60*24 },
 });
 
 const Plan = mongoose.model("Plan", planSchema);
