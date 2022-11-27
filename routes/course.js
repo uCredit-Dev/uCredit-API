@@ -6,6 +6,7 @@ const {
   returnData,
   errorHandler,
   distributionCreditUpdate,
+  forbiddenHandler,
 } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
@@ -27,15 +28,32 @@ router.get("/api/addSamples", (req, res) => {
 //return all courses of the user's plan
 router.get("/api/coursesByPlan/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
+  // verify that plan belongs to request user 
+  plans.findById(plan_id)
+    .then((plan) => {
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
+    }); 
+  // return courses associated with plan 
   courses
     .findByPlanId(plan_id)
     .then((retrievedCourses) => returnData(retrievedCourses, res))
     .catch((err) => errorHandler(res, 400, err));
 });
 
+// NOT_IN_USE
 //if distribution_id is not found data field would be an empty array
 router.get("/api/coursesByDistribution/:distribution_id", auth, (req, res) => {
   const d_id = req.params.distribution_id;
+  // verify that distribution belongs to request user 
+  distributions.findById(d_id)
+    .then((dist) => {
+      if (req.user._id !== dist.user_id) {
+        return forbiddenHandler(res);
+      }
+    }); 
+  // return courses associated with distribution 
   courses
     .findByDistributionId(d_id)
     .then((retrievedCourses) => returnData(retrievedCourses, res))
@@ -50,6 +68,7 @@ router.get("/api/courses/:course_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+// NOT_IN_USE 
 // get courses in a plan by term. provide plan id, year, and term
 router.get("/api/coursesByTerm/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
@@ -59,7 +78,12 @@ router.get("/api/coursesByTerm/:plan_id", auth, (req, res) => {
     .findOne({ plan_id, name: year })
     .populate({ path: "courses", match: term })
     .then((retrievedYear) => {
-      returnData(retrievedYear.courses, res);
+      // verify that year belongs to request user 
+      if (req.user._id !== retrievedYear.user_id) {
+        forbiddenHandler(res);
+      } else {
+        returnData(retrievedYear.courses, res);
+      }
     })
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -71,6 +95,10 @@ router.post("/api/courses", auth, async (req, res) => {
   await plans
     .findById(course.plan_id)
     .then((plan) => {
+      // verify that plan belongs to request user 
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
       course.distribution_ids.forEach((id) => {
         if (!plan.distribution_ids.includes(id)) 
           errorHandler(res, 400, {
@@ -108,6 +136,7 @@ router.post("/api/courses", auth, async (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+// NOT_IN_USE 
 //switch the "taken" status of a course, need to provide status in req body
 //update distribution credits accordingly
 router.patch("/api/courses/changeStatus/:course_id", auth, (req, res) => {
@@ -143,6 +172,14 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
   const newYear_id = req.body.newYear;
   const oldYear_id = req.body.oldYear;
   const newTerm = req.body.newTerm;
+  // verify that course belongs to user 
+  courses.findById(c_id)
+    .then((course) => {
+      if (req.user._id !== course.user_id) {
+        return forbiddenHandler(res);
+      }
+    })
+  // raise error if required param is undefined 
   if (!(newYear_id || oldYear_id || c_id || newTerm)) {
     errorHandler(res, 400, {
       message:
@@ -156,6 +193,7 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
         newTerm,
     });
   } else {
+    // remove course from old year 
     years
       .findByIdAndUpdate(
         oldYear_id,
@@ -163,7 +201,7 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
         { new: true, runValidators: true }
       )
       .catch((err) => errorHandler(res, 500, err));
-
+    // add course to new year  
     years
       .findByIdAndUpdate(
         newYear_id,
@@ -171,6 +209,7 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
         { new: true, runValidators: true }
       )
       .then((y) => {
+        // update course document with new year 
         courses
           .findByIdAndUpdate(
             c_id,
@@ -216,6 +255,15 @@ router.patch("/api/courses/changeDistribution/:course_id"),
 //update associated distribution credits
 router.delete("/api/courses/:course_id", auth, (req, res) => {
   const c_id = req.params.course_id;
+  // verify that course belongs to req user 
+  courses
+    .findById(c_id)
+    .then((course) => {
+      if (req.user._id !== course.user_id) {
+        return forbiddenHandler(res);
+      }
+    }); 
+  // delete course and update distributions 
   courses
     .findByIdAndDelete(c_id)
     .then((course) => {
