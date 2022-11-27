@@ -44,18 +44,16 @@ const auth = async (req, res, next) => {
   if (authorization) {
     const [_, token] = authorization.trim().split(" ");
     const valid = await verifyToken(token);
-    req.user = decodeToken(token);
-    if (!valid) {
-      return res.status(403).json({
-        message: "You are not authorized to access this resource.",
-      });
+    if (valid) {
+      req.user = decodeToken(token);
+      if (!req.body.user_id || req.body.user_id === req.user._id) {
+        return next();
+      }  
     }
-  } else {
-    return res.status(403).json({
-      message: "You are not authorized to access this resource.",
-    });
-  }
-  next();
+  } 
+  res.status(403).json({
+    message: "You are not authorized to access this resource.",
+  });
 };
 
 module.exports = {
