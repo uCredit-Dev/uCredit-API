@@ -1,5 +1,6 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const { forbiddenHandler } = require("../routes/helperMethods");
 
 const createToken = (user) => {
   console.log("secret:", process.env.JWT_SECRET);
@@ -51,9 +52,7 @@ const auth = async (req, res, next) => {
       }  
     }
   } 
-  res.status(403).json({
-    message: "You are not authorized to access this resource.",
-  });
+  forbiddenHandler(res);
 };
 
 module.exports = {
