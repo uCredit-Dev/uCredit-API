@@ -95,10 +95,6 @@ router.post("/api/courses", auth, async (req, res) => {
   await plans
     .findById(course.plan_id)
     .then((plan) => {
-      // verify that plan belongs to request user 
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
       course.distribution_ids.forEach((id) => {
         if (!plan.distribution_ids.includes(id)) 
           errorHandler(res, 400, {
