@@ -4,6 +4,7 @@ const {
   postNotification,
 } = require("./helperMethods.js");
 const { auth } = require("../util/token");
+const plans = require("../model/Plan.js");
 const planReviews = require("../model/PlanReview.js");
 const users = require("../model/User.js");
 const nodemailer = require("nodemailer");
