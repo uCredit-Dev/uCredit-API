@@ -1,5 +1,5 @@
 //routes related to distirbutions CRUD
-const { returnData, errorHandler } = require("./helperMethods.js");
+const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
 const { auth } = require("../util/token");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
@@ -15,7 +15,14 @@ router.get("/api/distributions/:distribution_id", auth, (req, res) => {
   const d_id = req.params.distribution_id;
   distributions
     .findById(d_id)
-    .then((distribution) => returnData(distribution, res))
+    .then((distribution) => {
+      // verify that distribution belongs to user 
+      if (req.user._id !== distribution.user_id) {
+        forbiddenHandler(res);
+      } else {
+        returnData(distribution, res);
+      }
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -25,7 +32,14 @@ router.get("/api/distributionsByPlan/:plan_id", auth, (req, res) => {
   plans
     .findById(plan_id)
     .populate({ path: "distribution_ids" })
-    .then((plan) => returnData(plan.distribution_ids, res))
+    .then((plan) => {
+      // verify that plan belongs to user 
+      if (req.user._id !== plan.user_id) {
+        forbiddenHandler(res);
+      } else {
+        returnData(plan.distribution_ids, res);
+      }
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -59,6 +73,10 @@ router.patch("/api/distributions/updateRequiredCredits", auth, (req, res) => {
       { new: true, runValidators: true }
     )
     .then((distribution) => {
+      // verify that distribution belongs to user 
+      if (req.user._id !== distribution.user_id) {
+        return forbiddenHandler(res);
+      }
       //recalculate whether distribution is satisfied
       distribution.satisfied = distribution.planned >= distribution.required;
       distribution.save().then((result) => returnData(result, res));
@@ -71,7 +89,14 @@ router.patch("/api/distributions/updateName", auth, (req, res) => {
   const id = req.query.id;
   distributions
     .findByIdAndUpdate(id, { name }, { new: true, runValidators: true })
-    .then((distribution) => returnData(distribution, res))
+    .then((distribution) => {
+      // verify that distribution belongs to user 
+      if (req.user._id !== distribution._id) {
+        forbiddenHandler(res);
+      } else {
+        returnData(distribution, res);
+      }
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
@@ -79,6 +104,13 @@ router.patch("/api/distributions/updateName", auth, (req, res) => {
 //return the deleted courses
 router.delete("/api/distributions/:d_id", auth, (req, res) => {
   const d_id = req.params.d_id;
+  // verify that distribution belongs to user 
+  distributions.findById(d_id)
+    .then((dist) => {
+      if (req.user._id !== dist._id) {
+        return forbiddenHandler(res);
+      } 
+    }); 
   distributions
     .findByIdAndDelete(d_id)
     .then((distribution) => {
