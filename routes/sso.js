@@ -136,7 +136,7 @@ router.get("/api/verifyLogin/:hash", (req, res) => {
           const token = createToken(retrievedUser);
           returnData({retrievedUser, token}, res)
         })
-        .catch((err) => errorHandler(res, 500, res));
+        .catch((err) => errorHandler(res, 500, err));
     }
   });
 });
