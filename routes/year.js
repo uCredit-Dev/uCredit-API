@@ -120,13 +120,13 @@ router.patch("/api/years/updateYear", auth, (req, res) => {
   }
   // check that year belongs to user 
   years.findById(year_id)
-    .then((year) => {
-      if (req.user._id !== year.user_id) {
+    .then((retrievedYear) => {
+      if (req.user._id !== retrievedYear.user_id) {
         return forbiddenHandler(res);
       }
-      year.year = year; 
-      year.save(); 
-      returnData(year, res);
+      retrievedYear.year = year; 
+      retrievedYear.save(); 
+      returnData(retrievedYear, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });

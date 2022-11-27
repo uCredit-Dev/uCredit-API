@@ -120,6 +120,8 @@ router.delete("/api/comment", auth, (req, res) => {
   else {
     Comments.findById(comment_id)
       .then((comment) => {
+        // TODO: comment is null error 
+        // console.log(comment);
         // verify that commenter is request user 
         if (req.user._id !== comment.commenter_id) {
           return forbiddenHandler(res);
