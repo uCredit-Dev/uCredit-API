@@ -18,6 +18,9 @@ router.get("/api/plans/:plan_id", auth, (req, res) => {
     .findById(p_id)
     .populate("year_ids")
     .then((plan) => {
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
       plan.populate("year_ids.courses", () => {
         plan = { ...plan._doc, years: plan.year_ids };
         delete plan.year_ids;
@@ -36,6 +39,9 @@ router.get("/api/plans/:plan_id", auth, (req, res) => {
 //get all plans of a user
 router.get("/api/plansByUser/:user_id", auth, (req, res) => {
   const user_id = req.params.user_id;
+  if (req.user._id !== user_id) {
+    return forbiddenHandler(res);
+  }
   const plansTotal = [];
   users
     .findById(user_id)
@@ -157,6 +163,14 @@ const getStartYear = (year) => {
 //return deleted courses
 router.delete("/api/plans/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
+  // check plan belongs to user 
+  plans.findById(plan_id)
+    .then((plan) => {
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
+    }); 
+  // delete plan 
   plans
     .findByIdAndDelete(plan_id)
     .then((plan) => {
@@ -193,6 +207,14 @@ router.patch("/api/plans/update", auth, (req, res) => {
     if (name) {
       updateBody.name = name;
     }
+    // check plan belongs to user 
+    plans.findById(id)
+      .then((plan) => {
+        if (req.user._id !== plan.user_id) {
+          return forbiddenHandler(res);
+        }
+      }); 
+    // update plan 
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
