@@ -1,4 +1,5 @@
-const { returnData, errorHandler } = require("./helperMethods.js");
+const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
+const Plans = require("../model/Plan.js");
 const Threads = require("../model/Thread.js");
 const Comments = require("../model/Comment.js");
 const { auth } = require("../util/token");
@@ -12,7 +13,12 @@ const router = express.Router();
 */
 router.get("/api/thread/getByPlan/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
-  console.log(plan_id);
+  // verify that plan belongs to request user 
+  Plans.findById(plan_id)
+    .then((plan) => {
+      if (plan.user_id !== req.user._id) 
+        return forbiddenHandler(res); 
+    }); 
   Threads.find({ plan_id })
     .then(async (threads) => {
       for (let i = 0; i < threads.length; i++) {
@@ -36,6 +42,10 @@ router.post("/api/thread/new", auth, async (req, res) => {
   const thread = req.body.thread;
   const comment = req.body.comment;
   console.log(thread, comment);
+  // verify that commenter is request user 
+  if (req.user._id !== comment.commenter_id) {
+    return forbiddenHandler(res);
+  }
   Threads.create(thread)
     .then((t) => {
       comment.thread_id = t._id;
@@ -58,6 +68,10 @@ router.post("/api/thread/new", auth, async (req, res) => {
 */
 router.post("/api/thread/reply", auth, async (req, res) => {
   const comment = req.body.comment;
+  // verify that commenter is request user 
+  if (req.user._id !== comment.commenter_id) {
+    return forbiddenHandler(res);
+  }
   Comments.create(comment)
     .then((c) => returnData(c, res))
     .catch((err) => errorHandler(res, 400, err));
@@ -83,13 +97,18 @@ router.patch("/api/thread/resolve", auth, (req, res) => {
 router.patch("/api/comment", auth, (req, res) => {
   const comment_id = req.body.comment_id;
   const message = req.body.message;
-  Comments.findByIdAndUpdate(
-    comment_id,
-    { message },
-    { new: true, runValidators: true }
-  )
-    .then((comment) => returnData(comment, res))
-    .catch((err) => errorHandler(res, 500, err));
+  Comments.findById(comment_id)
+    .then((comment) => {
+      // verify that commenter is request user 
+      if (req.user._id !== comment.commenter_id) {
+        return forbiddenHandler(res);
+      }
+      // update message 
+      comment.message = message; 
+      comment.save();
+      returnData(comment, res);
+    })
+    .catch((err) => errorHandler(res, 500, err)); 
 });
 
 /*
@@ -98,10 +117,18 @@ router.patch("/api/comment", auth, (req, res) => {
 router.delete("/api/comment", auth, (req, res) => {
   const comment_id = req.body.comment_id;
   if (!comment_id) errorHandler(res, 400, { message: "Missing comment_id." });
-  else
+  else {
+    Comments.findById(comment_id)
+      .then((comment) => {
+        // verify that commenter is request user 
+        if (req.user._id !== comment.commenter_id) {
+          return forbiddenHandler(res);
+        }
+      });
     Comments.findByIdAndDelete(comment_id)
       .then((c) => returnData(c, res))
       .catch((err) => errorHandler(res, 500, err));
+  }
 });
 
 /*
