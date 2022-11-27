@@ -3,6 +3,7 @@ const {
   returnData,
   errorHandler,
   distributionCreditUpdate,
+  forbiddenHandler,
 } = require("./helperMethods.js");
 const { auth } = require("../util/token");
 const courses = require("../model/Course.js");
@@ -20,6 +21,9 @@ router.get("/api/years/:plan_id", auth, (req, res) => {
     .findById(plan_id)
     .populate("year_ids")
     .then((plan) => {
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
       plan.populate("year_ids.courses", () => {
         returnData(plan.year_ids, res);
       });
@@ -58,6 +62,14 @@ router.patch("/api/years/changeOrder", auth, async (req, res) => {
     errorHandler(res, 400, "Missing required fields");
     return;
   }
+  // check that plan belongs to user 
+  plans.findById(plan_id)
+    .then((plan) => {
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
+    })
+  // update plan 
   plans
     .findByIdAndUpdate(
       plan_id,
@@ -80,9 +92,14 @@ router.patch("/api/years/updateName", auth, (req, res) => {
     errorHandler(res, 400, "must specify a year_id");
     return;
   }
-  years
-    .findByIdAndUpdate(year_id, { name }, { new: true, runValidators: true })
+  // check that year belongs to user 
+  years.findById(year_id)
     .then((year) => {
+      if (req.user._id !== year.user_id) {
+        return forbiddenHandler(res);
+      }
+      year.name = name; 
+      year.save(); 
       courses.updateMany({ year_id }, { year: name }).exec();
       returnData(year, res);
     })
@@ -101,11 +118,15 @@ router.patch("/api/years/updateYear", auth, (req, res) => {
     errorHandler(res, 400, "must specify a year_id");
     return;
   }
-  years
-    .findByIdAndUpdate(year_id, { year }, { new: true, runValidators: true })
-    .then((retrievedYear) => {
-      courses.updateMany({ year_id }, { year: retrievedYear.name }).exec();
-      returnData(retrievedYear, res);
+  // check that year belongs to user 
+  years.findById(year_id)
+    .then((year) => {
+      if (req.user._id !== year.user_id) {
+        return forbiddenHandler(res);
+      }
+      year.year = year; 
+      year.save(); 
+      returnData(year, res);
     })
     .catch((err) => errorHandler(res, 400, err));
 });
@@ -117,6 +138,14 @@ router.delete("/api/years/:year_id", auth, (req, res) => {
     errorHandler(res, 400, "must specify a valid year_id");
     return;
   }
+  // check that year belongs to user 
+  years.findById(year_id)
+    .then((year) => {
+      if (req.user._id !== year.user_id) {
+        return forbiddenHandler(res);
+      }
+    })
+  // delete the year 
   years
     .findByIdAndDelete(year_id)
     .then(async (year) => {
