@@ -161,17 +161,20 @@ router.post("/api/planReview/changeStatus", (req, res) => {
       } else if (review.status === "PENDING") {
         errorHandler(res, 400, { message: "Review currently pending." });
       } else {
-        review.status = status;
-        if (status === "UNDERREVIEW") review.requestTime = Date.now();
         const reviewer = await users.findById(review.reviewer_id);
         const reviewee = await users.findById(review.reviewee_id);
-        await sendReviewMail(
-          reviewee.name,
-          reviewer.name,
-          reviewer.email,
-          review._id,
-          res
-        );
+        review.status = status;
+        // send email to review if status UNDERREVIEW
+        if (status === "UNDERREVIEW") {
+          review.requestTime = Date.now();
+          await sendReviewMail(
+            reviewee.name,
+            reviewer.name,
+            reviewer.email,
+            review._id,
+            res
+          );
+        }
         review.save();
         postNotification(
           `A plan review status has changed to ${status}.`,
