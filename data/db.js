@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 //else, connect to dev or prod db URI in .env file
 const debug = process.env.DEBUG === "True";
 const URI = debug ? "mongodb://db:27017/debug" : process.env.URI; 
+
 //config connect options
 const option = {
   useNewUrlParser: true,
