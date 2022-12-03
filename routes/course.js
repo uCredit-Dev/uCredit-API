@@ -55,6 +55,7 @@ router.get("/api/coursesByTerm/:plan_id", (req, res) => {
 
 // add course, need to provide course info as json object in request body
 // year, distribution, and fineReq objects updated
+// returns new course and updated distributions 
 router.post("/api/courses", async (req, res) => {
   const courseBody = req.body;
   await courses
@@ -80,12 +81,10 @@ router.post("/api/courses", async (req, res) => {
       // get all distributions associated by course 
       const updatedDists = [];
       for (let d_id of updatedCourse.distribution_ids) {
-        distributions
+        const dist = await distributions
           .findById(d_id)
-          .populate({ path: "fineReq_ids" })
-          .then((dist) => {
-            updatedDists.push(dist);
-          });
+          .populate({ path: "fineReq_ids" }); 
+        updatedDists.push(dist);
       }
       const resp = {
         course: updatedCourse._doc,
@@ -185,6 +184,7 @@ router.patch("/api/courses/dragged", (req, res) => {
 
 // delete a course given course id
 // update associated distribution credits
+// returns deleted course and updated distributions
 router.delete("/api/courses/:course_id", (req, res) => {
   const c_id = ObjectId(req.params.course_id);
   courses
