@@ -4,7 +4,7 @@ const {
   errorHandler
 }= require("./helperMethods.js");
 const {
-  addMajorDistributions,
+  addPlanDistributions,
   addCourse,
 } = require("./distributionMethods.js");
 const courses = require("../model/Course.js");
@@ -115,8 +115,7 @@ router.post("/api/plans", (req, res) => {
         )
         .exec();
       // add distributions for selected major(s)
-      await addMajorDistributions(retrievedPlan);
-      await retrievedPlan.save();
+      await addPlanDistributions(retrievedPlan);
       const yearName = [
         "AP/Transfer",
         "Freshman",
@@ -233,7 +232,7 @@ router.patch("/api/plans/update", (req, res) => {
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then(async (plan) => {
         // add dists for new major, if any
-        await addMajorDistributions(plan);
+        await addPlanDistributions(plan);
         // remove dists and fineReqs for deleted major, if any
         await distributions.find({ plan_id: plan._id }).then(async (dists) => {
           for (let dist of dists) {

@@ -1,30 +1,18 @@
 //all routes related to retrieve, add, update, delete courses
-const { addSampleUsers } = require("../data/userSamples.js");
-const { addSampleDistributions } = require("../data/distributionSamples.js");
-const { addSampleCourses } = require("../data/courseSamples.js");
 const { returnData, errorHandler } = require("./helperMethods.js");
 const {
   addCourseToDistributions, 
-  removeCourseFromDistribution,
+  removeCourseFromDistributions,
 } = require("./distributionMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
-const fineRequirements = require("../model/FineRequirement.js");
-const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 
 var ObjectId = require("mongodb").ObjectID;
 const express = require("express");
 const router = express.Router();
-/*
-router.get("/api/addSamples", (req, res) => {
-  addSampleUsers(users).catch((err) => errorHandler(res, 500, err));
-  addSampleDistributions(distributions).catch((err) =>
-    errorHandler(res, 500, err)
-  );
-  addSampleCourses(courses).catch((err) => errorHandler(res, 500, err));
-});*/
+
 //return all courses of the user's plan
 router.get("/api/coursesByPlan/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
@@ -73,7 +61,6 @@ router.post("/api/courses", async (req, res) => {
     .create(courseBody)
     .then(async (retrievedCourse) => {
       // find year obj and insert course id to array
-      console.log(retrievedCourse);
       await years
         .findByIdAndUpdate(
           retrievedCourse.year_id, 
@@ -81,19 +68,19 @@ router.post("/api/courses", async (req, res) => {
           { new: true, runValidators: true }
         )
         .then(async (year) => {
-          console.log(year);
           retrievedCourse.year_id = year._id; // set year_id
           await retrievedCourse.save();
         });
       // update plan's distribution objs
-      await addCourseToDistributions(retrievedCourse);
+      const distObjs = await distributions.find({ plan_id: retrievedCourse.plan_id }); 
+      await addCourseToDistributions(retrievedCourse, distObjs);
 
       // get updated course to return (because modified in helper method)
-      const updatedCourse = await courses.findById(retrievedCourse._id).exec();
+      const updatedCourse = await courses.findById(retrievedCourse._id);
       // get all distributions associated by course 
       const updatedDists = [];
       for (let d_id of updatedCourse.distribution_ids) {
-        let dist = await distributions
+        distributions
           .findById(d_id)
           .populate({ path: "fineReq_ids" })
           .then((dist) => {
@@ -196,28 +183,6 @@ router.patch("/api/courses/dragged", (req, res) => {
   }
 });
 
-//change course's distribution, need to provide distribution_ids in req body
-//!!!does not update credit for the distributions!!! need to consider whether the user can change or not
-/*
-router.patch("/api/courses/changeDistribution/:course_id"),
-  (req, res) => {
-    const c_id = req.params.course_id;
-    const distribution_ids = req.body.distribution;
-    if (typeof distribution !== "array") {
-      errorHandler(res, 400, { message: "Invalid distribution." });
-    } else {
-      courses
-        .findByIdAndUpdate(
-          c_id,
-          { distribution_ids },
-          { new: true, runValidators: true }
-        )
-        .then((course) => returnData(course, res))
-        .catch((err) => errorHandler(res, 404, err));
-    }
-  };
-*/
-
 // delete a course given course id
 // update associated distribution credits
 router.delete("/api/courses/:course_id", (req, res) => {
@@ -226,13 +191,13 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .findByIdAndDelete(c_id)
     .then(async (deletedCourse) => {
       // remove course from distributions and get updated distributions
-      const updatedDists = await removeCourseFromDistribution(deletedCourse);
+      const updatedDists = await removeCourseFromDistributions(deletedCourse);
 
       //delete course id from user's year array
       let query = {};
       query[deletedCourse.year] = deletedCourse._id; //e.g. { freshman: id }
-      plans.findByIdAndUpdate(deletedCourse.plan_id, { $pull: query }).exec();
-      removeCourseFromYear(deletedCourse);
+      await plans.findByIdAndUpdate(deletedCourse.plan_id, { $pull: query });
+      await removeCourseFromYear(deletedCourse);
 
       // return deleted course with modified distributions
       const resp = {
@@ -244,8 +209,8 @@ router.delete("/api/courses/:course_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
+//delete course id from user's year.courses array
 async function removeCourseFromYear(course) {
-  //delete course id from user's year array
   years.findById(course.year_id).then(async (y) => {
     const yearArr = y.courses;
     const index = yearArr.indexOf(course._id);

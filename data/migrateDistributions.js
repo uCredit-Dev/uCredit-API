@@ -3,7 +3,7 @@ const {
   updateFieldsInCollection,
 } = require("./addFieldsToCollection.js");
 const {
-  addMajorDistributions,
+  addPlanDistributions,
   addCourses,
 } = require("./distributionMethods.ts");
 const db = require("./db");
@@ -54,7 +54,7 @@ async function dropDistributions() {
 async function addDistributions() {
   await Plans.find({}).then((plans) => {
     for (let plan of plans) {
-      addMajorDistributions(plan);
+      addPlanDistributions(plan);
     }
   });
 }
@@ -64,7 +64,7 @@ async function addAllCourses() {
   await Plans.find({}).then((plans) => {
     for (let plan of plans) {
       for (let m_id of plan.major_ids) {
-        addCourses(plan, m_id); 
+        addCourses(plan._id, m_id); 
       }
     }
   });
