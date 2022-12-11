@@ -1,8 +1,9 @@
 //routes to handle search requests
 const express = require("express");
 const router = express.Router();
-const { returnData, errorHandler } = require("./helperMethods.js");
+const { returnData, errorHandler, trigram } = require("./helperMethods.js");
 const SISCV = require("../model/SISCourseV.js");
+const Year = require("../model/Year.js");
 
 router.get("/api/search/all", (req, res) => {
   SISCV.find({})
@@ -21,12 +22,17 @@ router.get("/api/search/skip/:num", (req, res) => {
 });
 
 //return all versions of the course based on the filters
-router.get("/api/search", (req, res) => {
+router.get("/api/search/:page", async (req, res) => {
+  const page = parseInt(req.params.page) || 0;
+  const PERPAGE = 10;
+  const result = {};
+  // define queryTerm 
   let queryTerm =
     req.query.term === "All" || !req.query.term ? "" : req.query.term;
   if (queryTerm.length > 0) queryTerm += " ";
   queryTerm +=
     req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
+  // construct query 
   const query = constructQuery({
     userQuery: req.query.query,
     school: req.query.school,
@@ -38,24 +44,35 @@ router.get("/api/search", (req, res) => {
     tags: req.query.tags,
     level: req.query.level,
   });
-  SISCV.find(query)
-    .then((results) => {
-      results = results.filter((result) => {
-        for (let version of result.versions) {
-          if (
+  
+  // if (req.query.query.length <= 3) {
+    // simpleSearch();
+    try {
+      const total = await SISCV.countDocuments(query).exec(); 
+      result.pagination = {
+        page: page, 
+        limit: PERPAGE, 
+        last: Math.ceil(total / PERPAGE), 
+        total: total
+      }
+      let courses = await SISCV.find(query).skip((page - 1) * PERPAGE).limit(PERPAGE); 
+      result.courses = courses.filter((course) => {
+        for (let version of course.versions) {
+          return (
             (version.term === queryTerm &&
               req.query.areas &&
               version.areas !== "None") ||
             !req.query.areas
-          ) {
-            return true;
-          }
-          return false;
+          );
         }
       });
-      returnData(results, res);
-    })
-    .catch((err) => errorHandler(res, 500, err.message));
+      returnData(result, res);
+    } catch (err) {
+      errorHandler(res, 500, err.message); 
+    }
+  // } else {
+  //   fuzzySearch();
+  // }
 });
 
 //return the term version of a specific course
