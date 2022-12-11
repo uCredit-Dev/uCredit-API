@@ -51,9 +51,53 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
   const n = await Notifications.create(notification);
   return n;
 }
+
+function trigram(query) {
+  const MIN_LEN = 3; 
+  query = query.toLowerCase();
+  const trigrams = new Set();
+  for (let i = 0; i < query.length - 2; i++) {
+    trigrams.push(query.slice(i, i + 3)); 
+  }
+  return Array.from(trigrams);
+}
+
+function simpleSearch() {
+
+}
+
+async function fuzzySearch(query) {
+  const result = {};
+  const trigrams = trigram(query.userQuery);
+  try {
+    const total = await SISCV.countDocuments(query).exec(); 
+    result.pagination = {
+      page: page, 
+      limit: PERPAGE, 
+      last: Math.ceil(total / PERPAGE), 
+      total: total
+    }
+    let courses = await SISCV.find(query).skip((page - 1) * PERPAGE).limit(PERPAGE); 
+    result.courses = courses.filter((course) => {
+      for (let version of course.versions) {
+        return (
+          (version.term === queryTerm &&
+            req.query.areas &&
+            version.areas !== "None") ||
+          !req.query.areas
+        );
+      }
+    });
+    returnData(result, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
+}
+
 module.exports = {
   returnData,
   errorHandler,
   distributionCreditUpdate,
   postNotification,
+  trigram
 };
