@@ -24,12 +24,19 @@ router.get("/api/addSamples", (req, res) => {
   addSampleCourses(courses).catch((err) => errorHandler(res, 500, err));
 });*/
 //return all courses of the user's plan
-router.get("/api/coursesByPlan/:plan_id", (req, res) => {
+router.get("/api/coursesByPlan/:plan_id", async (req, res) => {
   const plan_id = req.params.plan_id;
-  courses
-    .findByPlanId(plan_id)
-    .then((retrievedCourses) => returnData(retrievedCourses, res))
-    .catch((err) => errorHandler(res, 400, err));
+  const data = [];
+  try {
+    const retrievedCourses = await courses.findByPlanId(plan_id); 
+    for (let course of retrievedCourses) {
+      const sisCourse = await SISCV.findOne({ number: course.number }); 
+      data.push(sisCourse);
+    }
+    returnData(data, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
 });
 
 //if distribution_id is not found data field would be an empty array
