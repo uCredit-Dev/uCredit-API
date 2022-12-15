@@ -1,5 +1,5 @@
 //routes related to Plan CRUD
-const { returnData, errorHandler } = require("./helperMethods.js");
+const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
@@ -85,7 +85,10 @@ router.post("/api/plans", auth, (req, res) => {
   const year = req.body.year;
   const numYears = !req.params.numYears ? 5 : req.params.numYears;
   if (numYears <= 0 || numYears > 5) {
-    errorHandler(res, 400, "numYear must be between 1-5");
+    return errorHandler(res, 400, "numYear must be between 1-5");
+  }
+  if (plan.user_id !== req.user._id) {
+    return forbiddenHandler(res);
   }
   plans
     .create(plan)

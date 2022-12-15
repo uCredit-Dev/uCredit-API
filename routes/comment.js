@@ -41,7 +41,6 @@ router.get("/api/thread/getByPlan/:plan_id", auth, (req, res) => {
 router.post("/api/thread/new", auth, async (req, res) => {
   const thread = req.body.thread;
   const comment = req.body.comment;
-  console.log(thread, comment);
   // verify that commenter is request user 
   if (req.user._id !== comment.commenter_id) {
     return forbiddenHandler(res);
@@ -82,12 +81,20 @@ router.post("/api/thread/reply", auth, async (req, res) => {
 */
 router.patch("/api/thread/resolve", auth, (req, res) => {
   const thread_id = req.body.thread_id;
-  Threads.findByIdAndUpdate(
-    thread_id,
-    { resolved: true },
-    { new: true, runValidators: true }
-  )
-    .then((t) => returnData(t, res))
+  Threads.findById(thread_id)
+    .then((thread) => {
+      // verify plan (and thrad) belongs to req user 
+      Plans.findById(thread.plan_id)
+        .then((plan) => {
+          if (plan.user_id !== req.user._id) {
+            return forbiddenHandler(res);
+          }
+        }); 
+      // update resolved 
+      thread.resolved = true; 
+      thread.save(); 
+      returnData(thread, res);
+    })
     .catch((err) => errorHandler(res, 500, err));
 });
 
@@ -120,8 +127,6 @@ router.delete("/api/comment", auth, (req, res) => {
   else {
     Comments.findById(comment_id)
       .then((comment) => {
-        // TODO: comment is null error 
-        // console.log(comment);
         // verify that commenter is request user 
         if (req.user._id !== comment.commenter_id) {
           return forbiddenHandler(res);
@@ -141,6 +146,18 @@ router.delete("/api/thread", auth, (req, res) => {
   if (!thread_id) {
     errorHandler(res, 400, { message: "Missing thread_id." });
   }
+  // verify plan (and thrad) belongs to req user 
+  Threads.findById(thread_id)
+    .then((thread) => {
+      Plans.findById(thread.plan_id)
+        .then((plan) => {
+          if (plan.user_id !== req.user._id) {
+            return forbiddenHandler(res);
+          }
+        })
+        .catch((err) => errorHandler(res, 500, err))
+    }); 
+  // delete thread and its comments 
   Threads.findByIdAndDelete(thread_id)
     .then((c) => returnData(c, res))
     .catch((err) => errorHandler(res, 500, err));

@@ -39,6 +39,9 @@ router.post("/api/years", auth, async (req, res) => {
     user_id: req.body.user_id,
     year: req.body.year,
   };
+  if (newYear.user_id !== req.user._id) {
+    return forbiddenHandler(res);
+  }
   years
     .create(newYear)
     .then((year) => {

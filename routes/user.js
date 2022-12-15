@@ -66,7 +66,6 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
   });
 });
 
-// NOT_IN_USE
 router.delete("/api/user/:id", auth, async (req, res) => {
   const id = req.params.id;
   if (req.user._id !== id) {

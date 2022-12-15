@@ -23,7 +23,6 @@ router.get("/api/notifications/:user_id", auth, (req, res) => {
   }
 });
 
-// NOT_IN_USE ?
 /* Create a notification */
 router.post("/api/notifications", auth, (req, res) => {
   const notification = req.body;

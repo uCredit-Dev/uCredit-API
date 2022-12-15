@@ -42,7 +42,6 @@ router.get("/api/coursesByPlan/:plan_id", auth, (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-// NOT_IN_USE
 //if distribution_id is not found data field would be an empty array
 router.get("/api/coursesByDistribution/:distribution_id", auth, (req, res) => {
   const d_id = req.params.distribution_id;
@@ -68,7 +67,6 @@ router.get("/api/courses/:course_id", (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-// NOT_IN_USE 
 // get courses in a plan by term. provide plan id, year, and term
 router.get("/api/coursesByTerm/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
@@ -92,6 +90,9 @@ router.get("/api/coursesByTerm/:plan_id", auth, (req, res) => {
 //distribution field is also updated
 router.post("/api/courses", auth, async (req, res) => {
   const course = req.body;
+  if (course.user_id !== req.user._id) {
+    return forbiddenHandler(res);
+  }
   await plans
     .findById(course.plan_id)
     .then((plan) => {
@@ -132,12 +133,20 @@ router.post("/api/courses", auth, async (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-// NOT_IN_USE 
 //switch the "taken" status of a course, need to provide status in req body
 //update distribution credits accordingly
-router.patch("/api/courses/changeStatus/:course_id", auth, (req, res) => {
+router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
   const c_id = req.params.course_id;
   const taken = req.body.taken;
+  // verify that course belongs to user 
+
+  const course = await courses.findById(c_id); 
+  courses.findById(c_id)
+    .then((course) => {
+      if (req.user._id !== course.user_id) {
+        return forbiddenHandler(res);
+      }
+    }); 
   if (typeof taken !== "boolean") {
     errorHandler(res, 400, { message: "Invalid taken status." });
   } else {
@@ -174,7 +183,7 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
       if (req.user._id !== course.user_id) {
         return forbiddenHandler(res);
       }
-    })
+    }); 
   // raise error if required param is undefined 
   if (!(newYear_id || oldYear_id || c_id || newTerm)) {
     errorHandler(res, 400, {
