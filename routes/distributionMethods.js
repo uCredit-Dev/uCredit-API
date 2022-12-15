@@ -109,7 +109,12 @@ async function removeCourseFromDistributions(course) {
   // remove course from distributions
   for (let d_id of course.distribution_ids) {
     const distribution = await Distributions.findById(d_id).populate("fineReq_ids"); 
-    await distCreditUpdate(distribution, course, false);
+    const courses = await Courses.find({ distribution_ids: d_id }); 
+    let total = 0; 
+    for (let c of courses) {
+      total += c.credits; 
+    }
+    distribution.planned = total; 
     // determine distribution satisfied with pathing
     await updateSatisfied(distribution);
     updatedDists.push(distribution);
