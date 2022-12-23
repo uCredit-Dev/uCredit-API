@@ -178,7 +178,7 @@ router.post("/api/planReview/changeStatus", auth, (req, res) => {
     .then(async (review) => {
       if (!review) {
         errorHandler(res, 404, { message: "planReview not found." });
-      } else if (req.user._id !== review._id) {
+      } else if (req.user._id !== review.reviewer_id) {
         forbiddenHandler(res);
       } else if (review.status === "PENDING") {
         errorHandler(res, 400, { message: "Review currently pending." });

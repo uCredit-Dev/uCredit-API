@@ -57,7 +57,5 @@ const auth = async (req, res, next) => {
 
 module.exports = {
   createToken,
-  verifyToken,
-  decodeToken,
   auth,
 };

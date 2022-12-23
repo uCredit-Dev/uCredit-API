@@ -108,7 +108,7 @@ router.delete("/api/distributions/:d_id", auth, async (req, res) => {
   const d_id = req.params.d_id;
   // verify that distribution belongs to user 
   const distribution = await distributions.findById(d_id); 
-  if (req.user._id !== distribution._id) {
+  if (req.user._id !== distribution.user_id) {
     return forbiddenHandler(res);
   } 
   distributions
