@@ -109,7 +109,7 @@ router.post("/api/plans", (req, res) => {
           year: i === 0 ? 0 : startYear + i,
           expireAt:
             retrievedPlan.user_id === "guestUser"
-              ? Date.now() + 60 * 60 * 24 * 1000
+              ? Date.now()
               : undefined,
         };
         const newYear = await years.create(retrievedYear);
