@@ -3,6 +3,8 @@ const {
   errorHandler,
   postNotification,
 } = require("./helperMethods.js");
+const { auth } = require("../util/token");
+const plans = require("../model/Plan.js");
 const planReviews = require("../model/PlanReview.js");
 const users = require("../model/User.js");
 const nodemailer = require("nodemailer");
@@ -13,7 +15,7 @@ const DEBUG = process.env.DEBUG === "True";
 const appPassword = process.env.APP_PASSWORD
 
 
-router.post("/api/planReview/request", async (req, res) => {
+router.post("/api/planReview/request", auth, async (req, res) => {
   const plan_id = req.body.plan_id;
   const reviewee_id = req.body.reviewee_id;
   const reviewee_name = req.body.reviewee_id;
@@ -23,6 +25,8 @@ router.post("/api/planReview/request", async (req, res) => {
       message:
         "Missing plan_id, reviewee_id or reviewer_id in the request body.",
     });
+  } else if (req.user._id !== reviewee_id) {
+    forbiddenHandler(res);
   } else {
     const review = await planReviews
       .findOne({ reviewer_id, reviewee_id, plan_id })
@@ -83,7 +87,7 @@ const confirmPlanReview = (review, res) => {
 };
 
 //reviewer confirms the request, adding the plan id to the whitelisted_plan_ids array, changing the pending status
-router.post("/api/planReview/confirm", (req, res) => {
+router.post("/api/planReview/confirm", auth, (req, res) => {
   const review_id = req.body.review_id;
   if (!review_id) {
     errorHandler(res, 400, {
@@ -94,7 +98,11 @@ router.post("/api/planReview/confirm", (req, res) => {
     .findById(review_id)
     .populate("reviewer_id", "name")
     .then((review) => {
-      confirmPlanReview(review, res);
+      if (req.user._id !== review.reviewer_id) {
+        forbiddenHandler(res);
+      } else {
+        confirmPlanReview(review, res);
+      }
     })
     .catch((err) => errorHandler(res, 500, err));
 });
@@ -115,8 +123,16 @@ router.post("/api/backdoor/planReview/confirm", (req, res) => {
 /*
   Return a list of reviewrs for the plan with populated reviewer info
 */
-router.get("/api/planReview/getReviewers", (req, res) => {
+router.get("/api/planReview/getReviewers", auth, (req, res) => {
   const plan_id = req.query.plan_id;
+  // check that plan belongs to user 
+  plans.findById(plan_id)
+    .then((plan) => {
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
+    }); 
+  // get plan reviews for given plan 
   planReviews
     .find({ plan_id })
     .populate("reviewer_id", "name email affiliation school grade")
@@ -127,8 +143,12 @@ router.get("/api/planReview/getReviewers", (req, res) => {
 /*
   Return a list of reviewrs for the plan with populated reviewer info
 */
-router.get("/api/planReview/plansToReview", (req, res) => {
+router.get("/api/planReview/plansToReview", auth, (req, res) => {
   const reviewer_id = req.query.reviewer_id;
+  // only reviewer can get their plans to review 
+  if (req.user._id !== reviewer_id) {
+    return forbiddenHandler(res);
+  }
   planReviews
     .find({ reviewer_id })
     .populate("reviewee_id", "name email affiliation school grade")
@@ -139,7 +159,7 @@ router.get("/api/planReview/plansToReview", (req, res) => {
 /*
   Return a list of reviewers for the plan with populated reviewer info
 */
-router.post("/api/planReview/changeStatus", (req, res) => {
+router.post("/api/planReview/changeStatus", auth, (req, res) => {
   const review_id = req.body.review_id;
   const status = req.body.status;
   if (
@@ -158,6 +178,8 @@ router.post("/api/planReview/changeStatus", (req, res) => {
     .then(async (review) => {
       if (!review) {
         errorHandler(res, 404, { message: "planReview not found." });
+      } else if (req.user._id !== review.reviewer_id) {
+        forbiddenHandler(res);
       } else if (review.status === "PENDING") {
         errorHandler(res, 400, { message: "Review currently pending." });
       } else {
@@ -210,8 +232,16 @@ async function sendReviewMail(revieweeName, reviewerName, email, review_id, res)
   });
 }
 
-router.delete("/api/planReview/removeReview", (req, res) => {
+router.delete("/api/planReview/removeReview", auth, (req, res) => {
   const review_id = req.query.review_id;
+  // only reviewer or reviewee can delete a review 
+  planReviews.findById(review_id)
+    .then((review) => {
+      if (req.user._id !== review.reviewer_id && req.user._id !== review.reviewee_id) {
+        return forbiddenHandler(res);
+      }
+    })
+  // delete the review 
   planReviews
     .findByIdAndDelete(review_id)
     .then((review) => {

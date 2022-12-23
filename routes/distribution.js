@@ -1,5 +1,6 @@
 //routes related to distirbutions CRUD
-const { returnData, errorHandler } = require("./helperMethods.js");
+const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
+const { auth } = require("../util/token");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const plans = require("../model/Plan.js");
@@ -10,27 +11,44 @@ const router = express.Router();
 module.exports = router;
 
 //get distribution by id
-router.get("/api/distributions/:distribution_id", (req, res) => {
+router.get("/api/distributions/:distribution_id", auth, (req, res) => {
   const d_id = req.params.distribution_id;
   distributions
     .findById(d_id)
-    .then((distribution) => returnData(distribution, res))
+    .then((distribution) => {
+      // verify that distribution belongs to user 
+      if (req.user._id !== distribution.user_id) {
+        forbiddenHandler(res);
+      } else {
+        returnData(distribution, res);
+      }
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
 //get all distributions in a plan
-router.get("/api/distributionsByPlan/:plan_id", (req, res) => {
+router.get("/api/distributionsByPlan/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   plans
     .findById(plan_id)
     .populate({ path: "distribution_ids" })
-    .then((plan) => returnData(plan.distribution_ids, res))
+    .then((plan) => {
+      // verify that plan belongs to user 
+      if (req.user._id !== plan.user_id) {
+        forbiddenHandler(res);
+      } else {
+        returnData(plan.distribution_ids, res);
+      }
+    })
     .catch((err) => errorHandler(res, 400, err));
 });
 
 //create distribution and update its plan
-router.post("/api/distributions", (req, res) => {
+router.post("/api/distributions", auth, (req, res) => {
   const distribution = req.body;
+  if (distribution.user_id !== req.user._id) {
+    return forbiddenHandler(res);
+  }
   distributions
     .create(distribution)
     .then((retrievedDistribution) => {
@@ -48,36 +66,51 @@ router.post("/api/distributions", (req, res) => {
 });
 
 //change required credit setting for distribution
-router.patch("/api/distributions/updateRequiredCredits", (req, res) => {
+router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) => {
   const required = req.query.required;
   const id = req.query.id;
-  distributions
-    .findByIdAndUpdate(
-      id,
-      { required: Number.parseInt(required) },
-      { new: true, runValidators: true }
-    )
-    .then((distribution) => {
-      //recalculate whether distribution is satisfied
-      distribution.satisfied = distribution.planned >= distribution.required;
-      distribution.save().then((result) => returnData(result, res));
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const distribution = await distributions.findById(id); 
+    // verify that distribution belongs to user 
+    if (req.user._id !== distribution.user_id) {
+      return forbiddenHandler(res);
+    }
+    //update distribution required 
+    distribution.required = Number.parseInt(required);
+    //recalculate whether distribution is satisfied
+    distribution.satisfied = distribution.planned >= distribution.required;
+    distribution.save().then((result) => returnData(result, res));
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
-router.patch("/api/distributions/updateName", (req, res) => {
+router.patch("/api/distributions/updateName", auth, async (req, res) => {
   const name = req.query.name;
   const id = req.query.id;
-  distributions
-    .findByIdAndUpdate(id, { name }, { new: true, runValidators: true })
-    .then((distribution) => returnData(distribution, res))
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const distribution = await distributions.findById(id); 
+    // verify that distribution belongs to user 
+    if (req.user._id !== distribution.user_id) {
+      return forbiddenHandler(res);
+    }
+    //update distribution name 
+    distribution.name = name;
+    distribution.save().then((result) => returnData(result, res));
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 //delete a distribution and its associated courses(if that is the only distirbution the course belongs to) and update it's plan
 //return the deleted courses
-router.delete("/api/distributions/:d_id", (req, res) => {
+router.delete("/api/distributions/:d_id", auth, async (req, res) => {
   const d_id = req.params.d_id;
+  // verify that distribution belongs to user 
+  const distribution = await distributions.findById(d_id); 
+  if (req.user._id !== distribution.user_id) {
+    return forbiddenHandler(res);
+  } 
   distributions
     .findByIdAndDelete(d_id)
     .then((distribution) => {
