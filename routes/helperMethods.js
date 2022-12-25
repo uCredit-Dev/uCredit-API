@@ -1,5 +1,6 @@
 //some helper methods for routing
 const Notifications = require("../model/Notification.js");
+const SISCV = require("../model/SISCourseV.js");
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
@@ -52,46 +53,63 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
   return n;
 }
 
-function trigram(query) {
+function ngram(query) {
   const MIN_LEN = 3; 
+  const queryLen = query.length; 
   query = query.toLowerCase();
-  const trigrams = new Set();
-  for (let i = 0; i < query.length - 2; i++) {
-    trigrams.push(query.slice(i, i + 3)); 
-  }
-  return Array.from(trigrams);
-}
-
-function simpleSearch() {
-
-}
-
-async function fuzzySearch(query) {
-  const result = {};
-  const trigrams = trigram(query.userQuery);
-  try {
-    const total = await SISCV.countDocuments(query).exec(); 
-    result.pagination = {
-      page: page, 
-      limit: PERPAGE, 
-      last: Math.ceil(total / PERPAGE), 
-      total: total
+  const ngrams = new Set();
+  ngrams.add(query);
+  for (let substrLen = MIN_LEN; substrLen <= queryLen; substrLen++) {
+    for (let i = 0; i <= queryLen - substrLen; i++) {
+      ngrams.add(query.slice(i, i + substrLen)); 
     }
-    let courses = await SISCV.find(query).skip((page - 1) * PERPAGE).limit(PERPAGE); 
-    result.courses = courses.filter((course) => {
-      for (let version of course.versions) {
-        return (
-          (version.term === queryTerm &&
-            req.query.areas &&
-            version.areas !== "None") ||
-          !req.query.areas
-        );
-      }
-    });
-    returnData(result, res);
-  } catch (err) {
-    errorHandler(res, 500, err.message); 
   }
+  return Array.from(ngrams);
+}
+
+async function simpleSearch(query, page) {
+  const PERPAGE = 10; 
+  const result = {}; 
+  const total = await SISCV.countDocuments(query).exec(); 
+  result.pagination = {
+    page: page, 
+    limit: PERPAGE, 
+    last: Math.ceil(total / PERPAGE), 
+    total: total
+  }
+  let courses = await SISCV.find(query).skip((page - 1) * PERPAGE).limit(PERPAGE); 
+  result.courses = courses; 
+  return result; 
+}
+
+async function fuzzySearch(query, searchTerm, page) {
+  const PERPAGE = 10; 
+  const result = {};
+  const ngrams = ngram(searchTerm);
+  const regNgrams = ngrams.map(tri => new RegExp(tri)); 
+  query['$or'] = [
+    { title: { $in: regNgrams } },
+    { number: { $in: regNgrams } },
+  ]; 
+  // console.log(ngrams, query);
+  const total = await SISCV.countDocuments(query).exec(); 
+  result.pagination = {
+    page: page, 
+    limit: PERPAGE, 
+    last: Math.ceil(total / PERPAGE), 
+    total: total
+  }
+  let courses = await SISCV.find(query); 
+  courses.forEach((course, i) => {
+    ngrams.forEach((gram) => {
+      if (course.title.includes(gram) || course.number.includes(gram)) {
+        courses[i].freq = ++(course.freq) || 1;
+      }
+    })
+  });
+  courses = courses.sort((c1, c2) => c2.freq - c1.freq);
+  result.courses = courses.slice((page - 1) * PERPAGE, page * PERPAGE); 
+  return result; 
 }
 
 module.exports = {
@@ -99,5 +117,6 @@ module.exports = {
   errorHandler,
   distributionCreditUpdate,
   postNotification,
-  trigram
+  simpleSearch,
+  fuzzySearch,
 };

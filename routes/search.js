@@ -1,7 +1,7 @@
 //routes to handle search requests
 const express = require("express");
 const router = express.Router();
-const { returnData, errorHandler, trigram } = require("./helperMethods.js");
+const { returnData, errorHandler, simpleSearch, fuzzySearch } = require("./helperMethods.js");
 const SISCV = require("../model/SISCourseV.js");
 const Year = require("../model/Year.js");
 
@@ -22,17 +22,18 @@ router.get("/api/search/skip/:num", (req, res) => {
 });
 
 //return all versions of the course based on the filters
-router.get("/api/search/:page", async (req, res) => {
-  const page = parseInt(req.params.page) || 0;
-  const PERPAGE = 10;
-  const result = {};
+router.get("/api/search", async (req, res) => {
+  // page is defined or 1 
+  const page = parseInt(req.query.page) || 1;
+  let result = {};
   // define queryTerm 
   let queryTerm =
     req.query.term === "All" || !req.query.term ? "" : req.query.term;
   if (queryTerm.length > 0) queryTerm += " ";
   queryTerm +=
     req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
-  // construct query 
+  // construct query for simple search 
+  const searchTerm = req.query.query; 
   const query = constructQuery({
     userQuery: req.query.query,
     school: req.query.school,
@@ -44,35 +45,31 @@ router.get("/api/search/:page", async (req, res) => {
     tags: req.query.tags,
     level: req.query.level,
   });
-  
-  // if (req.query.query.length <= 3) {
-    // simpleSearch();
-    try {
-      const total = await SISCV.countDocuments(query).exec(); 
-      result.pagination = {
-        page: page, 
-        limit: PERPAGE, 
-        last: Math.ceil(total / PERPAGE), 
-        total: total
-      }
-      let courses = await SISCV.find(query).skip((page - 1) * PERPAGE).limit(PERPAGE); 
-      result.courses = courses.filter((course) => {
-        for (let version of course.versions) {
-          return (
-            (version.term === queryTerm &&
-              req.query.areas &&
-              version.areas !== "None") ||
-            !req.query.areas
-          );
-        }
-      });
-      returnData(result, res);
-    } catch (err) {
-      errorHandler(res, 500, err.message); 
+  // get 10 matching courses in specified page range
+  try {
+    if (searchTerm.length <= 3) {
+      // simple search if term is 3 letters or less 
+      result = await simpleSearch(query, page);
+    } else {
+      // substring search if term is longer than 3 letters
+      result = await fuzzySearch(query, searchTerm, page);
     }
-  // } else {
-  //   fuzzySearch();
-  // }
+    // filter courses to make sure there exists matching version 
+    result.courses = result.courses.filter((course) => {
+      for (let version of course.versions) {
+        if (
+          (queryTerm !== "" && version.term === queryTerm) && 
+          (!req.query.areas || (version.areas && version.areas !== "None"))
+          ) 
+          return true;
+      }
+      return false;
+    });
+    // result includes courses array and pagination data 
+    returnData(result, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
 });
 
 //return the term version of a specific course
