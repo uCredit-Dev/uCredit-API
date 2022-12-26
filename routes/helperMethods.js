@@ -74,10 +74,10 @@ async function simpleSearch(query, page) {
   result.pagination = {
     page: page, 
     limit: PERPAGE, 
-    last: Math.ceil(total / PERPAGE), 
+    last: total <= 100 ? Math.ceil(total / PERPAGE) : 10, 
     total: total
   }
-  let courses = await SISCV.find(query).skip((page - 1) * PERPAGE).limit(PERPAGE); 
+  let courses = await SISCV.find(query).skip((page) * PERPAGE).limit(PERPAGE); 
   result.courses = courses; 
   return result; 
 }
@@ -86,10 +86,11 @@ async function fuzzySearch(query, searchTerm, page) {
   const PERPAGE = 10; 
   const result = {};
   const ngrams = ngram(searchTerm);
-  const regNgrams = ngrams.map(tri => {
-    tri = tri.replace('.', '\\.'); 
-    return new RegExp(tri);
+  const regNgrams = ngrams.map((gram) => {
+    gram = gram.replace('.', '\\.'); 
+    return new RegExp(gram);
   });
+  // TODO: index title and number 
   query['$or'] = [
     { title: { $in: regNgrams } },
     { number: { $in: regNgrams } },
@@ -98,10 +99,10 @@ async function fuzzySearch(query, searchTerm, page) {
   result.pagination = {
     page: page, 
     limit: PERPAGE, 
-    last: Math.ceil(total / PERPAGE), 
-    total: total
+    last: total <= 100 ? Math.ceil(total / PERPAGE) : 10, 
+    total: total <= 100 ? total : 100, 
   }
-  let courses = await SISCV.find(query);
+  let courses = await SISCV.find(query); 
   courses.forEach((course, i) => {
     for (let gram of ngrams) {
       if (course.title.toLowerCase().includes(gram) || course.number.toLowerCase().includes(gram)) {
@@ -110,7 +111,7 @@ async function fuzzySearch(query, searchTerm, page) {
     }
   });
   courses = courses.sort((c1, c2) => c2.priority - c1.priority); 
-  result.courses = courses.slice((page - 1) * PERPAGE, page * PERPAGE); 
+  result.courses = courses.slice(page * PERPAGE, (page + 1) * PERPAGE); 
   return result; 
 }
 

@@ -23,8 +23,8 @@ router.get("/api/search/skip/:num", (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/search", async (req, res) => {
-  // page is defined or 1 
-  const page = parseInt(req.query.page) || 1;
+  // page is defined or 0
+  const page = parseInt(req.query.page) || 0;
   let result = {};
   // define queryTerm 
   let queryTerm =
@@ -55,16 +55,6 @@ router.get("/api/search", async (req, res) => {
       // substring search if term is longer than 3 letters
       result = await fuzzySearch(query, searchTerm, page);
     }
-    // filter courses to make sure there exists matching version 
-    result.courses = result.courses.filter((course) => {
-      for (let version of course.versions) { // HNS
-        if (
-          (!req.query.areas || (version.areas && version.areas !== "None"))
-          ) 
-          return true;
-      }
-      return false;
-    });
     // result includes courses array and pagination data 
     returnData(result, res);
   } catch (err) {
@@ -116,8 +106,9 @@ function constructQuery(params) {
     "versions.term": { $regex: term, $options: "i" },
     "versions.level": { $regex: level, $options: "i" },
   };
-  if (areas !== "") {
+  if (areas !== "" && areas !== "None") {
     query["versions.areas"] = {
+      $not: new RegExp("None"), 
       $in: areas.split("|").map((area) => new RegExp(area)),
     };
   }
