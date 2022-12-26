@@ -32,7 +32,7 @@ router.get("/api/search", async (req, res) => {
   if (queryTerm.length > 0) queryTerm += " ";
   queryTerm +=
     req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
-  // construct query for simple search 
+    // construct query for simple search 
   const searchTerm = req.query.query; 
   const query = constructQuery({
     userQuery: req.query.query,
@@ -45,6 +45,7 @@ router.get("/api/search", async (req, res) => {
     tags: req.query.tags,
     level: req.query.level,
   });
+  console.log(query);
   // get 10 matching courses in specified page range
   try {
     if (searchTerm.length <= 3) {
@@ -56,9 +57,8 @@ router.get("/api/search", async (req, res) => {
     }
     // filter courses to make sure there exists matching version 
     result.courses = result.courses.filter((course) => {
-      for (let version of course.versions) {
+      for (let version of course.versions) { // HNS
         if (
-          (queryTerm !== "" && version.term === queryTerm) && 
           (!req.query.areas || (version.areas && version.areas !== "None"))
           ) 
           return true;

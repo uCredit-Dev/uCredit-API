@@ -59,7 +59,7 @@ function ngram(query) {
   query = query.toLowerCase();
   const ngrams = new Set();
   ngrams.add(query);
-  for (let substrLen = MIN_LEN; substrLen <= queryLen; substrLen++) {
+  for (let substrLen = queryLen; substrLen >= MIN_LEN; substrLen--) {
     for (let i = 0; i <= queryLen - substrLen; i++) {
       ngrams.add(query.slice(i, i + substrLen)); 
     }
@@ -86,12 +86,14 @@ async function fuzzySearch(query, searchTerm, page) {
   const PERPAGE = 10; 
   const result = {};
   const ngrams = ngram(searchTerm);
-  const regNgrams = ngrams.map(tri => new RegExp(tri)); 
+  const regNgrams = ngrams.map(tri => {
+    tri = tri.replace('.', '\\.'); 
+    return new RegExp(tri);
+  });
   query['$or'] = [
     { title: { $in: regNgrams } },
     { number: { $in: regNgrams } },
   ]; 
-  // console.log(ngrams, query);
   const total = await SISCV.countDocuments(query).exec(); 
   result.pagination = {
     page: page, 
@@ -99,15 +101,15 @@ async function fuzzySearch(query, searchTerm, page) {
     last: Math.ceil(total / PERPAGE), 
     total: total
   }
-  let courses = await SISCV.find(query); 
+  let courses = await SISCV.find(query);
   courses.forEach((course, i) => {
-    ngrams.forEach((gram) => {
-      if (course.title.includes(gram) || course.number.includes(gram)) {
-        courses[i].freq = ++(course.freq) || 1;
+    for (let gram of ngrams) {
+      if (course.title.toLowerCase().includes(gram) || course.number.toLowerCase().includes(gram)) {
+        courses[i].priority = courses[i].priority + gram.length || gram.length; 
       }
-    })
+    }
   });
-  courses = courses.sort((c1, c2) => c2.freq - c1.freq);
+  courses = courses.sort((c1, c2) => c2.priority - c1.priority); 
   result.courses = courses.slice((page - 1) * PERPAGE, page * PERPAGE); 
   return result; 
 }
