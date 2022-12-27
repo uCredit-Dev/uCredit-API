@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const { returnData, errorHandler, simpleSearch, fuzzySearch } = require("./helperMethods.js");
 const SISCV = require("../model/SISCourseV.js");
-const Year = require("../model/Year.js");
+const Courses = require("../model/Course.js");
 
 router.get("/api/search/all", (req, res) => {
   SISCV.find({})
@@ -45,7 +45,6 @@ router.get("/api/search", async (req, res) => {
     tags: req.query.tags,
     level: req.query.level,
   });
-  console.log(query);
   // get 10 matching courses in specified page range
   try {
     if (searchTerm.length <= 3) {
@@ -57,6 +56,52 @@ router.get("/api/search", async (req, res) => {
     }
     // result includes courses array and pagination data 
     returnData(result, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
+});
+
+//return all versions of the course based on the filters
+router.get("/api/cartSearch", async (req, res) => {
+  // define queryTerm 
+  let queryTerm =
+    req.query.term === "All" || !req.query.term ? "" : req.query.term;
+  if (queryTerm.length > 0) queryTerm += " ";
+  queryTerm +=
+    req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
+    // construct query for simple search 
+  const query = constructQuery({
+    userQuery: req.query.query,
+    school: req.query.school,
+    department: req.query.department,
+    term: queryTerm,
+    areas: req.query.areas,
+    wi: req.query.wi,
+    credits: req.query.credits,
+    tags: req.query.tags,
+    level: req.query.level,
+  });
+  try {
+    // simple search  
+    let courses = await SISCV.find(query); 
+    // result includes courses array and pagination data 
+    returnData(courses, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
+});
+
+//search course by id 
+router.get("/api/search/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const course = await Courses.findById(id); 
+    if (!course) {
+      errorHandler(res, 404, "course not found"); 
+    } else {
+      const courses = await SISCV.find({ number: course.number, title: course.title }); 
+      returnData(courses, res);
+    }
   } catch (err) {
     errorHandler(res, 500, err.message); 
   }
