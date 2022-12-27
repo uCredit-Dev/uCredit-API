@@ -1,7 +1,7 @@
-const majors = require("../model/Major.js");
-const { returnData, errorHandler } = require("./helperMethods.js");
+import majors from "../model/Major.js";
+import { returnData, errorHandler } from "./helperMethods.js";
+import express from "express";
 
-const express = require("express");
 const router = express.Router();
 
 router.get("/api/majors/all", (req, res) => {
@@ -21,4 +21,4 @@ router.post("/api/majors", async (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-module.exports = router;
+export default router;

@@ -1,14 +1,12 @@
 //routes related to distirbutions CRUD
-const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
-const { auth } = require("../util/token");
-const courses = require("../model/Course.js");
-const distributions = require("../model/Distribution.js");
-const plans = require("../model/Plan.js");
+import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
+import { auth } from "../util/token.js";
+import courses from "../model/Course.js";
+import distributions from "../model/Distribution.js";
+import plans from "../model/Plan.js";
+import express from "express";
 
-const express = require("express");
 const router = express.Router();
-
-module.exports = router;
 
 //get distribution by id
 router.get("/api/distributions/:distribution_id", auth, (req, res) => {
@@ -16,7 +14,7 @@ router.get("/api/distributions/:distribution_id", auth, (req, res) => {
   distributions
     .findById(d_id)
     .then((distribution) => {
-      // verify that distribution belongs to user 
+      // verify that distribution belongs to user
       if (req.user._id !== distribution.user_id) {
         forbiddenHandler(res);
       } else {
@@ -33,7 +31,7 @@ router.get("/api/distributionsByPlan/:plan_id", auth, (req, res) => {
     .findById(plan_id)
     .populate({ path: "distribution_ids" })
     .then((plan) => {
-      // verify that plan belongs to user 
+      // verify that plan belongs to user
       if (req.user._id !== plan.user_id) {
         forbiddenHandler(res);
       } else {
@@ -66,39 +64,43 @@ router.post("/api/distributions", auth, (req, res) => {
 });
 
 //change required credit setting for distribution
-router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) => {
-  const required = req.query.required;
-  const id = req.query.id;
-  try {
-    const distribution = await distributions.findById(id); 
-    // verify that distribution belongs to user 
-    if (req.user._id !== distribution.user_id) {
-      return forbiddenHandler(res);
+router.patch(
+  "/api/distributions/updateRequiredCredits",
+  auth,
+  async (req, res) => {
+    const required = req.query.required;
+    const id = req.query.id;
+    try {
+      const distribution = await distributions.findById(id);
+      // verify that distribution belongs to user
+      if (req.user._id !== distribution.user_id) {
+        return forbiddenHandler(res);
+      }
+      //update distribution required
+      distribution.required = Number.parseInt(required);
+      //recalculate whether distribution is satisfied
+      distribution.satisfied = distribution.planned >= distribution.required;
+      distribution.save().then((result) => returnData(result, res));
+    } catch (err) {
+      errorHandler(res, 400, err);
     }
-    //update distribution required 
-    distribution.required = Number.parseInt(required);
-    //recalculate whether distribution is satisfied
-    distribution.satisfied = distribution.planned >= distribution.required;
-    distribution.save().then((result) => returnData(result, res));
-  } catch (err) {
-    errorHandler(res, 400, err); 
   }
-});
+);
 
 router.patch("/api/distributions/updateName", auth, async (req, res) => {
   const name = req.query.name;
   const id = req.query.id;
   try {
-    const distribution = await distributions.findById(id); 
-    // verify that distribution belongs to user 
+    const distribution = await distributions.findById(id);
+    // verify that distribution belongs to user
     if (req.user._id !== distribution.user_id) {
       return forbiddenHandler(res);
     }
-    //update distribution name 
+    //update distribution name
     distribution.name = name;
     distribution.save().then((result) => returnData(result, res));
   } catch (err) {
-    errorHandler(res, 400, err); 
+    errorHandler(res, 400, err);
   }
 });
 
@@ -106,11 +108,11 @@ router.patch("/api/distributions/updateName", auth, async (req, res) => {
 //return the deleted courses
 router.delete("/api/distributions/:d_id", auth, async (req, res) => {
   const d_id = req.params.d_id;
-  // verify that distribution belongs to user 
-  const distribution = await distributions.findById(d_id); 
+  // verify that distribution belongs to user
+  const distribution = await distributions.findById(d_id);
   if (req.user._id !== distribution.user_id) {
     return forbiddenHandler(res);
-  } 
+  }
   distributions
     .findByIdAndDelete(d_id)
     .then((distribution) => {
@@ -137,4 +139,4 @@ router.delete("/api/distributions/:d_id", auth, async (req, res) => {
     .catch((err) => errorHandler(res, 400, err));
 });
 
-module.exports = router;
+export default router;

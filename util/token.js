@@ -1,6 +1,8 @@
-require("dotenv").config();
-const jwt = require("jsonwebtoken");
-const { forbiddenHandler } = require("../routes/helperMethods");
+import jwt from "jsonwebtoken";
+import { forbiddenHandler } from "../routes/helperMethods.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const createToken = (user) => {
   console.log("secret:", process.env.JWT_SECRET);
@@ -49,13 +51,10 @@ const auth = async (req, res, next) => {
       req.user = decodeToken(token);
       if (!req.body.user_id || req.body.user_id === req.user._id) {
         return next();
-      }  
+      }
     }
-  } 
+  }
   forbiddenHandler(res);
 };
 
-module.exports = {
-  createToken,
-  auth,
-};
+export { createToken, auth };

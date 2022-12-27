@@ -1,15 +1,15 @@
-const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
-const Notifications = require("../model/Notification.js");
-const { auth } = require("../util/token");
+import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
+import Notifications from "../model/Notification.js";
+import { auth } from "../util/token.js";
+import express from "express";
 
-const express = require("express");
 const router = express.Router();
 
 /* Get a user's notification */
 router.get("/api/notifications/:user_id", auth, (req, res) => {
   const user_id = req.params.user_id;
   if (req.user._id !== user_id) {
-    return forbiddenHandler(res); 
+    return forbiddenHandler(res);
   }
   if (!user_id) {
     errorHandler(res, 400, { message: "Must provide user_id." });
@@ -26,7 +26,7 @@ router.get("/api/notifications/:user_id", auth, (req, res) => {
 /* Create a notification */
 router.post("/api/notifications", auth, (req, res) => {
   const notification = req.body;
-  // verify that notification belongs to user 
+  // verify that notification belongs to user
   if (!notification.user_id.includes(req.user._id)) {
     return forbiddenHandler(res);
   }
@@ -45,8 +45,8 @@ router.post("/api/notifications/read/:notification_id", auth, (req, res) => {
       if (!notification) {
         errorHandler(res, 404, { message: "Notification not found." });
       } else if (!notification.user_id.includes(req.user._id)) {
-        // notification does not belongs to user 
-        return forbiddenHandler(res);  
+        // notification does not belongs to user
+        return forbiddenHandler(res);
       } else {
         notification.read = true;
         notification.save();
@@ -62,18 +62,18 @@ router.delete("/api/notifications/:notification_id", auth, (req, res) => {
   if (!notification_id) {
     errorHandler(res, 400, { message: "Must provide notification_id." });
   }
-  // check notification belongs to user 
-  Notifications.findById(notification_id)
-    .then((notif) => {
-      if (!notif.user_id.includes(req.user._id)) {
-        return forbiddenHandler(res);
-      }
-    })
-  // delete notification 
+  // check notification belongs to user
+  Notifications.findById(notification_id).then((notif) => {
+    if (!notif.user_id.includes(req.user._id)) {
+      return forbiddenHandler(res);
+    }
+  });
+  // delete notification
   Notifications.findByIdAndDelete(notification_id)
     .then((result) => {
       returnData(result, res);
     })
     .catch((err) => errorHandler(res, 500, err));
 });
-module.exports = router;
+
+export default router;

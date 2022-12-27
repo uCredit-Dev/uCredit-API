@@ -42,4 +42,4 @@ function addSampleDistributions(distributions) {
   });
 }
 
-module.exports = { addSampleDistributions };
+export default { addSampleDistributions };

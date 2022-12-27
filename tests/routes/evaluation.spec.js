@@ -1,7 +1,8 @@
-const mongoose = require("mongoose");
-const evaluation = require("../../model/Evaluation");
-const supertest = require("supertest");
-const createApp = require("../../app");
+import mongoose from "mongoose";
+import evaluation from "../../model/Evaluation";
+import supertest from "supertest";
+import createApp from "../../app";
+
 const request = supertest(createApp());
 const sampleEval = {
   n: "Test Course",

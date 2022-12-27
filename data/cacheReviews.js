@@ -1,6 +1,6 @@
-const axios = require("axios");
-const db = require("./db.js");
-const evaluation = require("../model/Evaluation.js");
+import axios from "axios";
+import db from "./db.js";
+import evaluation from "../model/Evaluation.js";
 
 db.connect()
   .then(() => {

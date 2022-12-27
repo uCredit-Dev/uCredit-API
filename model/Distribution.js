@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 /*  
@@ -17,7 +17,7 @@ const distributionSchema = new Schema({
   courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   user_id: { type: String, required: true },
   plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
-  expireAt: { type: Date,  expires: 60*60*24 },
+  expireAt: { type: Date, expires: 60 * 60 * 24 },
 });
 
 distributionSchema.statics.findByName = function (name, user_id) {
@@ -28,6 +28,4 @@ distributionSchema.statics.removeCourse = function (course_id, user_id) {};
 
 distributionSchema.statics.modifyCredits = function (field, value, user_id) {};
 
-const Distribution = mongoose.model("Distribution", distributionSchema);
-
-module.exports = Distribution;
+export default mongoose.model("Distribution", distributionSchema);

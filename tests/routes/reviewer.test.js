@@ -1,8 +1,8 @@
 // Run test suite with: npm run test tests/routes/reviewer.test.js
 
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../../app");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import createApp from "../../app";
 
 const request = supertest(createApp());
 const endpoint = "/api/planReview/addReviewer";
@@ -13,7 +13,6 @@ beforeEach(async () => {
 
 describe(`Test endpoint ${endpoint}`, () => {
   describe("HTTP POST request", () => {
-
     test("Return 200 on success", async () => {
       const response = await request.post(`${endpoint}`).send({
         plan_id: "asdfjksla",

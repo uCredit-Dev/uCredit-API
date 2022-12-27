@@ -1,7 +1,6 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../app");
-const experimentDAO = require("../data/ExperimentDAO");
+import mongoose from "mongoose";
+import experimentDAO from "../data/ExperimentDAO";
+
 const DAO = new experimentDAO();
 
 const JUNIOR = "AE UG JUNIOR";

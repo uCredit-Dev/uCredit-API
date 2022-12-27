@@ -1,8 +1,9 @@
 //routes to handle search requests
-const express = require("express");
+import express from "express";
+import { returnData, errorHandler } from "./helperMethods.js";
+import SISCV from "../model/SISCourseV.js";
+
 const router = express.Router();
-const { returnData, errorHandler } = require("./helperMethods.js");
-const SISCV = require("../model/SISCourseV.js");
 
 router.get("/api/search/all", (req, res) => {
   SISCV.find({})
@@ -155,21 +156,22 @@ function sendCourseVersion(query, version, res) {
     .catch((err) => errorHandler(res, 400, err));
 }
 
-// return min and max possible years for current courses in db 
+// return min and max possible years for current courses in db
 router.get("/api/getYearRange", (req, res) => {
-  // .distinct returns an array of all possible elements in the "terms" array 
-  SISCV.distinct("terms").then((resp) => {
-    let years = { min: Infinity, max: -Infinity };
-    // parse term for year value and update min / max 
-    resp.forEach((term) => {
-      if (parseInt(term.substring(term.length - 4, term.length)) < years.min)
-        years.min = parseInt(term.substring(term.length - 4, term.length));
-      if (parseInt(term.substring(term.length - 4, term.length)) > years.max)
-        years.max = parseInt(term.substring(term.length - 4, term.length));
+  // .distinct returns an array of all possible elements in the "terms" array
+  SISCV.distinct("terms")
+    .then((resp) => {
+      let years = { min: Infinity, max: -Infinity };
+      // parse term for year value and update min / max
+      resp.forEach((term) => {
+        if (parseInt(term.substring(term.length - 4, term.length)) < years.min)
+          years.min = parseInt(term.substring(term.length - 4, term.length));
+        if (parseInt(term.substring(term.length - 4, term.length)) > years.max)
+          years.max = parseInt(term.substring(term.length - 4, term.length));
+      });
+      returnData(years, res);
     })
-    returnData(years, res);
-  })
-  .catch((err) => errorHandler(res, 400, err));
+    .catch((err) => errorHandler(res, 400, err));
 });
 
-module.exports = router;
+export default router;

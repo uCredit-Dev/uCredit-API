@@ -1,8 +1,9 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../../app");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import createApp from "../../app";
+import User from "../../model/User";
+
 const request = supertest(createApp());
-const User = require("../../model/User");
 jest.setTimeout(10000);
 
 beforeEach((done) => {

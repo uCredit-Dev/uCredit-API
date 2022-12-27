@@ -1,6 +1,6 @@
-const fs = require("fs");
-const util = require("util");
-const path = require("path");
+import fs from "fs";
+import util from "util";
+import path from "path";
 const readFile = util.promisify(fs.readFile);
 
 /*
@@ -42,4 +42,4 @@ async function cleanDup(file) {
 const fileName = "FA2021.json";
 cleanDup(fileName);
 
-module.exports = { cleanDup };
+export default { cleanDup };

@@ -1,19 +1,17 @@
-const {
-  returnData,
-  errorHandler,
-  postNotification,
-} = require("./helperMethods.js");
-const { auth } = require("../util/token");
-const plans = require("../model/Plan.js");
-const planReviews = require("../model/PlanReview.js");
-const users = require("../model/User.js");
-const nodemailer = require("nodemailer");
+import { returnData, errorHandler, postNotification } from "./helperMethods.js";
+import { auth } from "../util/token.js";
+import plans from "../model/Plan.js";
+import planReviews from "../model/PlanReview.js";
+import users from "../model/User.js";
+import nodemailer from "nodemailer";
+import express from "express";
+import dotenv from "dotenv";
 
-const express = require("express");
+dotenv.config();
+
 const router = express.Router();
-const DEBUG = process.env.DEBUG === "True";
-const appPassword = process.env.APP_PASSWORD
-
+// const DEBUG = process.env.DEBUG === "True";
+const appPassword = process.env.APP_PASSWORD;
 
 router.post("/api/planReview/request", auth, async (req, res) => {
   const plan_id = req.body.plan_id;
@@ -125,14 +123,13 @@ router.post("/api/backdoor/planReview/confirm", (req, res) => {
 */
 router.get("/api/planReview/getReviewers", auth, (req, res) => {
   const plan_id = req.query.plan_id;
-  // check that plan belongs to user 
-  plans.findById(plan_id)
-    .then((plan) => {
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
-    }); 
-  // get plan reviews for given plan 
+  // check that plan belongs to user
+  plans.findById(plan_id).then((plan) => {
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
+  });
+  // get plan reviews for given plan
   planReviews
     .find({ plan_id })
     .populate("reviewer_id", "name email affiliation school grade")
@@ -145,7 +142,7 @@ router.get("/api/planReview/getReviewers", auth, (req, res) => {
 */
 router.get("/api/planReview/plansToReview", auth, (req, res) => {
   const reviewer_id = req.query.reviewer_id;
-  // only reviewer can get their plans to review 
+  // only reviewer can get their plans to review
   if (req.user._id !== reviewer_id) {
     return forbiddenHandler(res);
   }
@@ -211,17 +208,23 @@ router.post("/api/planReview/changeStatus", auth, (req, res) => {
 });
 
 // async..await is not allowed in global scope, must use a wrapper
-async function sendReviewMail(revieweeName, reviewerName, email, review_id, res) {
+async function sendReviewMail(
+  revieweeName,
+  reviewerName,
+  email,
+  review_id,
+  res
+) {
   // Generate test SMTP service account from ethereal.email
   // Only needed if you don't have a real mail account for testing
   // let testAccount = await nodemailer.createTestAccount();
 
   let transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
-      user: 'ucreditdev@gmail.com',
-      pass: appPassword
-    }
+      user: "ucreditdev@gmail.com",
+      pass: appPassword,
+    },
   });
   // send mail with defined transport object
   await transporter.sendMail({
@@ -234,14 +237,16 @@ async function sendReviewMail(revieweeName, reviewerName, email, review_id, res)
 
 router.delete("/api/planReview/removeReview", auth, (req, res) => {
   const review_id = req.query.review_id;
-  // only reviewer or reviewee can delete a review 
-  planReviews.findById(review_id)
-    .then((review) => {
-      if (req.user._id !== review.reviewer_id && req.user._id !== review.reviewee_id) {
-        return forbiddenHandler(res);
-      }
-    })
-  // delete the review 
+  // only reviewer or reviewee can delete a review
+  planReviews.findById(review_id).then((review) => {
+    if (
+      req.user._id !== review.reviewer_id &&
+      req.user._id !== review.reviewee_id
+    ) {
+      return forbiddenHandler(res);
+    }
+  });
+  // delete the review
   planReviews
     .findByIdAndDelete(review_id)
     .then((review) => {
@@ -256,4 +261,4 @@ router.delete("/api/planReview/removeReview", auth, (req, res) => {
     .catch((err) => errorHandler(res, 500, err));
 });
 
-module.exports = router;
+export default router;

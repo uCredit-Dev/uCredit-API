@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../../app");
-const ExperimentDao = require("../../data/ExperimentDao");
-const User = require("../../model/User");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import createApp from "../../app";
+import ExperimentDao from "../../data/ExperimentDao";
+import User from "../../model/User";
 
 const experiments = new ExperimentDao();
 const request = supertest(createApp());

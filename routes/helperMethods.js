@@ -1,5 +1,5 @@
 //some helper methods for routing
-const Notifications = require("../model/Notification.js");
+import Notifications from "../model/Notification.js";
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
@@ -10,7 +10,7 @@ function returnData(data, res) {
 
 //set status code of the response and send error info to the user in json
 function errorHandler(res, status, err) {
-  if (res.headersSent) return; 
+  if (res.headersSent) return;
   res.status(status).json({
     errors: [
       {
@@ -22,7 +22,7 @@ function errorHandler(res, status, err) {
 }
 
 function forbiddenHandler(res) {
-  if (res.headersSent) return; 
+  if (res.headersSent) return;
   res.status(403).json({
     status: 403,
     message: "You are not authorized to access this resource.",
@@ -30,7 +30,7 @@ function forbiddenHandler(res) {
 }
 
 async function distributionCreditUpdate(distribution, course, add) {
-  if (!distribution) return; 
+  if (!distribution) return;
   if (add) {
     distribution.planned += course.credits;
     if (course.taken) {
@@ -59,7 +59,7 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
   const n = await Notifications.create(notification);
   return n;
 }
-module.exports = {
+export {
   returnData,
   errorHandler,
   forbiddenHandler,

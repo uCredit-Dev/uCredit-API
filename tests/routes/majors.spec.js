@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const majors = require("../../model/Major");
-const createApp = require("../../app");
-const { allMajors } = require("../../data/majors");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import majors from "../../model/Major";
+import createApp from "../../app";
+import { allMajors } from "../../data/majors";
 
 beforeEach((done) => {
   mongoose

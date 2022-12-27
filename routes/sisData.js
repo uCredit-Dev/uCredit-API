@@ -1,7 +1,8 @@
 //routes to process sis student record(courses, advisor, major information)
-const express = require("express");
+import express from "express";
+import { returnData, errorHandler } from "./helperMethods.js";
+
 const router = express.Router();
-const { returnData, errorHandler } = require("./helperMethods.js");
 
 router.post("/api/sis/studentRecords", (req, res) => {
   const data = req.body;
@@ -12,4 +13,4 @@ router.post("/api/sis/studentRecords", (req, res) => {
   returnData(data, res);
 });
 
-module.exports = router;
+export default router;

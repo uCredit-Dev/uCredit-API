@@ -1,22 +1,20 @@
-require("dotenv").config(); //search for env variables
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 //set up db connection link
 //if debug, connect to local docker container
 //else, connect to dev or prod db URI in .env file
 const debug = process.env.DEBUG === "True";
-const URI = debug ? "mongodb://db:27017/debug" : process.env.URI; 
+const URI = debug ? "mongodb://db:27017/debug" : process.env.URI;
 
 //config connect options
-const option = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
-};
 
 //establish connection to cloud database
-async function connect() {
-  await mongoose.connect(URI, option);
+export async function connect() {
+  console.log(URI);
+  mongoose.connect(URI);
 
   //handle events emitted by the connection process
   mongoose.connection.on("error", (err) => {
@@ -27,5 +25,3 @@ async function connect() {
     console.log("Connected to MongoDB~");
   });
 }
-
-module.exports = { connect };

@@ -2046,4 +2046,4 @@ const allMajors = [
   // bsCivEng,
 ];
 
-module.exports = { getMajorFromCommonName, allMajors };
+export default { getMajorFromCommonName, allMajors };

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 /*  
@@ -11,9 +11,7 @@ const planSchema = new Schema({
   year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: "Distribution" }],
   user_id: { type: String, required: true },
-  expireAt: { type: Date,  expires: 60*60*24 },
+  expireAt: { type: Date, expires: 60 * 60 * 24 },
 });
 
-const Plan = mongoose.model("Plan", planSchema);
-
-module.exports = Plan;
+export default mongoose.model("Plan", planSchema);

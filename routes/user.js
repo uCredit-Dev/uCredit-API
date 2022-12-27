@@ -1,14 +1,16 @@
-require("dotenv").config();
-const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
-const users = require("../model/User.js");
-const plans = require("../model/Plan.js");
-const { createToken, auth } = require("../util/token");
-const years = require("../model/Plan.js");
-const courses = require("../model/Course.js");
-const distributions = require("../model/Distribution.js");
-const planReviews = require("../model/PlanReview.js");
+import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
+import users from "../model/User.js";
+import plans from "../model/Plan.js";
+import { createToken, auth } from "../util/token.js";
+import years from "../model/Plan.js";
+import courses from "../model/Course.js";
+import distributions from "../model/Distribution.js";
+import planReviews from "../model/PlanReview.js";
+import express from "express";
+import dotenv from "dotenv";
 
-const express = require("express");
+dotenv.config();
+
 const router = express.Router();
 
 const DEBUG = process.env.DEBUG === "True";
@@ -84,4 +86,4 @@ router.delete("/api/user/:id", auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

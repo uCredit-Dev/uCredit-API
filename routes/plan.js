@@ -1,14 +1,14 @@
 //routes related to Plan CRUD
-const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
-const courses = require("../model/Course.js");
-const distributions = require("../model/Distribution.js");
-const users = require("../model/User.js");
-const plans = require("../model/Plan.js");
-const years = require("../model/Year.js");
-const { auth } = require("../util/token");
-const reviews = require("../model/PlanReview.js");
+import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
+import courses from "../model/Course.js";
+import distributions from "../model/Distribution.js";
+import users from "../model/User.js";
+import plans from "../model/Plan.js";
+import years from "../model/Year.js";
+import { auth } from "../util/token.js";
+import reviews from "../model/PlanReview.js";
+import express from "express";
 
-const express = require("express");
 const router = express.Router();
 
 //get plan by plan id
@@ -118,9 +118,7 @@ router.post("/api/plans", auth, (req, res) => {
           user_id: retrievedPlan.user_id,
           year: i === 0 ? 0 : startYear + i,
           expireAt:
-            retrievedPlan.user_id === "guestUser"
-              ? Date.now()
-              : undefined,
+            retrievedPlan.user_id === "guestUser" ? Date.now() : undefined,
         };
         const newYear = await years.create(retrievedYear);
         yearObjs.push(newYear);
@@ -166,14 +164,13 @@ const getStartYear = (year) => {
 //return deleted courses
 router.delete("/api/plans/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
-  // check plan belongs to user 
-  plans.findById(plan_id)
-    .then((plan) => {
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
-    }); 
-  // delete plan 
+  // check plan belongs to user
+  plans.findById(plan_id).then((plan) => {
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
+  });
+  // delete plan
   plans
     .findByIdAndDelete(plan_id)
     .then((plan) => {
@@ -210,14 +207,13 @@ router.patch("/api/plans/update", auth, (req, res) => {
     if (name) {
       updateBody.name = name;
     }
-    // check plan belongs to user 
-    plans.findById(id)
-      .then((plan) => {
-        if (req.user._id !== plan.user_id) {
-          return forbiddenHandler(res);
-        }
-      }); 
-    // update plan 
+    // check plan belongs to user
+    plans.findById(id).then((plan) => {
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
+    });
+    // update plan
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
@@ -233,4 +229,4 @@ router.patch("/api/plans/update", auth, (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,11 +1,12 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const plans = require("../../model/Plan");
-const createApp = require("../../app");
-const users = require("../../model/User");
-const courses = require("../../model/Course");
-const distributions = require("../../model/Distribution");
-const years = require("../../model/Year");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import plans from "../../model/Plan";
+import createApp from "../../app";
+import users from "../../model/User";
+import courses from "../../model/Course";
+import distributions from "../../model/Distribution";
+import years from "../../model/Year";
+
 const TEST_PLAN_NAME_1 = "testPlan1";
 const TEST_USER_1 = "User1";
 const TEST_MAJOR_1 = "Computer Science";

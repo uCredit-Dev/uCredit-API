@@ -1,17 +1,18 @@
 //cache extra fields from sis
-require("dotenv").config(); //search for env variables
-const SISCourses = require("../model/SISCourse.js");
-const db = require("./db.js");
-const axios = require("axios");
-const { all } = require("../routes/course.js");
+import SISCourses from "../model/SISCourse.js";
+import db from "./db.js";
+import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 const key = process.env.SIS_API_KEY;
 
-async function update() {
+function update() {
   const regex = /\./g;
   db.connect()
-    .then(async () => {
+    .then(() => {
       console.log("connected");
-      SISCourses.find({ level: null }, "number").then((allCourses) => {
+      SISCourses.find({ level: null }, "number").then(async (allCourses) => {
         console.log("found all courses");
         for (let dbCourse of allCourses) {
           try {

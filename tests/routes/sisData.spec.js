@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../../app");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import createApp from "../../app";
 
 const TEST_NAME = "test";
 

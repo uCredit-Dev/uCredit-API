@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const users = require("../../model/User");
-const createApp = require("../../app");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import users from "../../model/User";
+import createApp from "../../app";
 
 const SOPHOMORE = "AE UG SOPHOMORE";
 const FRESHMAN = "AE UG FRESHMAN";

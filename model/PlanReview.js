@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 /*  
@@ -16,6 +16,4 @@ const planReviewSchema = new Schema({
   requestTime: { type: Date },
 });
 
-const PlanReview = mongoose.model("PlanReview", planReviewSchema);
-
-module.exports = PlanReview;
+export default mongoose.model("PlanReview", planReviewSchema);

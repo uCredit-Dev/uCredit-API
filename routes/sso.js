@@ -1,15 +1,16 @@
-require("dotenv").config();
-const express = require("express");
-const passport = require("passport");
-const saml = require("passport-saml");
-const session = require("express-session");
-const bodyParser = require("body-parser");
-const cryptoRandomString = require("crypto-random-string");
-const { createToken, auth } = require("../util/token");
+import express from "express";
+import passport from "passport";
+import saml from "passport-saml";
+import session from "express-session";
+import bodyParser from "body-parser";
+import cryptoRandomString from "crypto-random-string";
+import { createToken } from "../util/token.js";
+import { returnData, errorHandler } from "./helperMethods.js";
+import users from "../model/User.js";
+import sessions from "../model/Session.js";
+import dotenv from "dotenv";
 
-const { returnData, errorHandler } = require("./helperMethods.js");
-const users = require("../model/User.js");
-const sessions = require("../model/Session.js");
+dotenv.config();
 
 const router = express.Router();
 
@@ -134,7 +135,7 @@ router.get("/api/verifyLogin/:hash", (req, res) => {
         .findById(user._id)
         .then((retrievedUser) => {
           const token = createToken(retrievedUser);
-          returnData({retrievedUser, token}, res)
+          returnData({ retrievedUser, token }, res);
         })
         .catch((err) => errorHandler(res, 500, err));
     }
@@ -156,4 +157,4 @@ router.get("/api/metadata", (req, res) => {
   res.send(samlStrategy.generateServiceProviderMetadata(PbK, PbK));
 });
 
-module.exports = router;
+export default router;

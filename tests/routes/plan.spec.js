@@ -1,12 +1,11 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../../app");
-const plan = require("../../model/Plan");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import createApp from "../../app";
+
 const request = supertest(createApp());
 let plan1 = [];
 const planName = "testPlan";
 const userName = "User1";
-const users = require("../../model/User");
 
 beforeEach((done) => {
   mongoose

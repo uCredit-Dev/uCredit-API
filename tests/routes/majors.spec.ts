@@ -1,14 +1,11 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const { returnData } = require("../../routes/helperMethods");
-const majors = require("../../model/Major");
-const createApp = require("../../app");
-const { allMajors } = require("../../data/majors");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import majors from "../../model/Major";
+import { createApp } from "../../app";
+import allMajors from "../../data/majors";
 
 beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/majors", { useNewUrlParser: true })
-    .then(() => done());
+  mongoose.connect("mongodb://localhost:27017/majors").then(() => done());
 });
 
 afterEach((done) => {

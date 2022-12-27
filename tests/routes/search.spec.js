@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../../app");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import createApp from "../../app";
+
 const request = supertest(createApp());
 jest.setTimeout(30000);
 

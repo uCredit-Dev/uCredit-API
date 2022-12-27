@@ -1,17 +1,17 @@
 //routes related to Year CRUD
-const {
+import {
   returnData,
   errorHandler,
   distributionCreditUpdate,
   forbiddenHandler,
-} = require("./helperMethods.js");
-const { auth } = require("../util/token");
-const courses = require("../model/Course.js");
-const distributions = require("../model/Distribution.js");
-const plans = require("../model/Plan.js");
-const years = require("../model/Year.js");
+} from "./helperMethods.js";
+import { auth } from "../util/token.js";
+import courses from "../model/Course.js";
+import distributions from "../model/Distribution.js";
+import plans from "../model/Plan.js";
+import years from "../model/Year.js";
+import express from "express";
 
-const express = require("express");
 const router = express.Router();
 
 //get years by plan id
@@ -65,14 +65,13 @@ router.patch("/api/years/changeOrder", auth, async (req, res) => {
     errorHandler(res, 400, "Missing required fields");
     return;
   }
-  // check that plan belongs to user 
-  plans.findById(plan_id)
-    .then((plan) => {
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
-    })
-  // update plan 
+  // check that plan belongs to user
+  plans.findById(plan_id).then((plan) => {
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
+  });
+  // update plan
   plans
     .findByIdAndUpdate(
       plan_id,
@@ -95,14 +94,15 @@ router.patch("/api/years/updateName", auth, (req, res) => {
     errorHandler(res, 400, "must specify a year_id");
     return;
   }
-  // check that year belongs to user 
-  years.findById(year_id)
+  // check that year belongs to user
+  years
+    .findById(year_id)
     .then((year) => {
       if (req.user._id !== year.user_id) {
         return forbiddenHandler(res);
       }
-      year.name = name; 
-      year.save(); 
+      year.name = name;
+      year.save();
       courses.updateMany({ year_id }, { year: name }).exec();
       returnData(year, res);
     })
@@ -121,14 +121,15 @@ router.patch("/api/years/updateYear", auth, (req, res) => {
     errorHandler(res, 400, "must specify a year_id");
     return;
   }
-  // check that year belongs to user 
-  years.findById(year_id)
+  // check that year belongs to user
+  years
+    .findById(year_id)
     .then((retrievedYear) => {
       if (req.user._id !== retrievedYear.user_id) {
         return forbiddenHandler(res);
       }
-      retrievedYear.year = year; 
-      retrievedYear.save(); 
+      retrievedYear.year = year;
+      retrievedYear.save();
       returnData(retrievedYear, res);
     })
     .catch((err) => errorHandler(res, 400, err));
@@ -141,14 +142,13 @@ router.delete("/api/years/:year_id", auth, (req, res) => {
     errorHandler(res, 400, "must specify a valid year_id");
     return;
   }
-  // check that year belongs to user 
-  years.findById(year_id)
-    .then((year) => {
-      if (req.user._id !== year.user_id) {
-        return forbiddenHandler(res);
-      }
-    })
-  // delete the year 
+  // check that year belongs to user
+  years.findById(year_id).then((year) => {
+    if (req.user._id !== year.user_id) {
+      return forbiddenHandler(res);
+    }
+  });
+  // delete the year
   years
     .findByIdAndDelete(year_id)
     .then(async (year) => {
@@ -191,4 +191,4 @@ router.post("/api/spc-login", (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

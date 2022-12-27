@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   preset: "@shelf/jest-mongodb",
   verbose: true,
   collectCoverage: true,

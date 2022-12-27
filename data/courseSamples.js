@@ -52,4 +52,4 @@ function addSampleCourses(courses) {
   });
 }
 
-module.exports = { addSampleCourses };
+export default { addSampleCourses };

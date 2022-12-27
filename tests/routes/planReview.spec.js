@@ -1,8 +1,9 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const users = require("../../model/User");
-const plans = require("../../model/Plan");
-const createApp = require("../../app");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import users from "../../model/User";
+import plans from "../../model/Plan";
+import createApp from "../../app";
+
 const TEST_PLAN_NAME_1 = "testPlan1";
 const TEST_USER_1 = "User1";
 const TEST_MAJOR_1 = "Computer Science";
