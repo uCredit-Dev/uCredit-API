@@ -1,8 +1,9 @@
 //routes to handle search requests
 const express = require("express");
 const router = express.Router();
-const { returnData, errorHandler } = require("./helperMethods.js");
+const { returnData, errorHandler, simpleSearch, fuzzySearch } = require("./helperMethods.js");
 const SISCV = require("../model/SISCourseV.js");
+const Courses = require("../model/Course.js");
 
 router.get("/api/search/all", (req, res) => {
   SISCV.find({})
@@ -21,12 +22,18 @@ router.get("/api/search/skip/:num", (req, res) => {
 });
 
 //return all versions of the course based on the filters
-router.get("/api/search", (req, res) => {
+router.get("/api/search", async (req, res) => {
+  // page is defined or 0
+  const page = parseInt(req.query.page) || 0;
+  let result = {};
+  // define queryTerm 
   let queryTerm =
     req.query.term === "All" || !req.query.term ? "" : req.query.term;
   if (queryTerm.length > 0) queryTerm += " ";
   queryTerm +=
     req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
+    // construct query for simple search 
+  const searchTerm = req.query.query; 
   const query = constructQuery({
     userQuery: req.query.query,
     school: req.query.school,
@@ -38,24 +45,48 @@ router.get("/api/search", (req, res) => {
     tags: req.query.tags,
     level: req.query.level,
   });
-  SISCV.find(query)
-    .then((results) => {
-      results = results.filter((result) => {
-        for (let version of result.versions) {
-          if (
-            (version.term === queryTerm &&
-              req.query.areas &&
-              version.areas !== "None") ||
-            !req.query.areas
-          ) {
-            return true;
-          }
-          return false;
-        }
-      });
-      returnData(results, res);
-    })
-    .catch((err) => errorHandler(res, 500, err.message));
+  // get 10 matching courses in specified page range
+  try {
+    if (searchTerm.length <= 3) {
+      // simple search if term is 3 letters or less 
+      result = await simpleSearch(query, page);
+    } else {
+      // substring search if term is longer than 3 letters
+      result = await fuzzySearch(query, searchTerm, page);
+    }
+    // result includes courses array and pagination data 
+    returnData(result, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
+});
+
+//return all versions of the course based on the filters
+router.get("/api/cartSearch", async (req, res) => {
+  // define queryTerm 
+  let queryTerm =
+    req.query.term === "All" || !req.query.term ? "" : req.query.term;
+  if (queryTerm.length > 0) queryTerm += " ";
+  queryTerm +=
+    req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
+    // construct query for simple search 
+  const query = constructQuery({
+    userQuery: req.query.query,
+    school: req.query.school,
+    department: req.query.department,
+    term: queryTerm,
+    areas: req.query.areas,
+    wi: req.query.wi,
+    credits: req.query.credits,
+    tags: req.query.tags,
+    level: req.query.level,
+  });
+  try {
+    let courses = await SISCV.find(query); 
+    returnData(courses, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
 });
 
 //return the term version of a specific course
@@ -102,8 +133,9 @@ function constructQuery(params) {
     "versions.term": { $regex: term, $options: "i" },
     "versions.level": { $regex: level, $options: "i" },
   };
-  if (areas !== "") {
+  if (areas !== "" && areas !== "None") {
     query["versions.areas"] = {
+      $not: new RegExp("None"), 
       $in: areas.split("|").map((area) => new RegExp(area)),
     };
   }
