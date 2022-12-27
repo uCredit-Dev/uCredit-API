@@ -82,26 +82,8 @@ router.get("/api/cartSearch", async (req, res) => {
     level: req.query.level,
   });
   try {
-    // simple search  
     let courses = await SISCV.find(query); 
-    // result includes courses array and pagination data 
     returnData(courses, res);
-  } catch (err) {
-    errorHandler(res, 500, err.message); 
-  }
-});
-
-//search course by id 
-router.get("/api/search/:id", async (req, res) => {
-  const id = req.params.id;
-  try {
-    const course = await Courses.findById(id); 
-    if (!course) {
-      errorHandler(res, 404, "course not found"); 
-    } else {
-      const courses = await SISCV.find({ number: course.number, title: course.title }); 
-      returnData(courses, res);
-    }
   } catch (err) {
     errorHandler(res, 500, err.message); 
   }

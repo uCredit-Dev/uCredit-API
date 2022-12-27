@@ -8,8 +8,8 @@ const {
   distributionCreditUpdate,
 } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
+const SISCV = require("../model/SISCourseV.js");
 const distributions = require("../model/Distribution.js");
-const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
 
@@ -30,7 +30,7 @@ router.get("/api/coursesByPlan/:plan_id", async (req, res) => {
   try {
     const retrievedCourses = await courses.findByPlanId(plan_id); 
     for (let course of retrievedCourses) {
-      const sisCourse = await SISCV.findOne({ number: course.number }); 
+      const sisCourse = await SISCV.findOne({ number: course.number, title: course.title }); 
       data.push(sisCourse);
     }
     returnData(data, res);
@@ -144,7 +144,7 @@ router.patch("/api/courses/changeStatus/:course_id", (req, res) => {
 });
 
 // Updates course
-router.patch("/api/courses/dragged", (req, res) => {
+router.patch("/api/courses/dragged", async (req, res) => {
   const c_id = req.body.courseId;
   const newYear_id = req.body.newYear;
   const oldYear_id = req.body.oldYear;
@@ -162,39 +162,60 @@ router.patch("/api/courses/dragged", (req, res) => {
         newTerm,
     });
   } else {
-    years
-      .findByIdAndUpdate(
-        oldYear_id,
-        { $pull: { courses: c_id } },
-        { new: true, runValidators: true }
-      )
-      .catch((err) => errorHandler(res, 500, err));
-
-    years
-      .findByIdAndUpdate(
-        newYear_id,
-        { $push: { courses: c_id } },
-        { new: true, runValidators: true }
-      )
-      .then((y) => {
-        courses
+    try {
+      const course = await courses.findById(c_id); 
+      if (!course) {
+        return errorHandler(res, 404, "course not found"); 
+      } else {
+        const sisCourses = await SISCV.find({ number: course.number, title: course.title }); 
+        if (!checkDestValid(sisCourses, course, newTerm)) {
+          return errorHandler(res, 400, "no course this semester"); 
+        }
+        years
           .findByIdAndUpdate(
-            c_id,
-            {
-              year: y.name,
-              year_id: y._id,
-              term: newTerm.toLowerCase(),
-              version:
-                newTerm + " " + (newTerm === "Fall" ? y.year : y.year + 1),
-            },
+            oldYear_id,
+            { $pull: { courses: c_id } },
             { new: true, runValidators: true }
           )
-          .then((c) => returnData(c, res))
-          .catch((err) => errorHandler(res, 500, err));
-      })
-      .catch((err) => errorHandler(res, 500, err));
+    
+        years
+          .findByIdAndUpdate(
+            newYear_id,
+            { $push: { courses: c_id } },
+            { new: true, runValidators: true }
+          )
+          .then((y) => {
+            courses
+              .findByIdAndUpdate(
+                c_id,
+                {
+                  year: y.name,
+                  year_id: y._id,
+                  term: newTerm.toLowerCase(),
+                  version:
+                    newTerm + " " + (newTerm === "Fall" ? y.year : y.year + 1),
+                },
+                { new: true, runValidators: true }
+              )
+              .then((c) => returnData(c, res))
+          }); 
+      }
+    } catch (err) {
+      errorHandler(res, 500, err.message); 
+    }      
   }
 });
+
+const checkDestValid = (sisCourses, userCourse, newTerm) => {
+  for (let sisC of sisCourses) {
+    if (sisC.number === userCourse.number) {
+      for (let term of sisC.terms) {
+        if (term.includes(newTerm)) return true; 
+      }
+    }
+  }
+  return false; 
+}
 
 //change course's distribution, need to provide distribution_ids in req body
 //!!!does not update credit for the distributions!!! need to consider whether the user can change or not
