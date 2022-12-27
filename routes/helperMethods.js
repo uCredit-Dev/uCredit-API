@@ -22,6 +22,14 @@ function errorHandler(res, status, err) {
   });
 }
 
+function forbiddenHandler(res) {
+  if (res.headersSent) return; 
+  res.status(403).json({
+    status: 403,
+    message: "You are not authorized to access this resource.",
+  });
+}
+
 async function distributionCreditUpdate(distribution, course, add) {
   if (!distribution) return; 
   if (add) {
@@ -118,6 +126,7 @@ async function fuzzySearch(query, searchTerm, page) {
 module.exports = {
   returnData,
   errorHandler,
+  forbiddenHandler,
   distributionCreditUpdate,
   postNotification,
   simpleSearch,

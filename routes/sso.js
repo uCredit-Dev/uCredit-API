@@ -5,6 +5,7 @@ const saml = require("passport-saml");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const cryptoRandomString = require("crypto-random-string");
+const { createToken, auth } = require("../util/token");
 
 const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
@@ -131,8 +132,11 @@ router.get("/api/verifyLogin/:hash", (req, res) => {
     } else {
       users
         .findById(user._id)
-        .then((retrievedUser) => returnData(retrievedUser, res))
-        .catch((err) => errorHandler(res, 500, res));
+        .then((retrievedUser) => {
+          const token = createToken(retrievedUser);
+          returnData({retrievedUser, token}, res)
+        })
+        .catch((err) => errorHandler(res, 500, err));
     }
   });
 });
