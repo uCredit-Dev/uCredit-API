@@ -1,8 +1,6 @@
-require("dotenv").config();
-const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
+const { returnData, errorHandler } = require("./helperMethods.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
-const { createToken, auth } = require("../util/token");
 const years = require("../model/Plan.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
@@ -48,8 +46,7 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
   const id = req.params.id;
   users.findById(id).then(async (user) => {
     if (user) {
-      const token = createToken(user);
-      returnData({ user, token }, res);
+      returnData(user, res);
     } else {
       user = {
         _id: id,
@@ -60,17 +57,13 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
         school: "jooby hooby",
       };
       user = await users.create(user);
-      const token = createToken(user);
-      returnData({ user, token }, res);
+      returnData(user, res);
     }
   });
 });
 
-router.delete("/api/user/:id", auth, async (req, res) => {
+router.delete("/api/user/:id", async (req, res) => {
   const id = req.params.id;
-  if (req.user._id !== id) {
-    return forbiddenHandler(res);
-  }
   const user = await users.findByIdAndDelete(id);
   if (user) {
     await courses.deleteMany({ user_id: id });
@@ -83,5 +76,6 @@ router.delete("/api/user/:id", auth, async (req, res) => {
     errorHandler(res, 404, "User not found.");
   }
 });
+// }
 
 module.exports = router;

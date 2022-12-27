@@ -37,7 +37,7 @@ const courseSchema = new Schema({
   user_id: { type: String, required: true },
   level: { type: String, required: true },
   forceSatisfied: { type: String, required: false },
-  expireAt: { type: Date,  expires: 60*60*24 },
+  expireAt: { type: Date },
 });
 
 //custom static model functions

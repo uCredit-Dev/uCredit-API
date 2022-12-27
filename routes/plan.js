@@ -1,26 +1,22 @@
 //routes related to Plan CRUD
-const { returnData, errorHandler, forbiddenHandler } = require("./helperMethods.js");
+const { returnData, errorHandler } = require("./helperMethods.js");
 const courses = require("../model/Course.js");
 const distributions = require("../model/Distribution.js");
 const users = require("../model/User.js");
 const plans = require("../model/Plan.js");
 const years = require("../model/Year.js");
-const { auth } = require("../util/token");
 const reviews = require("../model/PlanReview.js");
 
 const express = require("express");
 const router = express.Router();
 
 //get plan by plan id
-router.get("/api/plans/:plan_id", auth, (req, res) => {
+router.get("/api/plans/:plan_id", (req, res) => {
   const p_id = req.params.plan_id;
   plans
     .findById(p_id)
     .populate("year_ids")
     .then((plan) => {
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
       plan.populate("year_ids.courses", () => {
         plan = { ...plan._doc, years: plan.year_ids };
         delete plan.year_ids;
@@ -37,11 +33,8 @@ router.get("/api/plans/:plan_id", auth, (req, res) => {
 });
 
 //get all plans of a user
-router.get("/api/plansByUser/:user_id", auth, (req, res) => {
+router.get("/api/plansByUser/:user_id", (req, res) => {
   const user_id = req.params.user_id;
-  if (req.user._id !== user_id) {
-    return forbiddenHandler(res);
-  }
   const plansTotal = [];
   users
     .findById(user_id)
@@ -75,7 +68,7 @@ router.get("/api/plansByUser/:user_id", auth, (req, res) => {
 
 //create plan and add the plan id to user
 //require user_id in body
-router.post("/api/plans", auth, (req, res) => {
+router.post("/api/plans", (req, res) => {
   const plan = {
     name: req.body.name,
     user_id: req.body.user_id,
@@ -85,10 +78,7 @@ router.post("/api/plans", auth, (req, res) => {
   const year = req.body.year;
   const numYears = !req.params.numYears ? 5 : req.params.numYears;
   if (numYears <= 0 || numYears > 5) {
-    return errorHandler(res, 400, "numYear must be between 1-5");
-  }
-  if (plan.user_id !== req.user._id) {
-    return forbiddenHandler(res);
+    errorHandler(res, 400, "numYear must be between 1-5");
   }
   plans
     .create(plan)
@@ -119,7 +109,7 @@ router.post("/api/plans", auth, (req, res) => {
           year: i === 0 ? 0 : startYear + i,
           expireAt:
             retrievedPlan.user_id === "guestUser"
-              ? Date.now()
+              ? Date.now() + 60 * 60 * 24 * 1000
               : undefined,
         };
         const newYear = await years.create(retrievedYear);
@@ -164,16 +154,8 @@ const getStartYear = (year) => {
 
 //delete a plan and its years, distributions and courses
 //return deleted courses
-router.delete("/api/plans/:plan_id", auth, (req, res) => {
+router.delete("/api/plans/:plan_id", (req, res) => {
   const plan_id = req.params.plan_id;
-  // check plan belongs to user 
-  plans.findById(plan_id)
-    .then((plan) => {
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
-    }); 
-  // delete plan 
   plans
     .findByIdAndDelete(plan_id)
     .then((plan) => {
@@ -196,7 +178,7 @@ router.delete("/api/plans/:plan_id", auth, (req, res) => {
 });
 
 //***need to consider not allow user to change major for a plan ***/
-router.patch("/api/plans/update", auth, (req, res) => {
+router.patch("/api/plans/update", (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
   const name = req.body.name;
@@ -210,14 +192,6 @@ router.patch("/api/plans/update", auth, (req, res) => {
     if (name) {
       updateBody.name = name;
     }
-    // check plan belongs to user 
-    plans.findById(id)
-      .then((plan) => {
-        if (req.user._id !== plan.user_id) {
-          return forbiddenHandler(res);
-        }
-      }); 
-    // update plan 
     plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .then((plan) => {
