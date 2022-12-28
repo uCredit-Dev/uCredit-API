@@ -4,6 +4,7 @@ import {
   errorHandler,
   distributionCreditUpdate,
   forbiddenHandler,
+  missingHandler,
 } from "./helperMethods.js";
 import courses from "../model/Course.js";
 import distributions from "../model/Distribution.js";
@@ -17,6 +18,9 @@ const router = express.Router();
 //return all courses of the user's plan
 router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
+  if (!plan_id) {
+    return missingHandler(res, { plan_id });   
+  }
   try {
     // verify that plan belongs to request user
     const plan = await plans.findById(plan_id); 
@@ -34,6 +38,9 @@ router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
 //if distribution_id is not found data field would be an empty array
 router.get("/api/coursesByDistribution/:distribution_id", auth, async (req, res) => {
   const d_id = req.params.distribution_id;
+  if (!d_id) {
+    return missingHandler(res, { d_id });   
+  }
   // verify that distribution belongs to request user
   try {
     const dist = distributions.findById(d_id); 
@@ -50,6 +57,9 @@ router.get("/api/coursesByDistribution/:distribution_id", auth, async (req, res)
 
 router.get("/api/courses/:course_id", (req, res) => {
   const c_id = req.params.course_id;
+  if (!c_id) {
+    return missingHandler(res, { c_id });   
+  }
   try {
     const course = courses.findById(c_id); 
     returnData(course, res); 
@@ -63,6 +73,9 @@ router.get("/api/coursesByTerm/:plan_id", auth, (req, res) => {
   const plan_id = req.params.plan_id;
   const year = req.query.year;
   const term = req.query.term;
+  if (!plan_id || !year || term) {
+    return missingHandler(res, { plan_id, year, term });   
+  }
   try {
     const retrievedYear = 
       years
@@ -82,6 +95,9 @@ router.get("/api/coursesByTerm/:plan_id", auth, (req, res) => {
 //distribution field is also updated
 router.post("/api/courses", auth, async (req, res) => {
   const course = req.body;
+  if (!course) {
+    return missingHandler(res, { course });   
+  }
   if (course.user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
@@ -122,6 +138,9 @@ router.post("/api/courses", auth, async (req, res) => {
 router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
   const c_id = req.params.course_id;
   const taken = req.body.taken;
+  if (!c_id ) {
+    return missingHandler(res, { c_id });   
+  }
   // verify that course belongs to user
   const oldCourse = await courses.findById(c_id);
   if (req.user._id !== oldCourse.user_id) {
@@ -154,18 +173,8 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
   const oldYear_id = req.body.oldYear;
   const newTerm = req.body.newTerm;
   // raise error if required param is undefined
-  if (!(newYear_id || oldYear_id || c_id || newTerm)) {
-    return errorHandler(res, 400, {
-      message:
-        "One of these is undefined: new year id is " +
-        newYear_id +
-        ", old year id is " +
-        oldYear_id +
-        ", courseId is " +
-        c_id +
-        ", new term is " +
-        newTerm,
-    });
+  if (!newYear_id || !oldYear_id || !c_id || !newTerm) {
+    return missingHandler(res, { newYear_id, oldYear_id, c_id, newTerm }); 
   }
   // verify that course belongs to user
   const course = await courses.findById(c_id); 
@@ -210,6 +219,9 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
 //update associated distribution credits
 router.delete("/api/courses/:course_id", auth, async (req, res) => {
   const c_id = req.params.course_id;
+  if (!c_id) {
+    return missingHandler(res, { c_id }); 
+  }
   // verify that course belongs to req user
   const course = await courses.findById(c_id);   
   if (req.user._id !== course.user_id) {

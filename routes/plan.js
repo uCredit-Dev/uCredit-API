@@ -1,5 +1,5 @@
 //routes related to Plan CRUD
-import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
+import { returnData, errorHandler, forbiddenHandler, missingHandler } from "./helperMethods.js";
 import courses from "../model/Course.js";
 import distributions from "../model/Distribution.js";
 import users from "../model/User.js";
@@ -21,6 +21,9 @@ const yearName = [
 //get plan by plan id
 router.get("/api/plans/:plan_id", auth, async (req, res) => {
   const p_id = req.params.plan_id;
+  if (!p_id) {
+    return missingHandler(res, { p_id }); 
+  }
   try {
     const plan = await plans
       .findById(p_id)
@@ -42,6 +45,9 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
 //get all plans of a user
 router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
   const user_id = req.params.user_id;
+  if (!user_id) {
+    return missingHandler(res, { user_id }); 
+  }
   if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
@@ -77,6 +83,9 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
 //create plan and add the plan id to user
 //require user_id in body
 router.post("/api/plans", auth, async (req, res) => {
+  if (!req.body.user_id) {
+    return missingHandler(res, { user_id: req.body.user_id }); 
+  }
   const plan = {
     name: req.body.name,
     user_id: req.body.user_id,
@@ -156,6 +165,9 @@ const getStartYear = (year) => {
 //return deleted courses
 router.delete("/api/plans/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
+  if (!plan_id) {
+    return missingHandler(res, { plan_id }); 
+  }
   // check plan belongs to user
   const plan = await plans.findById(plan_id); 
   if (req.user._id !== plan.user_id) {
@@ -187,32 +199,31 @@ router.patch("/api/plans/update", auth, async (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
   const name = req.body.name;
-  if (!(majors || name)) {
-    errorHandler(res, 400, "Must update majors or name.");
-  } else {
-    let updateBody = {};
-    if (majors) {
-      updateBody.majors = majors;
-    }
-    if (name) {
-      updateBody.name = name;
-    }
-    // check plan belongs to user
-    const plan = plans.findById(id); 
-    if (req.user._id !== plan.user_id) {
-      return forbiddenHandler(res);
-    }
-    try {
-      // update plan
-      const plan = await plans.findByIdAndUpdate(id, updateBody, { new: true, runValidators: true }); 
-      const reviewers = reviews
-        .find({ plan_id: id })
-        .populate("reviewer_id"); 
-      plan = { ...plan, reviewers };
-      returnData(plan, res);
-    } catch (err) {
-      errorHandler(res, 400, err); 
-    }
+  if (!majors && !name) {
+    return missingHandler(res, { majors, name }); 
+  }
+  let updateBody = {};
+  if (majors) {
+    updateBody.majors = majors;
+  }
+  if (name) {
+    updateBody.name = name;
+  }
+  // check plan belongs to user
+  const plan = plans.findById(id); 
+  if (req.user._id !== plan.user_id) {
+    return forbiddenHandler(res);
+  }
+  try {
+    // update plan
+    const plan = await plans.findByIdAndUpdate(id, updateBody, { new: true, runValidators: true }); 
+    const reviewers = reviews
+      .find({ plan_id: id })
+      .populate("reviewer_id"); 
+    plan = { ...plan, reviewers };
+    returnData(plan, res);
+  } catch (err) {
+    errorHandler(res, 400, err); 
   }
 });
 

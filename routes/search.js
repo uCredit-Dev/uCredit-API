@@ -1,6 +1,6 @@
 //routes to handle search requests
 import express from "express";
-import { returnData, errorHandler } from "./helperMethods.js";
+import { returnData, errorHandler, missingHandler } from "./helperMethods.js";
 import SISCV from "../model/SISCourseV.js";
 
 const router = express.Router();
@@ -17,6 +17,9 @@ router.get("/api/search/all", async (req, res) => {
 router.get("/api/search/skip/:num", async (req, res) => {
   const toSkip = req.params.num;
   const mod = parseInt(req.query.mod);
+  if (!toSkip || !mod) {
+    return missingHandler(res, { toSkip, mod });
+  }
   try {
     const courses = await SISCV.find({})
       .skip(toSkip * mod)
@@ -69,11 +72,7 @@ router.get("/api/searchVersion", async (req, res) => {
   const title = req.query.title;
   const number = req.query.number;
   if (!version || !title || !number) {
-    return errorHandler(
-      res,
-      400,
-      "You must provide the specific term, the complete title, and the number of the course."
-    );
+    return missingHandler(res, { version, title, number }); 
   } 
   const query = {
     title,

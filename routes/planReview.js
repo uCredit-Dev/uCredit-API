@@ -1,4 +1,4 @@
-import { returnData, errorHandler, postNotification } from "./helperMethods.js";
+import { returnData, errorHandler, postNotification, missingHandler } from "./helperMethods.js";
 import { auth } from "../util/token.js";
 import plans from "../model/Plan.js";
 import planReviews from "../model/PlanReview.js";
@@ -19,10 +19,7 @@ router.post("/api/planReview/request", auth, async (req, res) => {
   const reviewee_name = req.body.reviewee_id;
   const reviewer_id = req.body.reviewer_id;
   if (!plan_id || !reviewer_id || !reviewee_id) {
-    return errorHandler(res, 400, {
-      message:
-        "Missing plan_id, reviewee_id or reviewer_id in the request body.",
-    });
+    return missingHandler(res, { plan_id, reviewer_id, reviewee_id }); 
   } 
   if (req.user._id !== reviewee_id) {
     return forbiddenHandler(res);
@@ -84,10 +81,8 @@ const confirmPlanReview = async (review, res) => {
 router.post("/api/planReview/confirm", auth, async (req, res) => {
   const review_id = req.body.review_id;
   if (!review_id) {
-    return errorHandler(res, 400, {
-      message: "Missing review_id in request body.",
-    });
-  }
+    return missingHandler(res, { review_id }); 
+  } 
   try {
     const review = await planReviews
       .findById(review_id)
@@ -105,6 +100,9 @@ router.post("/api/planReview/confirm", auth, async (req, res) => {
 // if (DEBUG) {
 router.post("/api/backdoor/planReview/confirm", async (req, res) => {
   const reviewer_id = req.body.reviewer_id;
+  if (!reviewer_id) {
+    return missingHandler(res, { reviewer_id }); 
+  } 
   try {
     const review = await planReviews
       .findOne({ reviewer_id })
@@ -121,6 +119,9 @@ router.post("/api/backdoor/planReview/confirm", async (req, res) => {
 */
 router.get("/api/planReview/getReviewers", auth, async (req, res) => {
   const plan_id = req.query.plan_id;
+  if (!plan_id) {
+    return missingHandler(res, { plan_id }); 
+  } 
   // check that plan belongs to user
   const plan = plans.findById(plan_id); 
   if (req.user._id !== plan.user_id) {
@@ -142,6 +143,9 @@ router.get("/api/planReview/getReviewers", auth, async (req, res) => {
 */
 router.get("/api/planReview/plansToReview", auth, async (req, res) => {
   const reviewer_id = req.query.reviewer_id;
+  if (!reviewer_id) {
+    return missingHandler(res, { reviewer_id }); 
+  }
   // only reviewer can get their plans to review
   if (req.user._id !== reviewer_id) {
     return forbiddenHandler(res);
@@ -162,6 +166,9 @@ router.get("/api/planReview/plansToReview", auth, async (req, res) => {
 router.post("/api/planReview/changeStatus", auth, async (req, res) => {
   const review_id = req.body.review_id;
   const status = req.body.status;
+  if (!review_id || !status) {
+    return missingHandler(res, { review_id, status }); 
+  }
   if (
     !(
       status === "REJECTED" ||
@@ -237,6 +244,9 @@ async function sendReviewMail(
 
 router.delete("/api/planReview/removeReview", auth, async (req, res) => {
   const review_id = req.query.review_id;
+  if (!review_id) {
+    return missingHandler(res, { review_id });
+  }
   // only reviewer or reviewee can delete a review
   const review = await planReviews.findById(review_id); 
   if (

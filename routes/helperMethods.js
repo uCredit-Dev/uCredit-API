@@ -33,7 +33,7 @@ function missingHandler(res, required) {
   if (res.headersSent) return;
   res.status(400).json({
     status: 400,
-    message: "Request is missing required data.",
+    message: "Request is missing required fields.",
     required
   });
 }

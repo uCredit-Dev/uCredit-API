@@ -46,6 +46,9 @@ router.get("/api/user", async (req, res) => {
 // if (DEBUG) {
 router.get("/api/backdoor/verification/:id", async (req, res) => {
   const id = req.params.id;
+  if (!id) {
+    return missingHandler(res, { id }); 
+  }
   try {
     const user = await users.findById(id); 
     if (user) {
@@ -71,6 +74,9 @@ router.get("/api/backdoor/verification/:id", async (req, res) => {
 
 router.delete("/api/user/:id", auth, async (req, res) => {
   const id = req.params.id;
+  if (!id) {
+    return missingHandler(res, { id }); 
+  }
   if (req.user._id !== id) {
     return forbiddenHandler(res);
   }

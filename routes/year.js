@@ -4,6 +4,7 @@ import {
   errorHandler,
   distributionCreditUpdate,
   forbiddenHandler,
+  missingHandler,
 } from "./helperMethods.js";
 import { auth } from "../util/token.js";
 import courses from "../model/Course.js";
@@ -17,6 +18,9 @@ const router = express.Router();
 //get years by plan id
 router.get("/api/years/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
+  if (!plan_id) {
+    return missingHandler(res, { plan_id }); 
+  }
   const plan = await plans.findById(plan_id).populate("year_ids"); 
   if (req.user._id !== plan.user_id) {
     return forbiddenHandler(res);
@@ -60,7 +64,7 @@ router.patch("/api/years/changeOrder", auth, async (req, res) => {
   const year_ids = req.body.year_ids;
   const plan_id = req.body.plan_id;
   if (!year_ids || !plan_id) {
-    return errorHandler(res, 400, "Missing required fields");
+    return missingHandler(res, { year_ids, plan_id }); 
   }
   // check that plan belongs to user
   const plan = plans.findById(plan_id); 
@@ -85,11 +89,8 @@ router.patch("/api/years/changeOrder", auth, async (req, res) => {
 router.patch("/api/years/updateName", auth, async (req, res) => {
   const name = req.body.name;
   const year_id = req.body.year_id;
-  if (!name) {
-    return errorHandler(res, 400, "must specify a new name");
-  }
-  if (!year_id) {
-    return errorHandler(res, 400, "must specify a year_id");
+  if (!name || !year_id) {
+    return missingHandler(res, { name, year_id }); 
   }
   // check that year belongs to user
   const year = years.findById(year_id); 
@@ -110,13 +111,8 @@ router.patch("/api/years/updateName", auth, async (req, res) => {
 router.patch("/api/years/updateYear", auth, async (req, res) => {
   const year = req.body.year;
   const year_id = req.body.year_id;
-  if (!year) {
-    errorHandler(res, 400, "must specify a new year");
-    return;
-  }
-  if (!year_id) {
-    errorHandler(res, 400, "must specify a year_id");
-    return;
+  if (!year || !year_id) {
+    return missingHandler(res, { year, year_id }); 
   }
   try {
     // check that year belongs to user

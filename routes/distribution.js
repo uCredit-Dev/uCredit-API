@@ -1,5 +1,5 @@
 //routes related to distirbutions CRUD
-import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
+import { returnData, errorHandler, forbiddenHandler, missingHandler } from "./helperMethods.js";
 import { auth } from "../util/token.js";
 import courses from "../model/Course.js";
 import distributions from "../model/Distribution.js";
@@ -11,6 +11,9 @@ const router = express.Router();
 //get distribution by id
 router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
   const d_id = req.params.distribution_id;
+  if (!d_id) {
+    return missingHandler(res, { d_id }); 
+  }
   try {
     const distribution = await distributions.findById(d_id); 
     // verify that distribution belongs to user
@@ -27,6 +30,9 @@ router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
 //get all distributions in a plan
 router.get("/api/distributionsByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
+  if (!plan_id) {
+    return missingHandler(res, { plan_id }); 
+  }
   try {
     const plan = await plans
       .findById(plan_id)
@@ -45,6 +51,9 @@ router.get("/api/distributionsByPlan/:plan_id", auth, async (req, res) => {
 //create distribution and update its plan
 router.post("/api/distributions", auth, async (req, res) => {
   const distribution = req.body;
+  if (!distribution) {
+    return missingHandler(res, { distribution }); 
+  }
   if (distribution.user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
@@ -67,6 +76,9 @@ router.post("/api/distributions", auth, async (req, res) => {
 router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) => {
     const required = req.query.required;
     const id = req.query.id;
+    if (!required || !id) {
+      return missingHandler(res, { required, id }); 
+    }
     try {
       const distribution = await distributions.findById(id);
       // verify that distribution belongs to user
@@ -88,6 +100,9 @@ router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) 
 router.patch("/api/distributions/updateName", auth, async (req, res) => {
   const name = req.query.name;
   const id = req.query.id;
+  if (!name || !id) {
+    return missingHandler(res, { name, id }); 
+  }
   try {
     const distribution = await distributions.findById(id);
     // verify that distribution belongs to user
@@ -107,6 +122,9 @@ router.patch("/api/distributions/updateName", auth, async (req, res) => {
 //return the deleted courses
 router.delete("/api/distributions/:d_id", auth, async (req, res) => {
   const d_id = req.params.d_id;
+  if (!d_id) {
+    return missingHandler(res, { d_id }); 
+  }
   // verify that distribution belongs to user
   const distribution = await distributions.findById(d_id);
   if (req.user._id !== distribution.user_id) {

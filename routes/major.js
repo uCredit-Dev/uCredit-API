@@ -1,5 +1,5 @@
 import majors from "../model/Major.js";
-import { returnData, errorHandler } from "./helperMethods.js";
+import { returnData, errorHandler, missingHandler } from "./helperMethods.js";
 import express from "express";
 
 const router = express.Router();
@@ -15,6 +15,9 @@ router.get("/api/majors/all", async (req, res) => {
 
 router.post("/api/majors", async (req, res) => {
   const major = req.body;
+  if (!major) {
+    return missingHandler(res, { major });
+  }
   try {
     const newMajor = await majors.create(major); 
     returnData(newMajor, res); 

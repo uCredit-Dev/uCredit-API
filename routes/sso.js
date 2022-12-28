@@ -5,7 +5,7 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import cryptoRandomString from "crypto-random-string";
 import { createToken } from "../util/token.js";
-import { returnData, errorHandler } from "./helperMethods.js";
+import { returnData, errorHandler, missingHandler } from "./helperMethods.js";
 import users from "../model/User.js";
 import sessions from "../model/Session.js";
 import dotenv from "dotenv";
@@ -127,6 +127,9 @@ router.post(
 //retrieve user object from db
 router.get("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
+  if (!hash) {
+    return missingHandler(res, { hash }); 
+  }
   const user = await sessions.findOne({ hash }); 
   if (!user) {
     return errorHandler(res, 401, "User not logged in."); 
@@ -142,6 +145,9 @@ router.get("/api/verifyLogin/:hash", async (req, res) => {
 
 router.delete("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
+  if (!hash) {
+    return missingHandler(res, { hash }); 
+  }
   try {
     const user = await sessions.remove({ hash }); 
     returnData(user, res); 
