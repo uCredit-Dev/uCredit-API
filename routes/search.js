@@ -5,24 +5,30 @@ import SISCV from "../model/SISCourseV.js";
 
 const router = express.Router();
 
-router.get("/api/search/all", (req, res) => {
-  SISCV.find({})
-    .then((courses) => returnData(courses, res))
-    .catch((err) => errorHandler(res, 500, err));
+router.get("/api/search/all", async (req, res) => {
+  try {
+    const courses = await SISCV.find({}); 
+    returnData(courses, res); 
+  } catch (err) {
+    errorHandler(res, 500, err); 
+  }
 });
 
-router.get("/api/search/skip/:num", (req, res) => {
+router.get("/api/search/skip/:num", async (req, res) => {
   const toSkip = req.params.num;
   const mod = parseInt(req.query.mod);
-  SISCV.find({})
-    .skip(toSkip * mod)
-    .limit(mod)
-    .then((courses) => returnData(courses, res))
-    .catch((err) => errorHandler(res, 500, err));
+  try {
+    const courses = await SISCV.find({})
+      .skip(toSkip * mod)
+      .limit(mod); 
+    returnData(courses, res); 
+  } catch (err) {
+    errorHandler(res, 500, err); 
+  }
 });
 
 //return all versions of the course based on the filters
-router.get("/api/search", (req, res) => {
+router.get("/api/search", async (req, res) => {
   let queryTerm =
     req.query.term === "All" || !req.query.term ? "" : req.query.term;
   if (queryTerm.length > 0) queryTerm += " ";
@@ -39,44 +45,45 @@ router.get("/api/search", (req, res) => {
     tags: req.query.tags,
     level: req.query.level,
   });
-  SISCV.find(query)
-    .then((results) => {
-      results = results.filter((result) => {
-        for (let version of result.versions) {
-          if (
-            (version.term === queryTerm &&
-              req.query.areas &&
-              version.areas !== "None") ||
-            !req.query.areas
-          ) {
-            return true;
-          }
-          return false;
-        }
-      });
-      returnData(results, res);
-    })
-    .catch((err) => errorHandler(res, 500, err.message));
+  try {
+    const results = await SISCV.find(query); 
+    results = results.filter((result) => {
+      for (let version of result.versions) {
+        return (
+          (version.term === queryTerm &&
+            req.query.areas &&
+            version.areas !== "None") ||
+          !req.query.areas
+          ); 
+      }
+    });
+    returnData(results, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
 });
 
 //return the term version of a specific course
-router.get("/api/searchVersion", (req, res) => {
+router.get("/api/searchVersion", async (req, res) => {
   const version = req.query.version;
   const title = req.query.title;
   const number = req.query.number;
   if (!version || !title || !number) {
-    errorHandler(
+    return errorHandler(
       res,
       400,
       "You must provide the specific term, the complete title, and the number of the course."
     );
-  } else {
-    const query = {
-      title,
-      number,
-      terms: { $in: version },
-    };
-    sendCourseVersion(query, version, res);
+  } 
+  const query = {
+    title,
+    number,
+    terms: { $in: version },
+  };
+  try {
+    await sendCourseVersion(query, version, res);
+  } catch (err) {
+    errorHandler(res, 400, err); 
   }
 });
 
@@ -131,47 +138,44 @@ function constructQuery(params) {
   return query;
 }
 
-function sendCourseVersion(query, version, res) {
-  SISCV.findOne(query)
-    .then((match) => {
-      if (match == null) {
-        errorHandler(
-          res,
-          404,
-          "Did not find any course or the course specified is not offered in this term."
-        );
-      } else {
-        let course = {};
-        course.title = match.title;
-        course.number = match.number;
-        course.terms = match.terms;
-        match.versions.forEach((v) => {
-          if (v.term === version) {
-            course.version = v;
-          }
-        });
-        returnData(course, res);
-      }
-    })
-    .catch((err) => errorHandler(res, 400, err));
+async function sendCourseVersion(query, version, res) {
+  const match = await SISCV.findOne(query); 
+  if (match == null) {
+    return errorHandler(
+      res,
+      404,
+      "Did not find any course or the course specified is not offered in this term."
+    );
+  }
+  let course = {};
+  course.title = match.title;
+  course.number = match.number;
+  course.terms = match.terms;
+  match.versions.forEach((v) => {
+    if (v.term === version) {
+      course.version = v;
+    }
+  });
+  returnData(course, res);
 }
 
 // return min and max possible years for current courses in db
-router.get("/api/getYearRange", (req, res) => {
+router.get("/api/getYearRange", async (req, res) => {
   // .distinct returns an array of all possible elements in the "terms" array
-  SISCV.distinct("terms")
-    .then((resp) => {
-      let years = { min: Infinity, max: -Infinity };
-      // parse term for year value and update min / max
-      resp.forEach((term) => {
-        if (parseInt(term.substring(term.length - 4, term.length)) < years.min)
-          years.min = parseInt(term.substring(term.length - 4, term.length));
-        if (parseInt(term.substring(term.length - 4, term.length)) > years.max)
-          years.max = parseInt(term.substring(term.length - 4, term.length));
-      });
-      returnData(years, res);
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const resp = await SISCV.distinct("terms"); 
+    let years = { min: Infinity, max: -Infinity };
+    // parse term for year value and update min / max
+    resp.forEach((term) => {
+      if (parseInt(term.substring(term.length - 4, term.length)) < years.min)
+        years.min = parseInt(term.substring(term.length - 4, term.length));
+      if (parseInt(term.substring(term.length - 4, term.length)) > years.max)
+        years.max = parseInt(term.substring(term.length - 4, term.length));
+    });
+    returnData(years, res);
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 export default router;

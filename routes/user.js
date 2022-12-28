@@ -15,7 +15,7 @@ const router = express.Router();
 
 const DEBUG = process.env.DEBUG === "True";
 
-router.get("/api/user", (req, res) => {
+router.get("/api/user", async (req, res) => {
   const username = req.query.username || "";
   const affiliation = req.query.affiliation || "";
   const query = {
@@ -25,30 +25,29 @@ router.get("/api/user", (req, res) => {
     ],
     affiliation: { $regex: affiliation, $options: "i" },
   };
-  users
-    .find(query)
-    .then((users) => {
-      returnData(
-        users.map((user) => ({
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          affiliation: user.affiliation,
-          school: user.school,
-          grade: user.grade,
-          whitelisted_plan_ids: user.whitelisted_plan_ids,
-        })),
-        res
-      );
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    let users = await users.find(query); 
+    users = users.map((user) => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      affiliation: user.affiliation,
+      school: user.school,
+      grade: user.grade,
+      whitelisted_plan_ids: user.whitelisted_plan_ids,
+    })); 
+    returnData(users, res); 
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 // TODO: Temporarily disabled for OOSE dev deployment
 // if (DEBUG) {
-router.get("/api/backdoor/verification/:id", (req, res) => {
+router.get("/api/backdoor/verification/:id", async (req, res) => {
   const id = req.params.id;
-  users.findById(id).then(async (user) => {
+  try {
+    const user = await users.findById(id); 
     if (user) {
       const token = createToken(user);
       returnData({ user, token }, res);
@@ -65,7 +64,9 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
       const token = createToken(user);
       returnData({ user, token }, res);
     }
-  });
+  } catch (err) {
+    errorHandler(res, 500, err); 
+  }
 });
 
 router.delete("/api/user/:id", auth, async (req, res) => {

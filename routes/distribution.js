@@ -9,65 +9,62 @@ import express from "express";
 const router = express.Router();
 
 //get distribution by id
-router.get("/api/distributions/:distribution_id", auth, (req, res) => {
+router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
   const d_id = req.params.distribution_id;
-  distributions
-    .findById(d_id)
-    .then((distribution) => {
-      // verify that distribution belongs to user
-      if (req.user._id !== distribution.user_id) {
-        forbiddenHandler(res);
-      } else {
-        returnData(distribution, res);
-      }
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const distribution = await distributions.findById(d_id); 
+    // verify that distribution belongs to user
+    if (req.user._id !== distribution.user_id) {
+      forbiddenHandler(res);
+    } else {
+      returnData(distribution, res);
+    }
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 //get all distributions in a plan
-router.get("/api/distributionsByPlan/:plan_id", auth, (req, res) => {
+router.get("/api/distributionsByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
-  plans
-    .findById(plan_id)
-    .populate({ path: "distribution_ids" })
-    .then((plan) => {
-      // verify that plan belongs to user
-      if (req.user._id !== plan.user_id) {
-        forbiddenHandler(res);
-      } else {
-        returnData(plan.distribution_ids, res);
-      }
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const plan = await plans
+      .findById(plan_id)
+      .populate({ path: "distribution_ids" }); 
+    // verify that plan belongs to user
+    if (req.user._id !== plan.user_id) {
+      forbiddenHandler(res);
+    } else {
+      returnData(plan.distribution_ids, res);
+    }
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 //create distribution and update its plan
-router.post("/api/distributions", auth, (req, res) => {
+router.post("/api/distributions", auth, async (req, res) => {
   const distribution = req.body;
   if (distribution.user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
-  distributions
-    .create(distribution)
-    .then((retrievedDistribution) => {
-      plans
-        .findByIdAndUpdate(
-          //update plan
-          retrievedDistribution.plan_id,
-          { $push: { distribution_ids: retrievedDistribution._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      returnData(retrievedDistribution, res);
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const retrievedDistribution = await distributions.create(distribution);
+    await plans
+      .findByIdAndUpdate(
+        //update plan
+        retrievedDistribution.plan_id,
+        { $push: { distribution_ids: retrievedDistribution._id } },
+        { new: true, runValidators: true }
+      ); 
+    returnData(retrievedDistribution, res);
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 //change required credit setting for distribution
-router.patch(
-  "/api/distributions/updateRequiredCredits",
-  auth,
-  async (req, res) => {
+router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) => {
     const required = req.query.required;
     const id = req.query.id;
     try {
@@ -80,7 +77,8 @@ router.patch(
       distribution.required = Number.parseInt(required);
       //recalculate whether distribution is satisfied
       distribution.satisfied = distribution.planned >= distribution.required;
-      distribution.save().then((result) => returnData(result, res));
+      await distribution.save(); 
+      returnData(distribution, res);
     } catch (err) {
       errorHandler(res, 400, err);
     }
@@ -98,7 +96,8 @@ router.patch("/api/distributions/updateName", auth, async (req, res) => {
     }
     //update distribution name
     distribution.name = name;
-    distribution.save().then((result) => returnData(result, res));
+    distribution.save(); 
+    returnData(distribution, res);
   } catch (err) {
     errorHandler(res, 400, err);
   }
@@ -113,30 +112,27 @@ router.delete("/api/distributions/:d_id", auth, async (req, res) => {
   if (req.user._id !== distribution.user_id) {
     return forbiddenHandler(res);
   }
-  distributions
-    .findByIdAndDelete(d_id)
-    .then((distribution) => {
-      plans
-        .findByIdAndUpdate(
-          //update plan
-          distribution.plan_id,
-          { $pull: { distribution_ids: distribution._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      courses //delete courses that only belong to the distribution
-        .deleteMany({
-          $and: [
-            {
-              distribution_ids: distribution._id,
-            },
-            { distribution_ids: { $size: 1 } },
-          ], //needs to be an AND condition
-        })
-        .exec();
-      returnData(distribution, res);
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    await distributions.findByIdAndDelete(d_id); 
+    //update plan
+    await plans
+      .findByIdAndUpdate(
+        distribution.plan_id,
+        { $pull: { distribution_ids: distribution._id } },
+        { new: true, runValidators: true }
+      );
+    //delete courses that only belong to the distribution
+    await courses 
+      .deleteMany({
+        $and: [
+          { distribution_ids: distribution._id },
+          { distribution_ids: { $size: 1 } },
+        ],
+      }); 
+    returnData(distribution, res);
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 export default router;

@@ -10,72 +10,73 @@ import reviews from "../model/PlanReview.js";
 import express from "express";
 
 const router = express.Router();
+const yearName = [
+  "AP/Transfer",
+  "Freshman",
+  "Sophomore",
+  "Junior",
+  "Senior",
+];
 
 //get plan by plan id
-router.get("/api/plans/:plan_id", auth, (req, res) => {
+router.get("/api/plans/:plan_id", auth, async (req, res) => {
   const p_id = req.params.plan_id;
-  plans
-    .findById(p_id)
-    .populate("year_ids")
-    .then((plan) => {
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
-      plan.populate("year_ids.courses", () => {
-        plan = { ...plan._doc, years: plan.year_ids };
-        delete plan.year_ids;
-        reviews
-          .find({ plan_id: p_id })
-          .populate("reviewer_id")
-          .then((revs) => {
-            plan = { ...plan, reviewers: revs };
-            returnData(plan, res);
-          });
-      });
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const plan = await plans
+      .findById(p_id)
+      .populate("year_ids")
+      .populate("year_ids.courses"); 
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
+    plan = { ...plan._doc, years: plan.year_ids };
+    delete plan.year_ids;
+    const reviewers = reviews.find({ plan_id: p_id }).populate("reviewer_id"); 
+    plan = { ...plan, reviewers }; 
+    returnData(plan, res); 
+  } catch (err) {
+    errorHandler(res, 400, err);
+  }
 });
 
 //get all plans of a user
-router.get("/api/plansByUser/:user_id", auth, (req, res) => {
+router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
   const user_id = req.params.user_id;
   if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
   const plansTotal = [];
-  users
-    .findById(user_id)
-    .then(async (user) => {
-      let total = user.plan_ids.length;
-      if (!user) errorHandler(res, 404, `${user} of ${user_id} User not found`);
-      for (let plan_id of user.plan_ids) {
-        let plan = await plans.findById(plan_id).populate("year_ids");
-        if (!plan) {
-          total--;
-          continue;
-        }
-        await plan.populate("year_ids.courses", () => {
-          plan = { ...plan._doc, years: plan.year_ids };
-          delete plan.year_ids;
-          reviews
-            .find({ plan_id: plan_id })
-            .populate("reviewer_id")
-            .then((revs) => {
-              plan = { ...plan, reviewers: revs };
-              plansTotal.push(plan);
-              if (plansTotal.length === total) {
-                returnData(plansTotal, res);
-              }
-            });
-        });
+  const user = users.findById(user_id); 
+  if (!user) return errorHandler(res, 404, { message: `${user} of ${user_id} User not found` });
+  let total = user.plan_ids.length;
+  try {
+    for (let plan_id of user.plan_ids) {
+      let plan = await plans.findById(plan_id).populate("year_ids");
+      if (!plan) {
+        total--;
+        continue;
       }
-    })
-    .catch((err) => errorHandler(res, 400, err));
+      await plan.populate("year_ids.courses", async () => {
+        plan = { ...plan._doc, years: plan.year_ids };
+        delete plan.year_ids;
+        const reviewers = await reviews
+          .find({ plan_id: plan_id })
+          .populate("reviewer_id"); 
+        plan = { ...plan, reviewers };
+        plansTotal.push(plan);
+        if (plansTotal.length === total) {
+          returnData(plansTotal, res);
+        }
+      });
+    }
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 //create plan and add the plan id to user
 //require user_id in body
-router.post("/api/plans", auth, (req, res) => {
+router.post("/api/plans", auth, async (req, res) => {
   const plan = {
     name: req.body.name,
     user_id: req.body.user_id,
@@ -90,46 +91,37 @@ router.post("/api/plans", auth, (req, res) => {
   if (plan.user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
-  plans
-    .create(plan)
-    .then(async (retrievedPlan) => {
-      users
-        .findByIdAndUpdate(
-          //update user
-          retrievedPlan.user_id,
-          { $push: { plan_ids: retrievedPlan._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      const yearName = [
-        "AP/Transfer",
-        "Freshman",
-        "Sophomore",
-        "Junior",
-        "Senior",
-      ];
-      const startYear = getStartYear(year);
-      const yearObjs = [];
-      //create default year documents according to numYears
-      for (let i = 0; i < numYears; i++) {
-        const retrievedYear = {
-          name: yearName[i],
-          plan_id: retrievedPlan._id,
-          user_id: retrievedPlan.user_id,
-          year: i === 0 ? 0 : startYear + i,
-          expireAt:
-            retrievedPlan.user_id === "guestUser" ? Date.now() : undefined,
-        };
-        const newYear = await years.create(retrievedYear);
-        yearObjs.push(newYear);
-        retrievedPlan.year_ids.push(newYear._id);
-      }
-      retrievedPlan.save();
-      const resp = { ...retrievedPlan._doc, years: yearObjs, reviewers: [] };
-      delete resp.year_ids;
-      returnData(resp, res);
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const retrievedPlan = plans.create(plan); 
+    //update user
+    await users.findByIdAndUpdate(
+      retrievedPlan.user_id,
+      { $push: { plan_ids: retrievedPlan._id } },
+      { new: true, runValidators: true }
+    ); 
+    const startYear = getStartYear(year);
+    const yearObjs = [];
+    //create default year documents according to numYears
+    for (let i = 0; i < numYears; i++) {
+      const retrievedYear = {
+        name: yearName[i],
+        plan_id: retrievedPlan._id,
+        user_id: retrievedPlan.user_id,
+        year: i === 0 ? 0 : startYear + i,
+        expireAt:
+          retrievedPlan.user_id === "guestUser" ? Date.now() : undefined,
+      };
+      const newYear = await years.create(retrievedYear);
+      yearObjs.push(newYear);
+      retrievedPlan.year_ids.push(newYear._id);
+    }
+    await retrievedPlan.save();
+    const resp = { ...retrievedPlan._doc, years: yearObjs, reviewers: [] };
+    delete resp.year_ids;
+    returnData(resp, res);
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 const getStartYear = (year) => {
@@ -162,38 +154,36 @@ const getStartYear = (year) => {
 
 //delete a plan and its years, distributions and courses
 //return deleted courses
-router.delete("/api/plans/:plan_id", auth, (req, res) => {
+router.delete("/api/plans/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   // check plan belongs to user
-  plans.findById(plan_id).then((plan) => {
-    if (req.user._id !== plan.user_id) {
-      return forbiddenHandler(res);
-    }
-  });
-  // delete plan
-  plans
-    .findByIdAndDelete(plan_id)
-    .then((plan) => {
-      //delete distribution & courses
-      distributions.deleteMany({ plan_id: plan._id }).exec();
-      courses.deleteMany({ plan_id: plan._id }).exec();
-      years.deleteMany({ plan_id: plan._id }).exec();
-      // TODO: delete reviews
-      users
-        .findByIdAndUpdate(
-          //delete plan_id from user
-          plan.user_id,
-          { $pull: { plan_ids: plan._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      returnData(plan, res);
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  const plan = await plans.findById(plan_id); 
+  if (req.user._id !== plan.user_id) {
+    return forbiddenHandler(res);
+  }
+  try {
+    // delete plan
+    await plans.findByIdAndDelete(plan_id); 
+    //delete distribution & courses
+    distributions.deleteMany({ plan_id: plan._id }).exec();
+    courses.deleteMany({ plan_id: plan._id }).exec();
+    years.deleteMany({ plan_id: plan._id }).exec();
+    // TODO: delete reviews
+    await users
+      .findByIdAndUpdate(
+        //delete plan_id from user
+        plan.user_id,
+        { $pull: { plan_ids: plan._id } },
+        { new: true, runValidators: true }
+      ); 
+    returnData(plan, res);
+  } catch (err) {
+    errorHandler(res, 400, err); 
+  }
 });
 
 //***need to consider not allow user to change major for a plan ***/
-router.patch("/api/plans/update", auth, (req, res) => {
+router.patch("/api/plans/update", auth, async (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
   const name = req.body.name;
@@ -208,24 +198,21 @@ router.patch("/api/plans/update", auth, (req, res) => {
       updateBody.name = name;
     }
     // check plan belongs to user
-    plans.findById(id).then((plan) => {
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
-    });
-    // update plan
-    plans
-      .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
-      .then((plan) => {
-        reviews
-          .find({ plan_id: id })
-          .populate("reviewer_id")
-          .then((revs) => {
-            plan = { ...plan, reviewers: revs };
-            returnData(plan, res);
-          });
-      })
-      .catch((err) => errorHandler(res, 400, err));
+    const plan = plans.findById(id); 
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
+    try {
+      // update plan
+      const plan = await plans.findByIdAndUpdate(id, updateBody, { new: true, runValidators: true }); 
+      const reviewers = reviews
+        .find({ plan_id: id })
+        .populate("reviewer_id"); 
+      plan = { ...plan, reviewers };
+      returnData(plan, res);
+    } catch (err) {
+      errorHandler(res, 400, err); 
+    }
   }
 });
 

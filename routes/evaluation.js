@@ -5,12 +5,14 @@ import express from "express";
 const router = express.Router();
 
 //get course evaluations by course number
-router.get("/api/evals/:number", (req, res) => {
+router.get("/api/evals/:number", async (req, res) => {
   const num = req.params.number;
-  evaluation
-    .findOne({ num })
-    .then((review) => returnData(review, res))
-    .catch((err) => errorHandler(res, 500, err));
+  try {
+    const review = await evaluation.findOne({ num }); 
+    returnData(review, res); 
+  } catch (err) {
+    errorHandler(res, 500, err); 
+  }
 });
 
 export default router;

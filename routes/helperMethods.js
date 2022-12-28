@@ -29,6 +29,15 @@ function forbiddenHandler(res) {
   });
 }
 
+function missingHandler(res, required) {
+  if (res.headersSent) return;
+  res.status(400).json({
+    status: 400,
+    message: "Request is missing required data.",
+    required
+  });
+}
+
 async function distributionCreditUpdate(distribution, course, add) {
   if (!distribution) return;
   if (add) {
@@ -63,6 +72,7 @@ export {
   returnData,
   errorHandler,
   forbiddenHandler,
+  missingHandler, 
   distributionCreditUpdate,
   postNotification,
 };

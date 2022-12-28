@@ -125,29 +125,29 @@ router.post(
 );
 
 //retrieve user object from db
-router.get("/api/verifyLogin/:hash", (req, res) => {
+router.get("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
-  sessions.findOne({ hash }).then((user) => {
-    if (user === null) {
-      errorHandler(res, 401, "User not logged in.");
-    } else {
-      users
-        .findById(user._id)
-        .then((retrievedUser) => {
-          const token = createToken(retrievedUser);
-          returnData({ retrievedUser, token }, res);
-        })
-        .catch((err) => errorHandler(res, 500, err));
-    }
-  });
+  const user = await sessions.findOne({ hash }); 
+  if (!user) {
+    return errorHandler(res, 401, "User not logged in."); 
+  }
+  try {
+    const retrievedUser = await users.findById(user._id); 
+    const token = createToken(retrievedUser); 
+    returnData({ retrievedUser, token }, res); 
+  } catch (err) {
+    errorHandler(res, 500, err); 
+  }
 });
 
-router.delete("/api/verifyLogin/:hash", (req, res) => {
+router.delete("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
-  sessions
-    .remove({ hash })
-    .then((user) => returnData(user, res))
-    .catch((err) => errorHandler(res, 500, err));
+  try {
+    const user = await sessions.remove({ hash }); 
+    returnData(user, res); 
+  } catch (err) {
+    errorHandler(res, 500, err); 
+  }
 });
 
 // route to metadata
