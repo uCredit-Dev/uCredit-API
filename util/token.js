@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const createToken = (user) => {
-  console.log("secret:", process.env.JWT_SECRET);
   return jwt.sign(
     {
       _id: user._id,

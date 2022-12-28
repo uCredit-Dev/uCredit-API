@@ -38,7 +38,7 @@ const samlStrategy = new saml.Strategy(
     issuer: SP_NAME,
     callbackUrl: `${BASE_URL}/api/login/callback`,
     decryptionPvk: PvK,
-    privateCert: PvK,
+    privateKey: PvK,
     // sameSite: "none",
   },
   (profile, done) => {

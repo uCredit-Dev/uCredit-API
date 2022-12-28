@@ -13,7 +13,6 @@ const URI = debug ? "mongodb://db:27017/debug" : process.env.URI;
 
 //establish connection to cloud database
 export async function connect() {
-  console.log(URI);
   mongoose.connect(URI);
 
   //handle events emitted by the connection process
