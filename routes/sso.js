@@ -104,18 +104,18 @@ router.post(
         grade: req.user[grade],
         school: req.user[school],
       };
-      users.create(user);
+      await users.create(user);
     } else {
       user.grade = req.user[grade];
       user.school = req.user[school];
-      user.save();
+      await user.save();
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
     await sessions.findByIdAndUpdate(
-      id,
-      { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
-      { upsert: true, new: true }
-    );
+        id,
+        { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
+        { upsert: true, new: true }
+      ).exec();
     try {
       res.redirect(`https://ucredit.me/login/${hash}`);
     } catch (err) {
@@ -130,7 +130,7 @@ router.get("/api/verifyLogin/:hash", async (req, res) => {
   if (!hash) {
     return missingHandler(res, { hash }); 
   }
-  const user = await sessions.findOne({ hash }); 
+  const user = await sessions.findOne({ hash }).exec(); 
   if (!user) {
     return errorHandler(res, 401, "User not logged in."); 
   }
@@ -149,7 +149,7 @@ router.delete("/api/verifyLogin/:hash", async (req, res) => {
     return missingHandler(res, { hash }); 
   }
   try {
-    const user = await sessions.remove({ hash }); 
+    const user = await sessions.remove({ hash }).exec(); 
     returnData(user, res); 
   } catch (err) {
     errorHandler(res, 500, err); 

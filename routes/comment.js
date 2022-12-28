@@ -52,9 +52,9 @@ router.post("/api/thread/new", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   try {
-    const newThread = await Threads.create(thread).exec(); 
+    const newThread = await Threads.create(thread); 
     comment.thread_id = newThread._id;
-    const newComment = await Comments.create(comment).create(); 
+    const newComment = await Comments.create(comment); 
     returnData({ ...newThread._doc, comments: [newComment] }, res); 
   } catch (err) {
     errorHandler(res, 500, err);
@@ -67,7 +67,7 @@ router.post("/api/thread/new", auth, async (req, res) => {
 router.post("/api/thread/reply", auth, async (req, res) => {
   const comment = req.body.comment;
   if (!comment) {
-    missingHandler(res, { comment }); 
+    return missingHandler(res, { comment }); 
   } 
   // verify that commenter is request user
   if (req.user._id !== comment.commenter_id) {
@@ -90,15 +90,15 @@ router.patch("/api/thread/resolve", auth, async (req, res) => {
     return missingHandler(res, { thread_id });   
   }
   try {
-    const thread = await Threads.findById(thread_id); 
+    const thread = await Threads.findById(thread_id).exec(); 
     // verify plan (and thrad) belongs to req user
-    const plan = Plans.findbyId(thread.plan_id); 
+    const plan = await Plans.findbyId(thread.plan_id).exec(); 
     if (plan.user_id !== req.user._id) {
       return forbiddenHandler(res);
     }
     // update resolved
     thread.resolved = true;
-    thread.save();
+    await thread.save();
     returnData(thread, res);    
   } catch (err) {
     errorHandler(res, 500, err)
@@ -115,14 +115,14 @@ router.patch("/api/comment", auth, async (req, res) => {
     return missingHandler(res, { comment_id, message });   
   }
   try {
-    const comment = await Comments.findById(comment_id); 
+    const comment = await Comments.findById(comment_id).exec(); 
     // verify that commenter is request user
     if (req.user._id !== comment.commenter_id) {
       return forbiddenHandler(res);
     }
     // update message
     comment.message = message;
-    comment.save();
+    await comment.save();
     returnData(comment, res);
   } catch (err) {
     errorHandler(res, 500, err);  

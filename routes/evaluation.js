@@ -11,7 +11,7 @@ router.get("/api/evals/:number", async (req, res) => {
     return missingHandler(res, { num }); 
   }
   try {
-    const review = await evaluation.findOne({ num }); 
+    const review = await evaluation.findOne({ num }).exec(); 
     returnData(review, res); 
   } catch (err) {
     errorHandler(res, 500, err); 

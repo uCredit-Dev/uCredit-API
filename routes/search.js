@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get("/api/search/all", async (req, res) => {
   try {
-    const courses = await SISCV.find({}); 
+    const courses = await SISCV.find({}).exec(); 
     returnData(courses, res); 
   } catch (err) {
     errorHandler(res, 500, err); 
@@ -37,7 +37,7 @@ router.get("/api/search", async (req, res) => {
   if (queryTerm.length > 0) queryTerm += " ";
   queryTerm +=
     req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
-  const query = constructQuery({
+  let query = constructQuery({
     userQuery: req.query.query,
     school: req.query.school,
     department: req.query.department,
@@ -49,7 +49,7 @@ router.get("/api/search", async (req, res) => {
     level: req.query.level,
   });
   try {
-    const results = await SISCV.find(query); 
+    let results = await SISCV.find(query).exec(); 
     results = results.filter((result) => {
       for (let version of result.versions) {
         return (
@@ -138,7 +138,7 @@ function constructQuery(params) {
 }
 
 async function sendCourseVersion(query, version, res) {
-  const match = await SISCV.findOne(query); 
+  const match = await SISCV.findOne(query).exec(); 
   if (match == null) {
     return errorHandler(
       res,

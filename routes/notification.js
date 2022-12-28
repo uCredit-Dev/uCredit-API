@@ -18,7 +18,7 @@ router.get("/api/notifications/:user_id", auth, async (req, res) => {
     return errorHandler(res, 400, { message: "Must provide user_id." });
   } 
   try {
-    const notifications = await Notifications.find({ user_id: { $elemMatch: { $eq: user_id } } }); 
+    const notifications = await Notifications.find({ user_id: { $elemMatch: { $eq: user_id } } }).exec(); 
     returnData(notifications, res); 
   } catch (err) {
     errorHandler(res, 500, err); 
@@ -49,7 +49,7 @@ router.post("/api/notifications/read/:notification_id", auth, async (req, res) =
   if (!notification_id) {
     return missingHandler(res, { notification_id }); 
   }
-  const notification = await Notifications.findById(notification_id); 
+  const notification = await Notifications.findById(notification_id).exec(); 
   if (!notification) {
     errorHandler(res, 404, { message: "Notification not found." });
   } else if (!notification.user_id.includes(req.user._id)) {
@@ -57,7 +57,7 @@ router.post("/api/notifications/read/:notification_id", auth, async (req, res) =
   } else {
     try {
       notification.read = true;
-      notification.save();
+      await notification.save();
       returnData(notification, res);
     } catch (err) {
       errorHandler(res, 400, err); 
@@ -72,13 +72,13 @@ router.delete("/api/notifications/:notification_id", auth, async (req, res) => {
     return missingHandler(res, { notification_id }); 
   }
   // check notification belongs to user
-  const notif = await Notifications.findById(notification_id); 
+  const notif = await Notifications.findById(notification_id).exec(); 
   if (!notif.user_id.includes(req.user._id)) {
     return forbiddenHandler(res);
   }
   try {
     // delete notification
-    const result = await Notifications.findByIdAndDelete(notification_id); 
+    const result = await Notifications.findByIdAndDelete(notification_id).exec(); 
     returnData(result, res);
   } catch (err) {
     errorHandler(res, 500, err); 

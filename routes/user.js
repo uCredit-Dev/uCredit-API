@@ -26,7 +26,7 @@ router.get("/api/user", async (req, res) => {
     affiliation: { $regex: affiliation, $options: "i" },
   };
   try {
-    let users = await users.find(query); 
+    let users = await users.find(query).exec(); 
     users = users.map((user) => ({
       _id: user._id,
       name: user.name,
@@ -50,7 +50,7 @@ router.get("/api/backdoor/verification/:id", async (req, res) => {
     return missingHandler(res, { id }); 
   }
   try {
-    const user = await users.findById(id); 
+    const user = await users.findById(id).exec(); 
     if (user) {
       const token = createToken(user);
       returnData({ user, token }, res);
@@ -80,13 +80,13 @@ router.delete("/api/user/:id", auth, async (req, res) => {
   if (req.user._id !== id) {
     return forbiddenHandler(res);
   }
-  const user = await users.findByIdAndDelete(id);
+  const user = await users.findByIdAndDelete(id).exec();
   if (user) {
-    await courses.deleteMany({ user_id: id });
-    await distributions.deleteMany({ user_id: id });
-    await years.deleteMany({ user_id: id });
-    await plans.deleteMany({ user_id: id });
-    await planReviews.deleteMany({ reviewee_id: id });
+    await courses.deleteMany({ user_id: id }).exec();
+    await distributions.deleteMany({ user_id: id }).exec();
+    await years.deleteMany({ user_id: id }).exec();
+    await plans.deleteMany({ user_id: id }).exec();
+    await planReviews.deleteMany({ reviewee_id: id }).exec();
     res.status(204).json({});
   } else {
     errorHandler(res, 404, "User not found.");

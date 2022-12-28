@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get("/api/majors/all", async (req, res) => {
   try {
-    const allMajors = await majors.find({}); 
+    const allMajors = await majors.find({}).exec(); 
     returnData(allMajors, res); 
   } catch (err) {
     errorHandler(res, 500, err); 

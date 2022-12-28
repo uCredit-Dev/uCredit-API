@@ -27,16 +27,22 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
   try {
     const plan = await plans
       .findById(p_id)
-      .populate("year_ids")
-      .populate("year_ids.courses"); 
+      .populate({
+        path : 'year_ids',
+        populate : {
+          path : 'courses'
+        }    
+      }).exec(); 
     if (req.user._id !== plan.user_id) {
       return forbiddenHandler(res);
     }
-    plan = { ...plan._doc, years: plan.year_ids };
-    delete plan.year_ids;
-    const reviewers = reviews.find({ plan_id: p_id }).populate("reviewer_id"); 
-    plan = { ...plan, reviewers }; 
-    returnData(plan, res); 
+    const years = plan.year_ids; 
+    let result = { ...plan._doc };
+    delete result.year_ids;
+    result = { ...result, years };
+    const reviewers = await reviews.find({ plan_id: p_id }).populate("reviewer_id").exec(); 
+    result = { ...result, reviewers }; 
+    returnData(result, res); 
   } catch (err) {
     errorHandler(res, 400, err);
   }
@@ -52,22 +58,23 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   const plansTotal = [];
-  const user = users.findById(user_id); 
+  const user = await users.findById(user_id).exec(); 
   if (!user) return errorHandler(res, 404, { message: `${user} of ${user_id} User not found` });
   let total = user.plan_ids.length;
   try {
     for (let plan_id of user.plan_ids) {
-      let plan = await plans.findById(plan_id).populate("year_ids");
+      let plan = await plans.findById(plan_id).populate("year_ids").exec();
       if (!plan) {
         total--;
         continue;
       }
-      await plan.populate("year_ids.courses", async () => {
+      plan.populate("year_ids.courses", async () => {
         plan = { ...plan._doc, years: plan.year_ids };
         delete plan.year_ids;
         const reviewers = await reviews
           .find({ plan_id: plan_id })
-          .populate("reviewer_id"); 
+          .populate("reviewer_id")
+          .exec(); 
         plan = { ...plan, reviewers };
         plansTotal.push(plan);
         if (plansTotal.length === total) {
@@ -107,7 +114,7 @@ router.post("/api/plans", auth, async (req, res) => {
       retrievedPlan.user_id,
       { $push: { plan_ids: retrievedPlan._id } },
       { new: true, runValidators: true }
-    ); 
+    ).exec(); 
     const startYear = getStartYear(year);
     const yearObjs = [];
     //create default year documents according to numYears
@@ -169,13 +176,13 @@ router.delete("/api/plans/:plan_id", auth, async (req, res) => {
     return missingHandler(res, { plan_id }); 
   }
   // check plan belongs to user
-  const plan = await plans.findById(plan_id); 
+  const plan = await plans.findById(plan_id).exec(); 
   if (req.user._id !== plan.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // delete plan
-    await plans.findByIdAndDelete(plan_id); 
+    await plans.findByIdAndDelete(plan_id).exec(); 
     //delete distribution & courses
     distributions.deleteMany({ plan_id: plan._id }).exec();
     courses.deleteMany({ plan_id: plan._id }).exec();
@@ -187,7 +194,7 @@ router.delete("/api/plans/:plan_id", auth, async (req, res) => {
         plan.user_id,
         { $pull: { plan_ids: plan._id } },
         { new: true, runValidators: true }
-      ); 
+      ).exec(); 
     returnData(plan, res);
   } catch (err) {
     errorHandler(res, 400, err); 
@@ -210,16 +217,17 @@ router.patch("/api/plans/update", auth, async (req, res) => {
     updateBody.name = name;
   }
   // check plan belongs to user
-  const plan = plans.findById(id); 
+  const plan = await plans.findById(id).exec(); 
   if (req.user._id !== plan.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // update plan
-    const plan = await plans.findByIdAndUpdate(id, updateBody, { new: true, runValidators: true }); 
-    const reviewers = reviews
+    let plan = await plans.findByIdAndUpdate(id, updateBody, { new: true, runValidators: true }).exec(); 
+    const reviewers = await reviews
       .find({ plan_id: id })
-      .populate("reviewer_id"); 
+      .populate("reviewer_id")
+      .exec(); 
     plan = { ...plan, reviewers };
     returnData(plan, res);
   } catch (err) {
