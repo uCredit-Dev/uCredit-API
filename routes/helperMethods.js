@@ -11,7 +11,7 @@ function returnData(data, res) {
 //set status code of the response and send error info to the user in json
 function errorHandler(res, status, err) {
   if (res.headersSent) return;
-  console.log(" >> ", status, err.message || err); 
+  console.log(" >> ", status, err.message || err);
   res.status(status).json({
     errors: [
       {
@@ -35,7 +35,7 @@ function missingHandler(res, required) {
   res.status(400).json({
     status: 400,
     message: "Request is missing required fields.",
-    required
+    required,
   });
 }
 
@@ -73,7 +73,7 @@ export {
   returnData,
   errorHandler,
   forbiddenHandler,
-  missingHandler, 
+  missingHandler,
   distributionCreditUpdate,
   postNotification,
 };

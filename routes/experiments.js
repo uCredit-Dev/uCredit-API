@@ -12,10 +12,10 @@ const experiments = new ExperimentDao();
 router.get("/", async (req, res) => {
   // simple fail proof db query
   try {
-    await majors.findOne({}).exec(); 
-    returnData("Welcome to uCredit backend!", res)  
+    await majors.findOne({}).exec();
+    returnData("Welcome to uCredit backend!", res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 

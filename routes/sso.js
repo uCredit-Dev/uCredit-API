@@ -111,11 +111,13 @@ router.post(
       await user.save();
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
-    await sessions.findByIdAndUpdate(
+    await sessions
+      .findByIdAndUpdate(
         id,
         { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
         { upsert: true, new: true }
-      ).exec();
+      )
+      .exec();
     try {
       res.redirect(`https://ucredit.me/login/${hash}`);
     } catch (err) {
@@ -128,31 +130,31 @@ router.post(
 router.get("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
   if (!hash) {
-    return missingHandler(res, { hash }); 
+    return missingHandler(res, { hash });
   }
-  const user = await sessions.findOne({ hash }).exec(); 
+  const user = await sessions.findOne({ hash }).exec();
   if (!user) {
-    return errorHandler(res, 401, "User not logged in."); 
+    return errorHandler(res, 401, "User not logged in.");
   }
   try {
-    const retrievedUser = await users.findById(user._id); 
-    const token = createToken(retrievedUser); 
-    returnData({ retrievedUser, token }, res); 
+    const retrievedUser = await users.findById(user._id);
+    const token = createToken(retrievedUser);
+    returnData({ retrievedUser, token }, res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 
 router.delete("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
   if (!hash) {
-    return missingHandler(res, { hash }); 
+    return missingHandler(res, { hash });
   }
   try {
-    const user = await sessions.remove({ hash }).exec(); 
-    returnData(user, res); 
+    const user = await sessions.remove({ hash }).exec();
+    returnData(user, res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 

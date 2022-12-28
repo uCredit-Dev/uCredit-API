@@ -8,13 +8,13 @@ const router = express.Router();
 router.get("/api/evals/:number", async (req, res) => {
   const num = req.params.number;
   if (!num) {
-    return missingHandler(res, { num }); 
+    return missingHandler(res, { num });
   }
   try {
-    const review = await evaluation.findOne({ num }).exec(); 
-    returnData(review, res); 
+    const review = await evaluation.findOne({ num }).exec();
+    returnData(review, res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 

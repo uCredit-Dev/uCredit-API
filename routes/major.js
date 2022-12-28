@@ -6,10 +6,10 @@ const router = express.Router();
 
 router.get("/api/majors/all", async (req, res) => {
   try {
-    const allMajors = await majors.find({}).exec(); 
-    returnData(allMajors, res); 
+    const allMajors = await majors.find({}).exec();
+    returnData(allMajors, res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 
@@ -19,10 +19,10 @@ router.post("/api/majors", async (req, res) => {
     return missingHandler(res, { major });
   }
   try {
-    const newMajor = await majors.create(major); 
-    returnData(newMajor, res); 
+    const newMajor = await majors.create(major);
+    returnData(newMajor, res);
   } catch (err) {
-    errorHandler(res, 400, err)
+    errorHandler(res, 400, err);
   }
 });
 

@@ -1,4 +1,9 @@
-import { returnData, errorHandler, forbiddenHandler, missingHandler } from "./helperMethods.js";
+import {
+  returnData,
+  errorHandler,
+  forbiddenHandler,
+  missingHandler,
+} from "./helperMethods.js";
 import Notifications from "../model/Notification.js";
 import { auth } from "../util/token.js";
 import express from "express";
@@ -9,19 +14,21 @@ const router = express.Router();
 router.get("/api/notifications/:user_id", auth, async (req, res) => {
   const user_id = req.params.user_id;
   if (!user_id) {
-    return missingHandler(res, { user_id }); 
+    return missingHandler(res, { user_id });
   }
   if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
   if (!user_id) {
     return errorHandler(res, 400, { message: "Must provide user_id." });
-  } 
+  }
   try {
-    const notifications = await Notifications.find({ user_id: { $elemMatch: { $eq: user_id } } }).exec(); 
-    returnData(notifications, res); 
+    const notifications = await Notifications.find({
+      user_id: { $elemMatch: { $eq: user_id } },
+    }).exec();
+    returnData(notifications, res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 
@@ -29,17 +36,17 @@ router.get("/api/notifications/:user_id", auth, async (req, res) => {
 router.post("/api/notifications", auth, async (req, res) => {
   const notification = req.body;
   if (!notification) {
-    return missingHandler(res, { notification }); 
+    return missingHandler(res, { notification });
   }
   // verify that notification belongs to user
   if (!notification.user_id.includes(req.user._id)) {
     return forbiddenHandler(res);
   }
   try {
-    const result = await Notifications.create(notification); 
-    returnData(result, res); 
+    const result = await Notifications.create(notification);
+    returnData(result, res);
   } catch (err) {
-    errorHandler(res, 400, err); 
+    errorHandler(res, 400, err);
   }
 });
 
@@ -49,7 +56,7 @@ router.post("/api/notifications/read/:notification_id", auth, async (req, res) =
   if (!notification_id) {
     return missingHandler(res, { notification_id }); 
   }
-  const notification = await Notifications.findById(notification_id).exec(); 
+  const notification = await Notifications.findById(notification_id).exec();
   if (!notification) {
     errorHandler(res, 404, { message: "Notification not found." });
   } else if (!notification.user_id.includes(req.user._id)) {
@@ -60,28 +67,30 @@ router.post("/api/notifications/read/:notification_id", auth, async (req, res) =
       await notification.save();
       returnData(notification, res);
     } catch (err) {
-      errorHandler(res, 400, err); 
+      errorHandler(res, 400, err);
     }
-  }
+  } 
 });
 
 /* Delete a notification */
 router.delete("/api/notifications/:notification_id", auth, async (req, res) => {
   const notification_id = req.params.notification_id;
   if (!notification_id) {
-    return missingHandler(res, { notification_id }); 
+    return missingHandler(res, { notification_id });
   }
   // check notification belongs to user
-  const notif = await Notifications.findById(notification_id).exec(); 
+  const notif = await Notifications.findById(notification_id).exec();
   if (!notif.user_id.includes(req.user._id)) {
     return forbiddenHandler(res);
   }
   try {
     // delete notification
-    const result = await Notifications.findByIdAndDelete(notification_id).exec(); 
+    const result = await Notifications.findByIdAndDelete(
+      notification_id
+    ).exec();
     returnData(result, res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 

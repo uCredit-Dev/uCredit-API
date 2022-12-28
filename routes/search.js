@@ -7,10 +7,10 @@ const router = express.Router();
 
 router.get("/api/search/all", async (req, res) => {
   try {
-    const courses = await SISCV.find({}).exec(); 
-    returnData(courses, res); 
+    const courses = await SISCV.find({}).exec();
+    returnData(courses, res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 
@@ -23,10 +23,10 @@ router.get("/api/search/skip/:num", async (req, res) => {
   try {
     const courses = await SISCV.find({})
       .skip(toSkip * mod)
-      .limit(mod); 
-    returnData(courses, res); 
+      .limit(mod);
+    returnData(courses, res);
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 
@@ -49,7 +49,7 @@ router.get("/api/search", async (req, res) => {
     level: req.query.level,
   });
   try {
-    let results = await SISCV.find(query).exec(); 
+    let results = await SISCV.find(query).exec();
     results = results.filter((result) => {
       for (let version of result.versions) {
         return (
@@ -57,12 +57,12 @@ router.get("/api/search", async (req, res) => {
             req.query.areas &&
             version.areas !== "None") ||
           !req.query.areas
-          ); 
+        );
       }
     });
     returnData(results, res);
   } catch (err) {
-    errorHandler(res, 500, err.message); 
+    errorHandler(res, 500, err.message);
   }
 });
 
@@ -72,8 +72,8 @@ router.get("/api/searchVersion", async (req, res) => {
   const title = req.query.title;
   const number = req.query.number;
   if (!version || !title || !number) {
-    return missingHandler(res, { version, title, number }); 
-  } 
+    return missingHandler(res, { version, title, number });
+  }
   const query = {
     title,
     number,
@@ -82,7 +82,7 @@ router.get("/api/searchVersion", async (req, res) => {
   try {
     await sendCourseVersion(query, version, res);
   } catch (err) {
-    errorHandler(res, 400, err); 
+    errorHandler(res, 400, err);
   }
 });
 
@@ -138,7 +138,7 @@ function constructQuery(params) {
 }
 
 async function sendCourseVersion(query, version, res) {
-  const match = await SISCV.findOne(query).exec(); 
+  const match = await SISCV.findOne(query).exec();
   if (match == null) {
     return errorHandler(
       res,
@@ -162,7 +162,7 @@ async function sendCourseVersion(query, version, res) {
 router.get("/api/getYearRange", async (req, res) => {
   // .distinct returns an array of all possible elements in the "terms" array
   try {
-    const resp = await SISCV.distinct("terms"); 
+    const resp = await SISCV.distinct("terms");
     let years = { min: Infinity, max: -Infinity };
     // parse term for year value and update min / max
     resp.forEach((term) => {
@@ -173,7 +173,7 @@ router.get("/api/getYearRange", async (req, res) => {
     });
     returnData(years, res);
   } catch (err) {
-    errorHandler(res, 400, err); 
+    errorHandler(res, 400, err);
   }
 });
 

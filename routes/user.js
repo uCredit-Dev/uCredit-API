@@ -26,7 +26,7 @@ router.get("/api/user", async (req, res) => {
     affiliation: { $regex: affiliation, $options: "i" },
   };
   try {
-    let users = await users.find(query).exec(); 
+    let users = await users.find(query).exec();
     users = users.map((user) => ({
       _id: user._id,
       name: user.name,
@@ -35,10 +35,10 @@ router.get("/api/user", async (req, res) => {
       school: user.school,
       grade: user.grade,
       whitelisted_plan_ids: user.whitelisted_plan_ids,
-    })); 
-    returnData(users, res); 
+    }));
+    returnData(users, res);
   } catch (err) {
-    errorHandler(res, 400, err); 
+    errorHandler(res, 400, err);
   }
 });
 
@@ -47,10 +47,10 @@ router.get("/api/user", async (req, res) => {
 router.get("/api/backdoor/verification/:id", async (req, res) => {
   const id = req.params.id;
   if (!id) {
-    return missingHandler(res, { id }); 
+    return missingHandler(res, { id });
   }
   try {
-    const user = await users.findById(id).exec(); 
+    const user = await users.findById(id).exec();
     if (user) {
       const token = createToken(user);
       returnData({ user, token }, res);
@@ -68,14 +68,14 @@ router.get("/api/backdoor/verification/:id", async (req, res) => {
       returnData({ user, token }, res);
     }
   } catch (err) {
-    errorHandler(res, 500, err); 
+    errorHandler(res, 500, err);
   }
 });
 
 router.delete("/api/user/:id", auth, async (req, res) => {
   const id = req.params.id;
   if (!id) {
-    return missingHandler(res, { id }); 
+    return missingHandler(res, { id });
   }
   if (req.user._id !== id) {
     return forbiddenHandler(res);
