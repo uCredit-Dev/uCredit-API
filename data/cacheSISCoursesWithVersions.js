@@ -192,7 +192,7 @@ async function pushNewVersion(offeringName, section, courseFromDB, TERM) {
   const number = offeringName.replace(regex, "") + section;
   await axios
     .get(`https://sis.jhu.edu/api/classes/${number}/${TERM}?key=${key}`)
-    .then((res) => {
+    .then(async (res) => {
       const course = res.data[res.data.length - 1];
       const details = course.SectionDetails[0];
       //extract attributes
@@ -213,7 +213,7 @@ async function pushNewVersion(offeringName, section, courseFromDB, TERM) {
       };
       if (version.wi !== undefined) {
         courseFromDB.versions.unshift(version);
-        courseFromDB.save();
+        await courseFromDB.save();
       }
     })
     .catch((err) => console.log(err));

@@ -22,8 +22,8 @@ async function addFieldsToCollection(model) {
   model
     .find()
     .then((collection) => {
-      collection.forEach((doc) => {
-        doc.save();
+      collection.forEach(async (doc) => {
+        await doc.save();
       });
       console.log(
         "Done! Check DB to confirm the field has been added to all documents."
@@ -80,7 +80,7 @@ async function setLevelInCourses() {
         }
       }
       console.log(course.title + ": " + course.level);
-      course.save();
+      await course.save();
     }
     console.log("matched: %d", res.length);
     console.log("updated from SISCourseV: %d", updated);
@@ -104,7 +104,7 @@ async function setVersionInCourses() {
         version.charAt(0).toUpperCase() + version.slice(1) + " " + year.year;
       course.version = version;
       console.log(course.title + ": " + course.version);
-      course.save();
+      await course.save();
     }
     console.log("matched: %d", res.length);
     console.log("updated: %d", updated);

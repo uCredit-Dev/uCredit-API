@@ -29,7 +29,7 @@ function update() {
               `https://sis.jhu.edu/api/classes/${numberWithSec}?key=${key}`
             );
             if (res2.data == undefined) console.log(res1);
-            addProperty(dbCourse, res2.data[res2.data.length - 1]);
+            await addProperty(dbCourse, res2.data[res2.data.length - 1]);
           } catch (err) {
             console.log(err);
           }
@@ -39,7 +39,7 @@ function update() {
     .catch((err) => console.log(err));
 }
 
-function addProperty(course, res) {
+async function addProperty(course, res) {
   const details = res.SectionDetails[0];
   course.level = res.Level;
   course.bio = details.Description;
@@ -49,7 +49,7 @@ function addProperty(course, res) {
   course.tags =
     details.PosTags.length == 0 ? [] : getField(details.PosTags, "Tag");
   console.log("-------saving", course.number);
-  course.save();
+  await course.save();
 }
 
 /*
