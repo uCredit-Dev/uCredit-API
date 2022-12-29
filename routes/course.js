@@ -23,19 +23,27 @@ router.get("/api/addSamples", (req, res) => {
   addSampleCourses(courses).catch((err) => errorHandler(res, 500, err));
 });*/
 //return all courses of the user's plan
-router.get("/api/coursesByPlan/:plan_id", auth, (req, res) => {
+router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
-  // verify that plan belongs to request user
-  plans.findById(plan_id).then((plan) => {
-    if (req.user._id !== plan.user_id) {
-      return forbiddenHandler(res);
+  // verify that plan belongs to request user 
+  plans.findById(plan_id)
+    .then((plan) => {
+      if (req.user._id !== plan.user_id) {
+        return forbiddenHandler(res);
+      }
+    }); 
+  // return courses associated with plan 
+  const data = [];
+  try {
+    const retrievedCourses = await courses.findByPlanId(plan_id); 
+    for (let course of retrievedCourses) {
+      const sisCourse = await SISCV.findOne({ number: course.number, title: course.title }); 
+      data.push(sisCourse);
     }
-  });
-  // return courses associated with plan
-  courses
-    .findByPlanId(plan_id)
-    .then((retrievedCourses) => returnData(retrievedCourses, res))
-    .catch((err) => errorHandler(res, 400, err));
+    returnData(data, res);
+  } catch (err) {
+    errorHandler(res, 500, err.message); 
+  }
 });
 
 //if distribution_id is not found data field would be an empty array
@@ -165,19 +173,18 @@ router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
 });
 
 // Updates course
-router.patch("/api/courses/dragged", auth, (req, res) => {
+router.patch("/api/courses/dragged", auth, async (req, res) => {
   const c_id = req.body.courseId;
   const newYear_id = req.body.newYear;
   const oldYear_id = req.body.oldYear;
   const newTerm = req.body.newTerm;
-  // verify that course belongs to user
-  courses.findById(c_id).then((course) => {
-    if (req.user._id !== course.user_id) {
-      return forbiddenHandler(res);
-    }
-  });
-  // raise error if required param is undefined
-  if (!(newYear_id || oldYear_id || c_id || newTerm)) {
+  // verify that course belongs to user 
+  const course = await courses.findById(c_id); 
+  if (req.user._id !== course.user_id) {
+    return forbiddenHandler(res);
+  }
+  // raise error if required param is undefined 
+  if (!(newYear_id && oldYear_id && c_id && newTerm)) {
     errorHandler(res, 400, {
       message:
         "One of these is undefined: new year id is " +
@@ -190,24 +197,30 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
         newTerm,
     });
   } else {
-    // remove course from old year
-    years
-      .findByIdAndUpdate(
-        oldYear_id,
-        { $pull: { courses: c_id } },
-        { new: true, runValidators: true }
-      )
-      .catch((err) => errorHandler(res, 500, err));
-    // add course to new year
-    years
-      .findByIdAndUpdate(
-        newYear_id,
-        { $push: { courses: c_id } },
-        { new: true, runValidators: true }
-      )
-      .then((y) => {
-        // update course document with new year
-        courses
+    try {
+      const course = await courses.findById(c_id); 
+      if (!course) {
+        return errorHandler(res, 404, "course not found"); 
+      } else {
+        const sisCourses = await SISCV.find({ number: course.number, title: course.title }); 
+        if (!checkDestValid(sisCourses, course, newTerm)) {
+          return errorHandler(res, 400, "no course this semester"); 
+        }
+        // remove course from old year 
+        await years
+          .findByIdAndUpdate(
+            oldYear_id,
+            { $pull: { courses: c_id } },
+            { new: true, runValidators: true }
+          ); 
+        // add course to new year
+        const y = await years
+          .findByIdAndUpdate(
+            newYear_id,
+            { $push: { courses: c_id } },
+            { new: true, runValidators: true }
+          ); 
+        const c = await courses
           .findByIdAndUpdate(
             c_id,
             {
@@ -218,11 +231,12 @@ router.patch("/api/courses/dragged", auth, (req, res) => {
                 newTerm + " " + (newTerm === "Fall" ? y.year : y.year + 1),
             },
             { new: true, runValidators: true }
-          )
-          .then((c) => returnData(c, res))
-          .catch((err) => errorHandler(res, 500, err));
-      })
-      .catch((err) => errorHandler(res, 500, err));
+          ); 
+        returnData(c, res);
+      }
+    } catch (err) {
+      errorHandler(res, 500, err.message); 
+    }      
   }
 });
 
