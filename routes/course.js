@@ -7,6 +7,7 @@ import {
 } from "./helperMethods.js";
 import courses from "../model/Course.js";
 import distributions from "../model/Distribution.js";
+import SISCV from "../model/SISCourseV.js"; 
 import plans from "../model/Plan.js";
 import years from "../model/Year.js";
 import { auth } from "../util/token.js";
@@ -22,23 +23,24 @@ router.get("/api/addSamples", (req, res) => {
   );
   addSampleCourses(courses).catch((err) => errorHandler(res, 500, err));
 });*/
-//return all courses of the user's plan
+
+//return all SIS course versions of the user's plan
 router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   // verify that plan belongs to request user 
-  plans.findById(plan_id)
-    .then((plan) => {
-      if (req.user._id !== plan.user_id) {
-        return forbiddenHandler(res);
-      }
-    }); 
+  const plan = await plans.findById(plan_id).exec();
+  if (req.user._id !== plan.user_id) {
+    return forbiddenHandler(res);
+  }
   // return courses associated with plan 
   const data = [];
   try {
     const retrievedCourses = await courses.findByPlanId(plan_id); 
     for (let course of retrievedCourses) {
+      // for every 'user course', get SIS version of it 
       const sisCourse = await SISCV.findOne({ number: course.number, title: course.title }); 
-      data.push(sisCourse);
+      // could be undefined if placeholder course 
+      if (sisCourse) data.push(sisCourse);
     }
     returnData(data, res);
   } catch (err) {
@@ -203,6 +205,7 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
         return errorHandler(res, 404, "course not found"); 
       } else {
         const sisCourses = await SISCV.find({ number: course.number, title: course.title }); 
+        // check if course is held at new term!
         if (!checkDestValid(sisCourses, course, newTerm)) {
           return errorHandler(res, 400, "no course this semester"); 
         }

@@ -1,6 +1,6 @@
 //routes to handle search requests
 import express from "express";
-import { returnData, errorHandler, simpleSearch, fuzzySearch } from "./helperMethods.js";
+import { returnData, errorHandler, simpleSearch, fuzzySearch, constructQuery, sendCourseVersion } from "./helperMethods.js";
 import SISCV from "../model/SISCourseV.js";
 
 const router = express.Router();
@@ -90,7 +90,7 @@ router.get("/api/cartSearch", async (req, res) => {
 });
 
 //return the term version of a specific course
-router.get("/api/searchVersion", (req, res) => {
+router.get("/api/searchVersion", async (req, res) => {
   const version = req.query.version;
   const title = req.query.title;
   const number = req.query.number;
@@ -106,86 +106,9 @@ router.get("/api/searchVersion", (req, res) => {
       number,
       terms: { $in: version },
     };
-    sendCourseVersion(query, version, res);
+    await sendCourseVersion(query, version, res);
   }
 });
-
-function constructQuery(params) {
-  let {
-    userQuery = "",
-    school = "",
-    department = "",
-    term = "",
-    areas = "",
-    wi,
-    credits = "",
-    tags = "",
-    level = "",
-  } = params;
-  userQuery = userQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); //escape special character for regex
-  let query = {
-    $or: [
-      { title: { $regex: userQuery, $options: "i" } },
-      { number: { $regex: userQuery, $options: "i" } },
-    ],
-    "versions.school": { $regex: school, $options: "i" },
-    "versions.department": { $regex: department, $options: "i" },
-    "versions.term": { $regex: term, $options: "i" },
-    "versions.level": { $regex: level, $options: "i" },
-  };
-  if (areas !== "" && areas !== "None") {
-    query["versions.areas"] = {
-      $not: new RegExp("None"), 
-      $in: areas.split("|").map((area) => new RegExp(area)),
-    };
-  }
-
-  if (tags !== "") {
-    query["versions.tags"] = {
-      $in: tags.split("|").map((tag) => new RegExp(tag)),
-    };
-  }
-
-  if (credits !== "") {
-    query["versions.credits"] = {
-      $in: credits.split("|"),
-    };
-  }
-
-  if (wi != null) {
-    if (wi === "1" || wi === "true") {
-      query["versions.wi"] = true;
-    } else if (wi === "0" || wi === "false") {
-      query["versions.wi"] = false;
-    }
-  }
-  return query;
-}
-
-function sendCourseVersion(query, version, res) {
-  SISCV.findOne(query)
-    .then((match) => {
-      if (match == null) {
-        errorHandler(
-          res,
-          404,
-          "Did not find any course or the course specified is not offered in this term."
-        );
-      } else {
-        let course = {};
-        course.title = match.title;
-        course.number = match.number;
-        course.terms = match.terms;
-        match.versions.forEach((v) => {
-          if (v.term === version) {
-            course.version = v;
-          }
-        });
-        returnData(course, res);
-      }
-    })
-    .catch((err) => errorHandler(res, 400, err));
-}
 
 // return min and max possible years for current courses in db
 router.get("/api/getYearRange", (req, res) => {
