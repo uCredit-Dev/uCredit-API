@@ -217,25 +217,25 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
             { new: true, runValidators: true }
           ); 
         // add course to new year
-        const y = await years
+        const year = await years
           .findByIdAndUpdate(
             newYear_id,
             { $push: { courses: c_id } },
             { new: true, runValidators: true }
           ); 
-        const c = await courses
+        const course = await courses
           .findByIdAndUpdate(
             c_id,
             {
-              year: y.name,
-              year_id: y._id,
+              year: year.name,
+              year_id: year._id,
               term: newTerm.toLowerCase(),
               version:
-                newTerm + " " + (newTerm === "Fall" ? y.year : y.year + 1),
+                newTerm + " " + (newTerm === "Fall" ? year.year : year.year + 1),
             },
             { new: true, runValidators: true }
           ); 
-        returnData(c, res);
+        returnData(course, res);
       }
     } catch (err) {
       errorHandler(res, 500, err.message); 

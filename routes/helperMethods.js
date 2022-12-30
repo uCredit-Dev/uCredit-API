@@ -2,6 +2,9 @@
 import Notifications from "../model/Notification.js";
 import SISCV from "../model/SISCourseV.js"; 
 
+const PERPAGE = 10; 
+const MIN_LEN = 3; 
+
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
   data
@@ -63,7 +66,6 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
 
 // return an array of substrings of length 3+
 function ngram(query) {
-  const MIN_LEN = 3; 
   const queryLen = query.length; 
   query = query.toLowerCase();
   const ngrams = new Set();
@@ -80,7 +82,6 @@ function ngram(query) {
 
 // for strict query matching 
 async function simpleSearch(query, page) {
-  const PERPAGE = 10; 
   const result = {}; 
   // set pagination info; limit to 100 
   const total = await SISCV.countDocuments(query).exec(); 
@@ -97,7 +98,6 @@ async function simpleSearch(query, page) {
 
 // search for all courses matching substring of searchTerm  
 async function fuzzySearch(query, searchTerm, page) {
-  const PERPAGE = 10; 
   const result = {};
   const ngrams = ngram(searchTerm);
   const regNgrams = ngrams.map((gram) => {
