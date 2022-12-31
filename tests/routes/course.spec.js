@@ -1,165 +1,125 @@
-import mongoose from "mongoose";
+import mongoose, { trusted } from "mongoose";
 import supertest from "supertest";
-import course from "../../model/Course";
+import Courses from "../../model/Course";
+import Years from "../../model/Year";
+import Distributions from "../../model/Distribution";
 import createApp from "../../app";
-import years from "../../model/Year";
-import plans from "../../model/Plan";
-import distributions from "../../model/Distribution";
+import { TEST_USER_1, TEST_TOKEN_1, TEST_PLAN_NAME_1, TEST_CS, sampleCourses, TEST_DATE } from "./testVars"; 
 
-const planName = "testPlan";
-const userName = "User1";
-const samples = [
-  {
-    user_id: "csStudent",
-    distribution_ids: ["6001b745e5fd0d8124251e51"],
-    title: "Gateway Computing: Java",
-    number: "500.112",
-    term: "fall",
-    credits: 3,
-    year: "Junior",
-  },
-  {
-    user_id: "csStudent",
-    distribution_ids: ["6001b745e5fd0d8124251e50"],
-    title: "expos",
-    number: "201.220",
-    term: "spring",
-    wi: true,
-    credits: 3,
-    year: "Junior",
-  },
-  {
-    user_id: "mathStudent",
-    distribution_ids: ["6001b745e5fd0d8124251e53"],
-    title: "Cryptography",
-    number: "301.227",
-    term: "summer",
-    credits: 3,
-    year: "Senior",
-  },
-  {
-    user_id: "mathStudent",
-    distribution_ids: ["6001b745e5fd0d8124251e54"],
-    title: "physics",
-    number: "301.280",
-    term: "fall",
-    credits: 4,
-    year: "Senior",
-  },
-  {
-    user_id: "bioStudent",
-    distribution_ids: ["6001b745e5fd0d8124251e54"],
-    title: "Linear Algebra",
-    number: "501.421",
-    term: "spring",
-    credits: 4,
-    year: "Senior",
-  },
-];
-let addedCourses = [];
-
-let coursesWithIds = [];
-
-let yearArray = [];
-
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/courses", { useNewUrlParser: true })
-    .then(async () => {
-      const response = await request.post("/api/plans").send({
-        name: planName,
-        user_id: userName,
-        majors: ["CS"],
-        expireAt: new Date(),
-        year: "Junior",
-      });
-      let plan1 = response.body.data;
-      const sampleDistribution = await request.post("/api/distributions").send({
-        plan_id: plan1._id,
-        user_id: userName,
-        name: "testDistribution",
-        required: 1,
-      });
-      samples.forEach(async (sample) => {
-        sample.plan_id = plan1._id;
-        sample.distribution_ids = [sampleDistribution.body.data._id];
-        addedCourses.push(sample);
-      });
-      await course.insertMany(addedCourses);
-      let courses = await course.find({});
-      yearArray = plan1.year_ids;
-      for (let course of courses) {
-        await years.findByIdAndUpdate(plan1.year_ids[3], {
-          $push: { courses: course._id },
-        });
-        await distributions.findByIdAndUpdate(course.distribution_ids[0], {
-          $push: { courses: course._id },
-        });
-      }
-      done();
-    });
-});
-
-afterEach((done) => {
-  mongoose.connection.db.collection("courses").drop(() => {
-    mongoose.connection.close(() => done());
-  });
-});
+let plan;
+let distribution;
+let courses; 
 
 const request = supertest(createApp());
 
+beforeEach((done) => {
+  mongoose.connect("mongodb://localhost:27017/courses", { useNewUrlParser: true }, async () => {
+    // make sample plan 
+    let response = await request
+      .post("/api/plans")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({
+        name: TEST_PLAN_NAME_1,
+        user_id: TEST_USER_1._id,
+        majors: [ TEST_CS ],
+        expireAt: TEST_DATE,
+        year: "Junior",
+      });
+    plan = response.body.data;
+    // make sample distribution 
+    response = await request
+      .post("/api/distributions")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({
+        plan_id: plan._id,
+        user_id: TEST_USER_1._id,
+        name: "testDistribution",
+        required: 1,
+      });
+    distribution = response.body.data; 
+    // set plan_id and distribution_ids 
+    sampleCourses.forEach(async (sample) => {
+      sample.plan_id = plan._id;
+      sample.distribution_ids = [distribution._id];
+    });
+    // create courses 
+    await Courses.insertMany(sampleCourses);
+    courses = await Courses.find({});
+    for (let course of courses) {
+      // insert course into Junior year
+      await Years.findByIdAndUpdate(plan.years[3]._id, {
+        $push: { courses: course._id },
+      });
+      // insert course into sample distribution
+      await Distributions.findByIdAndUpdate(distribution._id, {
+        $push: { courses: course._id },
+      });
+    }
+    done();
+  }); 
+});
+
+afterEach(async () => {
+  await mongoose.connection.db.collection("courses").drop(); 
+  await mongoose.connection.close();
+});
+
 describe("Course Routes", () => {
   it("Should return course with the given _id", async () => {
-    coursesWithIds = await course.find({});
-    const id = coursesWithIds[0]._id;
-    const name = coursesWithIds[0].name;
-    const res = await request.get(`/api/courses/${id}`);
+    courses = await Courses.find({});
+    const course = courses[0];
+    const res = await request
+      .get(`/api/courses/${course._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
     expect(res.status).toBe(200);
-    const data = res.body.data;
-    expect(JSON.stringify(data._id)).toBe(JSON.stringify(id));
-    expect(data.name).toBe(name);
+    const resCourse = res.body.data;
+    expect(JSON.stringify(resCourse._id)).toBe(JSON.stringify(course._id));
+    expect(resCourse.name).toBe(course.name);
   });
 
   it("Should return all courses with the distribution id", async () => {
-    coursesWithIds = await course.find({});
-    const distributionId = coursesWithIds[0].distribution_ids[0];
-    const name = coursesWithIds[0].name;
-
-    const res = await request.get(
-      `/api/coursesByDistribution/${distributionId}`
-    );
+    courses = await Courses.find({});
+    // get courses in distribution (should be all) 
+    const res = await request
+      .get(`/api/coursesByDistribution/${distribution._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); ;
     expect(res.status).toBe(200);
-    const data = res.body.data[0];
-    expect(JSON.stringify(data.distribution_ids[0])).toBe(
-      JSON.stringify(distributionId)
-    );
-    expect(data.name).toBe(name);
+    const resCourses = res.body.data; 
+    expect(resCourses.length).toBe(courses.length);
+    // confirm course distribution id 
+    resCourses.forEach((course) => {
+      expect(JSON.stringify(course.distribution_ids[0]))
+        .toBe(JSON.stringify(distribution._id));
+    });
   });
 
   it("Should return all courses associated with the plan id", async () => {
-    coursesWithIds = await course.find({});
-    const planId = coursesWithIds[0].plan_id;
-
-    const res = await request.get(`/api/coursesByPlan/${planId}`);
+    courses = await Courses.find({});
+    // get all courses in plan (should be all) 
+    const res = await request
+      .get(`/api/coursesByPlan/${plan._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
-    expect(res.body.data.length).toBe(coursesWithIds.length);
-    coursesWithIds.forEach((course) => {
-      expect(
-        res.body.data.find((course) => course._id === course._id).name
-      ).toBe(course.name);
+    const resCourses = res.body.data; 
+    expect(resCourses.length).toBe(courses.length);
+    // confirm course plan id 
+    resCourses.forEach((course) => {
+      expect(JSON.stringify(course.plan_id)).toBe(JSON.stringify(plan._id));
     });
   });
 
   it("Should return all courses of a users terms for a plan", async () => {
-    coursesWithIds = await course.find({});
-    const planId = coursesWithIds[0].plan_id;
-
-    const res = await request.get(
-      `/api/coursesByTerm/${planId}?year=Junior&term=fall`
-    );
+    courses = await Courses.find({});
+    // find courses in Junior fall; gateway, expo, physics
+    const res = await request
+      .get(
+        `/api/coursesByTerm/${plan._id}?year=Junior&term=fall`
+      )
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); ;
     expect(res.status).toBe(200);
-    expect(res.body.data.length).toBeGreaterThan(0);
-    coursesWithIds.forEach((course) => {
+    expect(res.body.data.length).toBe(3); 
+    // term should be fall and year should be Junior 
+    courses.forEach((course) => {
       expect(
         res.body.data.find((course) => course._id === course._id).term
       ).toBe("fall");
@@ -170,36 +130,38 @@ describe("Course Routes", () => {
   });
 
   it("Should return created course via post request", async () => {
-    const planResp = await plans.find({});
-    const planId = planResp[0]._id;
-    const course = {
-      user_id: "TESTUSER",
-      distribution_ids: planResp[0].distribution_ids,
-      title: "Test Course",
-      term: "spring",
-      credits: 4,
-      year: "Junior",
-      year_id: "" + yearArray[3],
-      plan_id: planId,
-    };
-
-    const res = await request.post(`/api/courses/`).send(course);
+    // set request course body 
+    const course = sampleCourses[0]; 
+    course.distribution_ids = plan.distribution_ids; 
+    course.year_id = plan.years[3]._id; 
+    course.plan_id = plan._id; 
+    // POST new course 
+    const res = await request
+      .post(`/api/courses/`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send(course);
     expect(res.status).toBe(200);
-    expect(res.body.data.title).toBe(course.title);
-    expect(res.body.data.term).toBe(course.term);
-    expect(res.body.data.number).toBe(course.number);
+    const newCourse = res.body.data; 
+    expect(newCourse.title).toBe(course.title);
+    expect(newCourse.term).toBe(course.term);
+    expect(newCourse.number).toBe(course.number);
+    expect(newCourse.level).toBe(course.level);
+    expect(newCourse.user_id).toBe(course.user_id);
+    expect(newCourse.plan_id).toBe(course.plan_id);
   });
 
   it("Should return course with changed status", async () => {
-    const tempCourse = await course.find({});
-    const planResp = await plans.find({});
-    const id = tempCourse[0]._id;
-
+    // course.taken is false by default  
+    courses = await Courses.find({});
+    const course = courses[0];
+    expect(course.taken).toBe(false);
+    // change taken status to true 
     const res = await request
-      .patch(`/api/courses/changeStatus/${id}`)
-      .send({ taken: false });
+      .patch(`/api/courses/changeStatus/${course._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({ taken: true });
     expect(res.status).toBe(200);
-    expect(res.body.data.taken).toBe(false);
+    expect(res.body.data.taken).toBe(true);
   });
 
   // it("Should return course with updated distribution", async () => {
@@ -216,11 +178,13 @@ describe("Course Routes", () => {
   // });
 
   it("Should return deleted course", async () => {
-    const tempCourse = await course.find({});
-    const planResp = await plans.find({});
-    const id = tempCourse[0]._id;
-
-    const res = await request.delete(`/api/courses/${id}`);
+    courses = await Courses.find({});
+    const id = courses[0]._id;
+    // delete the course 
+    const res = await request
+      .delete(`/api/courses/${id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
+    // expect res.body.data to be course obj 
     expect(res.status).toBe(200);
     expect(JSON.stringify(res.body.data._id)).toBe(JSON.stringify(id));
   });
