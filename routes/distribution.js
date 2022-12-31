@@ -16,9 +16,6 @@ const router = express.Router();
 //get distribution by id
 router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
   const d_id = req.params.distribution_id;
-  if (!d_id) {
-    return missingHandler(res, { d_id });
-  }
   try {
     const distribution = await Distributions.findById(d_id).exec();
     // verify that distribution belongs to user
@@ -35,9 +32,6 @@ router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
 //get all distributions in a plan
 router.get("/api/distributionsByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
-  if (!plan_id) {
-    return missingHandler(res, { plan_id });
-  }
   try {
     const plan = await Plans
       .findById(plan_id)
@@ -129,9 +123,6 @@ router.patch("/api/distributions/updateName", auth, async (req, res) => {
 //return the deleted courses
 router.delete("/api/distributions/:d_id", auth, async (req, res) => {
   const d_id = req.params.d_id;
-  if (!d_id) {
-    return missingHandler(res, { d_id });
-  }
   // verify that distribution belongs to user
   const distribution = await Distributions.findById(d_id).exec();
   if (req.user._id !== distribution.user_id) {

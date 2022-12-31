@@ -18,9 +18,6 @@ const router = express.Router();
 //get years by plan id
 router.get("/api/years/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
-  if (!plan_id) {
-    return missingHandler(res, { plan_id });
-  }
   try {
     const plan = await Plans.findById(plan_id).populate("year_ids").exec();
     if (req.user._id !== plan.user_id) {

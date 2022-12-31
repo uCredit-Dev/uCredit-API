@@ -20,9 +20,6 @@ const yearName = ["AP/Transfer", "Freshman", "Sophomore", "Junior", "Senior"];
 //get plan by plan id
 router.get("/api/plans/:plan_id", auth, async (req, res) => {
   const p_id = req.params.plan_id;
-  if (!p_id) {
-    return missingHandler(res, { p_id });
-  }
   try {
     const plan = await Plans
       .findById(p_id)
@@ -54,9 +51,6 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
 //get all plans of a user
 router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
   const user_id = req.params.user_id;
-  if (!user_id) {
-    return missingHandler(res, { user_id });
-  }
   if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
@@ -180,9 +174,6 @@ const getStartYear = (year) => {
 //return deleted courses
 router.delete("/api/plans/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
-  if (!plan_id) {
-    return missingHandler(res, { plan_id });
-  }
   try {
     // check plan belongs to user
     const plan = await Plans.findById(plan_id).exec();

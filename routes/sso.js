@@ -129,9 +129,6 @@ router.post(
 //retrieve user object from db
 router.get("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
-  if (!hash) {
-    return missingHandler(res, { hash });
-  }
   try {
     const user = await Sessions.findOne({ hash }).exec();
     if (!user) {
@@ -147,9 +144,6 @@ router.get("/api/verifyLogin/:hash", async (req, res) => {
 
 router.delete("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
-  if (!hash) {
-    return missingHandler(res, { hash });
-  }
   try {
     const user = await Sessions.remove({ hash }).exec();
     returnData(user, res);

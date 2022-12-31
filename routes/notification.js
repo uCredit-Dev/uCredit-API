@@ -13,9 +13,6 @@ const router = express.Router();
 /* Get a user's notification */
 router.get("/api/notifications/:user_id", auth, async (req, res) => {
   const user_id = req.params.user_id;
-  if (!user_id) {
-    return missingHandler(res, { user_id });
-  }
   if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
@@ -50,9 +47,6 @@ router.post("/api/notifications", auth, async (req, res) => {
 /* Read a notification */
 router.post("/api/notifications/read/:notification_id", auth, async (req, res) => {
   const notification_id = req.params.notification_id;
-  if (!notification_id) {
-    return missingHandler(res, { notification_id }); 
-  }
   try {
     const notification = await Notifications.findById(notification_id).exec();
     if (!notification) {
@@ -71,9 +65,6 @@ router.post("/api/notifications/read/:notification_id", auth, async (req, res) =
 /* Delete a notification */
 router.delete("/api/notifications/:notification_id", auth, async (req, res) => {
   const notification_id = req.params.notification_id;
-  if (!notification_id) {
-    return missingHandler(res, { notification_id });
-  }
   try {
     // check notification belongs to user
     const notif = await Notifications.findById(notification_id).exec();

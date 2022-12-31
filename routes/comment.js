@@ -18,9 +18,6 @@ const router = express.Router();
 */
 router.get("/api/thread/getByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
-  if (!plan_id) {
-    return missingHandler(res, { plan_id });
-  }
   try {
     // verify that plan belongs to request user
     const plan = await Plans.findById(plan_id).exec();

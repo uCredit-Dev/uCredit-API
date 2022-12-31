@@ -18,9 +18,6 @@ const router = express.Router();
 //return all courses of the user's plan
 router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
-  if (!plan_id) {
-    return missingHandler(res, { plan_id });
-  }
   try {
     // verify that plan belongs to request user
     const plan = await Plans.findById(plan_id).exec();
@@ -38,9 +35,6 @@ router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
 //if distribution_id is not found data field would be an empty array
 router.get("/api/coursesByDistribution/:distribution_id", auth, async (req, res) => {
   const d_id = req.params.distribution_id;
-  if (!d_id) {
-    return missingHandler(res, { d_id });   
-  }
   // verify that distribution belongs to request user
   try {
     const dist = await Distributions.findById(d_id).exec();
@@ -57,9 +51,6 @@ router.get("/api/coursesByDistribution/:distribution_id", auth, async (req, res)
 
 router.get("/api/courses/:course_id", async (req, res) => {
   const c_id = req.params.course_id;
-  if (!c_id) {
-    return missingHandler(res, { c_id });
-  }
   try {
     const course = await Courses.findById(c_id).exec();
     returnData(course, res);
@@ -144,9 +135,6 @@ router.post("/api/courses", auth, async (req, res) => {
 router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
   const c_id = req.params.course_id;
   const taken = req.body.taken;
-  if (!c_id) {
-    return missingHandler(res, { c_id });
-  }
   if (typeof taken !== "boolean") {
     return errorHandler(res, 400, { message: "Invalid taken status." });
   }
@@ -159,7 +147,7 @@ router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
     const course = await Courses
       .findByIdAndUpdate(c_id, { taken }, { new: true, runValidators: true })
       .exec();
-    course.distribution_ids.forEach(async (id) => {
+    for (let id of course.distribution_ids) {
       const distribution = await Distributions.findById(id).exec();
       if (taken) {
         distribution.current += course.credits;
@@ -167,7 +155,7 @@ router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
         distribution.current -= course.credits;
       }
       await distribution.save();
-    });
+    }
     returnData(course, res);
   } catch (err) {
     errorHandler(res, 404, err);
@@ -229,9 +217,6 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
 //update associated distribution credits
 router.delete("/api/courses/:course_id", auth, async (req, res) => {
   const c_id = req.params.course_id;
-  if (!c_id) {
-    return missingHandler(res, { c_id });
-  }
   try {
     // verify that course belongs to req user
     const course = await Courses.findById(c_id).exec();
@@ -240,7 +225,14 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
     }
     // delete course and update distributions
     await Courses.findByIdAndDelete(c_id).exec();
-    course.distribution_ids.forEach(async (id) => {
+    await Years
+      .findByIdAndUpdate(
+        course.year_id,
+        { $pull: { courses: course._id }},
+        { runValidators: true }
+      )
+      .exec();
+    for (let id of course.distribution_ids) {
       const distribution = await Distributions
         .findByIdAndUpdate(
           id,
@@ -249,23 +241,6 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
         )
         .exec();
       await distributionCreditUpdate(distribution, course, false);
-    });
-    //delete course id to user's year array
-    let query = {};
-    query[course.year] = course._id; //e.g. { freshman: id }
-    await Plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
-    const y = await Years.findById(course.year_id).exec();
-    const yearArr = y.courses;
-    const index = yearArr.indexOf(course._id);
-    if (index !== -1) {
-      yearArr.splice(index, 1);
-      await Years
-        .findByIdAndUpdate(
-          course.year_id,
-          { courses: yearArr },
-          { runValidators: true }
-        )
-        .exec();
     }
     returnData(course, res);
   } catch (err) {
