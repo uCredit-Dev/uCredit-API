@@ -8,7 +8,7 @@ const request = supertest(createApp());
 const endpoint = "/api/planReview/addReviewer";
 
 beforeEach(async () => {
-  await mongoose.connect(global.__MONGO_URI__);
+  await mongoose.connect();
 });
 
 describe(`Test endpoint ${endpoint}`, () => {

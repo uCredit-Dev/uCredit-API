@@ -60,7 +60,7 @@ beforeEach((done) => {
 });
 
 afterEach(async () => {
-  await mongoose.connection.db.collection("courses").drop(); 
+  await mongoose.connection.db.dropDatabase(); 
   await mongoose.connection.close();
 });
 

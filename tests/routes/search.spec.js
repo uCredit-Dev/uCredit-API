@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import jest from "jest"; 
 import supertest from "supertest";
 import createApp from "../../app";
 
@@ -10,6 +11,11 @@ beforeAll(() => {
     useNewUrlParser: true,
   });
 });
+
+afterAll(async () => {
+  await mongoose.connection.db.dropDatabase(); 
+  await mongoose.connection.close();
+})
 
 describe("GET Search Routes", () => {
   it("GET /api/search/all: Should return list of all SIS courses", async () => {

@@ -1,75 +1,62 @@
 import mongoose from "mongoose";
 import supertest from "supertest";
-import plans from "../../model/Plan";
 import createApp from "../../app";
-import users from "../../model/User";
-import courses from "../../model/Course";
-import distributions from "../../model/Distribution";
-import years from "../../model/Year";
+import Plans from "../../model/Plan";
+import Users from "../../model/User";
+import Courses from "../../model/Course";
+import Distributions from "../../model/Distribution";
+import Years from "../../model/Year";
 
-const TEST_PLAN_NAME_1 = "testPlan1";
-const TEST_USER_1 = "User1";
-const TEST_MAJOR_1 = "Computer Science";
-const TEST_MAJOR_2 = "Math";
-const TEST_DATE = new Date(1519129864400);
-const TEST_YEAR_1 = "AE UG Freshman";
-const TEST_PLAN_NAME_2 = "testPlan2";
-const TEST_USER_2 = "User2";
-const TEST_YEAR_2 = "AE UG Sophomore";
-const postBody1 = {
-  name: TEST_PLAN_NAME_1,
-  user_id: TEST_USER_1,
-  majors: [TEST_MAJOR_1, TEST_MAJOR_2],
-  expireAt: TEST_DATE,
-  year: TEST_YEAR_1,
-};
+import { TEST_USER_1, TEST_USER_2, TEST_PLAN_1, TEST_PLAN_2, TEST_TOKEN_1, TEST_TOKEN_2 } from "./testVars"; 
 
-const postBody2 = {
-  name: TEST_PLAN_NAME_2,
-  user_id: TEST_USER_2,
-  majors: [TEST_MAJOR_1],
-  expireAt: TEST_DATE,
-  year: TEST_YEAR_2,
-};
+let plan; 
 
 beforeEach((done) => {
   mongoose
     .connect("mongodb://localhost:27017/years", { useNewUrlParser: true })
     .then(async () => {
-      await users.create({ _id: TEST_USER_1 });
-      await users.create({ _id: TEST_USER_2 });
-      const resp1 = await request.post("/api/plans").send(postBody1);
-      const resp2 = await request.post("/api/plans").send(postBody2);
+      await Users.create( TEST_USER_1 );
+      await Users.create( TEST_USER_2 );
+      const resp1 = await request
+        .post("/api/plans")
+        .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+        .send(TEST_PLAN_1);
+      plan = resp1.body.data; 
+      const resp2 = await request
+        .post("/api/plans")
+        .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+        .send(TEST_PLAN_2);
       for (let i = 0; i < 5; i++) {
         const plan = i < 3 ? resp1.body.data : resp2.body.data;
-        const courseResp = await courses.create({
+        const courseResp = await Courses.create({
           name: `course${i}`,
           plan_id: plan._id,
-          year_id: plan.year_ids[0],
-          user_id: TEST_USER_1,
-          year: TEST_YEAR_1,
+          year_id: plan.years[0]._id,
+          user_id: TEST_USER_1._id,
+          year: "Freshman",
           term: "fall",
           credits: 0,
           title: i,
+          level: "Lower Level Undergraduate"
         });
 
-        await years.findByIdAndUpdate(plan.year_ids[0], {
+        await Years.findByIdAndUpdate(plan.years[0]._id, {
           $push: { courses: courseResp._id },
         });
-        const distributionResp = await distributions.create({
+        const distributionResp = await Distributions.create({
           plan_id: plan._id,
           course_id: courseResp._id,
-          user_id: TEST_USER_1,
-          year: TEST_YEAR_1,
+          user_id: TEST_USER_1._id,
+          year: "Freshman",
           term: "fall",
           name: i,
           required: 0,
-          year_id: plan.year_ids[0],
+          year_id: plan.years[0]._id,
         });
-        await distributions.findByIdAndUpdate(distributionResp._id, {
+        await Distributions.findByIdAndUpdate(distributionResp._id, {
           $push: { courses: courseResp._id },
         });
-        await courses.findByIdAndUpdate(courseResp._id, {
+        await Courses.findByIdAndUpdate(courseResp._id, {
           $push: { distribution_ids: distributionResp._id },
         });
       }
@@ -77,71 +64,79 @@ beforeEach((done) => {
     });
 });
 
-afterEach((done) => {
-  mongoose.connection.db.dropDatabase(() => {
-    mongoose.connection.close(() => done());
-  });
+afterEach(async () => {
+  await mongoose.connection.db.dropDatabase(); 
+  await mongoose.connection.close();
 });
 
 const request = supertest(createApp());
 
 describe("year GET /api/years/:plan_id route", () => {
   it("should return a list of years corresponding to a valid plan", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._id;
-    const resp = await request.get("/api/years/" + id);
+    const id = plan._id;
+    const resp = await request
+      .get("/api/years/" + id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
     expect(resp.body.data.length).toBe(5);
   });
 
   it("should return status 400 for invalid id", async () => {
-    const resp = await request.get("/api/years/%00");
+    const resp = await request
+      .get("/api/years/%00")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(400);
   });
 });
 
 describe("year POST /api/years route", () => {
   it("should return a list of years corresponding to a valid plan", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._id;
-    const resp = await request.post("/api/years").send({
-      name: TEST_PLAN_NAME_1,
-      user_id: TEST_USER_1,
-      year: 2001,
-      plan_id: id,
-    });
+    const id = plan._id;
+    const resp = await request
+      .post("/api/years")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({
+        name: TEST_PLAN_1.name,
+        user_id: TEST_USER_1._id,
+        year: 2001,
+        plan_id: id,
+      });
     expect(resp.status).toBe(200);
-    expect(resp.body.data.name).toBe(TEST_PLAN_NAME_1);
-    expect(resp.body.data.user_id).toBe(TEST_USER_1);
+    expect(resp.body.data.name).toBe(TEST_PLAN_1.name);
+    expect(resp.body.data.user_id).toBe(TEST_USER_1._id);
     expect(resp.body.data.year).toBe(2001);
   });
 
   it("should return status 400 for missing name", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._id;
-    const resp = await request.post("/api/years").send({
-      user_id: TEST_USER_1,
-      year: 2001,
-      plan_id: id,
-    });
+    const id = plan._id;
+    const resp = await request
+      .post("/api/years")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({
+        user_id: TEST_USER_1._id,
+        year: 2001,
+        plan_id: id,
+      });
     expect(resp.status).toBe(400);
   });
 
   it("should return status 400 for missing user_id", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._id;
-    const resp = await request.post("/api/years").send({
-      name: TEST_PLAN_NAME_1,
-      year: 2001,
-      plan_id: id,
-    });
+    const id = plan._id;
+    const resp = await request
+      .post("/api/years")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({
+        name: TEST_PLAN_1.name,
+        year: 2001,
+        plan_id: id,
+      });
     expect(resp.status).toBe(400);
   });
 });
 
 describe("year PATCH /api/years/changeOrder route", () => {
   it("given a new order of years for a plan, the order of years should change", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
+    const planList = await Plans.find({ name: TEST_PLAN_1.name });
     const firstPlan = { ...planList[0]._doc };
     const id = firstPlan._id;
     const yearsTot = firstPlan.year_ids;
@@ -150,6 +145,7 @@ describe("year PATCH /api/years/changeOrder route", () => {
     yearsTot[1] = tmp;
     const resp = await request
       .patch("/api/years/changeOrder")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ plan_id: id, year_ids: yearsTot });
     expect(resp.status).toBe(200);
     const respYearIDs = resp.body.data.year_ids;
@@ -162,6 +158,7 @@ describe("year PATCH /api/years/changeOrder route", () => {
   it("should throw 400 for invalid plan id", async () => {
     const resp = await request
       .patch("/api/years/changeOrder")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ plan_id: "no_exist", year_ids: [] });
     expect(resp.status).toBe(400);
   });
@@ -169,6 +166,7 @@ describe("year PATCH /api/years/changeOrder route", () => {
   it("should throw 400 for missing plan id", async () => {
     const resp = await request
       .patch("/api/years/changeOrder")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ year_ids: [] });
     expect(resp.status).toBe(400);
   });
@@ -176,11 +174,11 @@ describe("year PATCH /api/years/changeOrder route", () => {
 
 describe("year PATCH /api/years/updateName route", () => {
   it("should return a list of years corresponding to a valid plan", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
     const NEW_NAME = "new test";
-    const id = planList[0]._doc.year_ids[0];
+    const id = plan.years[0]._id;
     const resp = await request
       .patch("/api/years/updateName")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ year_id: id, name: NEW_NAME });
     expect(resp.status).toBe(200);
     expect(resp.body.data.name).toBe(NEW_NAME);
@@ -189,15 +187,16 @@ describe("year PATCH /api/years/updateName route", () => {
   it("should throw 400 for invalid year id", async () => {
     const resp = await request
       .patch("/api/years/updateName")
-      .send({ year_id: "no_exist", name: TEST_PLAN_NAME_1 });
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({ year_id: "no_exist", name: TEST_PLAN_1.name });
     expect(resp.status).toBe(400);
   });
 
   it("should throw 400 for invalid missing name", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._doc.year_ids[0];
+    const id = plan.years[0]._id;
     const resp = await request
       .patch("/api/years/updateName")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ year_id: id });
     expect(resp.status).toBe(400);
   });
@@ -205,7 +204,8 @@ describe("year PATCH /api/years/updateName route", () => {
   it("should throw 400 for invalid missing year_id", async () => {
     const resp = await request
       .patch("/api/years/updateName")
-      .send({ name: TEST_PLAN_NAME_1 });
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({ name: TEST_PLAN_1.name });
     expect(resp.status).toBe(400);
   });
 });
@@ -213,10 +213,10 @@ describe("year PATCH /api/years/updateName route", () => {
 const NEW_YEAR = 2002;
 describe("year PATCH /api/years/updateYear route", () => {
   it("should return a list of years corresponding to a valid plan", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._doc.year_ids[0];
+    const id = plan.years[0]._id;
     const resp = await request
       .patch("/api/years/updateYear")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ year_id: id, year: NEW_YEAR });
     expect(resp.status).toBe(200);
     expect(resp.body.data.year).toBe(NEW_YEAR);
@@ -225,15 +225,16 @@ describe("year PATCH /api/years/updateYear route", () => {
   it("should throw 400 for invalid year id", async () => {
     const resp = await request
       .patch("/api/years/updateYear")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ year_id: "no_exist", year: NEW_YEAR });
     expect(resp.status).toBe(400);
   });
 
   it("should throw 400 for invalid missing year", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._doc.year_ids[0];
+    const id = plan.years[0]._id;
     const resp = await request
       .patch("/api/years/updateYear")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ year_id: id });
     expect(resp.status).toBe(400);
   });
@@ -241,6 +242,7 @@ describe("year PATCH /api/years/updateYear route", () => {
   it("should throw 400 for invalid missing year_id", async () => {
     const resp = await request
       .patch("/api/years/updateYear")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({ year: NEW_YEAR });
     expect(resp.status).toBe(400);
   });
@@ -248,40 +250,46 @@ describe("year PATCH /api/years/updateYear route", () => {
 
 describe("year DELETE /api/years/:year_id route", () => {
   it("should return deleted first year", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._doc.year_ids[0];
-    const resp = await request.delete("/api/years/" + id);
+    const id = plan.years[0]._id;
+    const resp = await request
+      .delete("/api/years/" + id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data._id)).toBe(JSON.stringify(id));
-    const planListAfter = await plans.find({ name: TEST_PLAN_NAME_1 });
+    const planListAfter = await Plans.find({ name: TEST_PLAN_1.name });
     for (let year_id of planListAfter[0]._doc.year_ids) {
       expect(JSON.stringify(year_id)).not.toBe(JSON.stringify(id));
     }
-    const courseList = await courses.find({ year_id: id });
+    const courseList = await Courses.find({ year_id: id });
     expect(courseList.length).toBe(0);
   });
 
   it("should return deleted non-first year", async () => {
-    const planList = await plans.find({ name: TEST_PLAN_NAME_1 });
-    const id = planList[0]._doc.year_ids[planList[0]._doc.year_ids.length - 1];
-    const resp = await request.delete("/api/years/" + id);
+    const id = plan.years[plan.years.length - 1]._id;
+    const resp = await request
+      .delete("/api/years/" + id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data._id)).toBe(JSON.stringify(id));
-    const planListAfter = await plans.find({ name: TEST_PLAN_NAME_1 });
+    const planListAfter = await Plans.find({ name: TEST_PLAN_1.name });
     for (let year_id of planListAfter[0]._doc.year_ids) {
       expect(JSON.stringify(year_id)).not.toBe(JSON.stringify(id));
     }
-    const courseList = await courses.find({ year_id: id });
+    const courseList = await Courses.find({ year_id: id });
     expect(courseList.length).toBe(0);
   });
 
   it("should throw 400 for invalid null year_id", async () => {
-    const resp = await request.delete("/api/years/%00");
+    const resp = await request
+      .delete("/api/years/%00")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(400);
   });
 
   it("should throw 500 for invalid year_id", async () => {
-    const resp = await request.delete("/api/years/asdffdsad");
+    const resp = await request
+      .delete("/api/years/asdffdsad")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(500);
   });
 });

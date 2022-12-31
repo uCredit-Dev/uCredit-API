@@ -58,17 +58,14 @@ describe("Test experiments endpoints", () => {
       setupFunc(done);
     });
 
-    afterEach((done) => {
-      mongoose.connection.db.dropDatabase(() => {
-        mongoose.connection.close(() => done());
-      });
-      done();
+    afterEach(async () => {
+      await mongoose.connection.db.dropDatabase(); 
+      await mongoose.connection.close();
     });
 
-    afterEach(async (done) => {
-      mongoose.connection.db.dropDatabase(() => {
-        mongoose.connection.close(() => done());
-      });
+    afterEach(async () => {
+      await mongoose.connection.db.dropDatabase(); 
+      await mongoose.connection.close();
     });
 
     describe(`Test GET ${endpoint}/allExperiments`, () => {

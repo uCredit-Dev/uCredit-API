@@ -36,25 +36,24 @@ router.get("/api/years/:plan_id", auth, async (req, res) => {
 
 //create a new year and add year id to the end of plan's year array
 router.post("/api/years", auth, async (req, res) => {
-  let newYear = {
-    name: req.body.name,
-    plan_id: req.body.plan_id,
-    user_id: req.body.user_id,
-    year: req.body.year,
-  };
-  if (newYear.user_id !== req.user._id) {
+  const { name, plan_id, user_id, year } = req.body; 
+  if (!name || !plan_id || !user_id || !year) {
+    return missingHandler(res, { name, plan_id, user_id, year })
+  }
+  if (user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
   try {
-    const year = await Years.create(newYear);
+    let newYear = { name, plan_id, user_id, year }; 
+    newYear = await Years.create(newYear);
     await Plans
       .findByIdAndUpdate(
         newYear.plan_id,
-        { $push: { year_ids: year._id } },
+        { $push: { year_ids: newYear._id } },
         { new: true, runValidators: true }
       )
       .exec();
-    returnData(year, res);
+    returnData(newYear, res);
   } catch (err) {
     errorHandler(res, 400, err);
   }

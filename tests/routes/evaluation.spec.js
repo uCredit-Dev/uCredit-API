@@ -15,10 +15,9 @@ beforeEach(() => {
   });
 });
 
-afterEach((done) => {
-  mongoose.connection.db.collection("evaluations").drop(() => {
-    mongoose.connection.close(() => done());
-  });
+afterEach(async () => {
+  await mongoose.connection.db.dropDatabase(); 
+  await mongoose.connection.close();
 });
 
 describe("Evaluation Routes", () => {

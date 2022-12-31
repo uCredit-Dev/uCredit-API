@@ -2,11 +2,7 @@ import mongoose from "mongoose";
 import supertest from "supertest";
 import users from "../../model/User";
 import createApp from "../../app";
-
-const SOPHOMORE = "AE UG SOPHOMORE";
-const FRESHMAN = "AE UG FRESHMAN";
-const JUNIOR = "AE UG JUNIOR";
-const SENIOR = "AE UG SENIOR";
+import { FRESHMAN, SOPHOMORE, JUNIOR, SENIOR } from "./testVars"; 
 
 beforeEach((done) => {
   const samples = [];
@@ -33,10 +29,9 @@ beforeEach((done) => {
     });
 });
 
-afterEach((done) => {
-  mongoose.connection.db.dropDatabase(() => {
-    mongoose.connection.close(() => done());
-  });
+afterEach(async () => {
+  await mongoose.connection.db.dropDatabase(); 
+  await mongoose.connection.close();
 });
 
 const request = supertest(createApp());
