@@ -132,11 +132,11 @@ router.get("/api/verifyLogin/:hash", async (req, res) => {
   if (!hash) {
     return missingHandler(res, { hash });
   }
-  const user = await Sessions.findOne({ hash }).exec();
-  if (!user) {
-    return errorHandler(res, 401, "User not logged in.");
-  }
   try {
+    const user = await Sessions.findOne({ hash }).exec();
+    if (!user) {
+      return errorHandler(res, 401, "User not logged in.");
+    }
     const retrievedUser = await Users.findById(user._id);
     const token = createToken(retrievedUser);
     returnData({ retrievedUser, token }, res);

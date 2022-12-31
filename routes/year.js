@@ -21,11 +21,11 @@ router.get("/api/years/:plan_id", auth, async (req, res) => {
   if (!plan_id) {
     return missingHandler(res, { plan_id });
   }
-  const plan = await Plans.findById(plan_id).populate("year_ids").exec();
-  if (req.user._id !== plan.user_id) {
-    return forbiddenHandler(res);
-  }
   try {
+    const plan = await Plans.findById(plan_id).populate("year_ids").exec();
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
     plan.populate("year_ids.courses", () => {
       returnData(plan.year_ids, res);
     });
@@ -67,14 +67,14 @@ router.patch("/api/years/changeOrder", auth, async (req, res) => {
   if (!year_ids || !plan_id) {
     return missingHandler(res, { year_ids, plan_id });
   }
-  // check that plan belongs to user
-  const plan = await Plans.findById(plan_id).exec();
-  if (req.user._id !== plan.user_id) {
-    return forbiddenHandler(res);
-  }
   try {
+    // check that plan belongs to user
+    let plan = await Plans.findById(plan_id).exec();
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
     // update plan
-    const plan = await Plans
+    plan = await Plans
       .findByIdAndUpdate(
         plan_id,
         { year_ids: year_ids },
@@ -94,12 +94,12 @@ router.patch("/api/years/updateName", auth, async (req, res) => {
   if (!name || !year_id) {
     return missingHandler(res, { name, year_id });
   }
-  // check that year belongs to user
-  const year = await Years.findById(year_id).exec();
-  if (req.user._id !== year.user_id) {
-    return forbiddenHandler(res);
-  }
   try {
+    // check that year belongs to user
+    const year = await Years.findById(year_id).exec();
+    if (req.user._id !== year.user_id) {
+      return forbiddenHandler(res);
+    }
     year.name = name;
     await year.save();
     await Courses.updateMany({ year_id }, { year: name }).exec();
@@ -137,13 +137,13 @@ router.delete("/api/years/:year_id", auth, async (req, res) => {
     return errorHandler(res, 400, "must specify a valid year_id");
   }
   // check that year belongs to user
-  const year = await Years.findById(year_id).exec();
-  if (req.user._id !== year.user_id) {
-    return forbiddenHandler(res);
-  }
   try {
+    let year = await Years.findById(year_id).exec();
+    if (req.user._id !== year.user_id) {
+      return forbiddenHandler(res);
+    }
     // delete the year
-    const year = await Years.findByIdAndDelete(year_id).exec();
+    year = await Years.findByIdAndDelete(year_id).exec();
     year.courses.forEach(async (c_id) => {
       const course = await Courses.findByIdAndDelete(c_id).exec();
       course.distribution_ids.forEach(async (id) => {

@@ -19,9 +19,6 @@ router.get("/api/notifications/:user_id", auth, async (req, res) => {
   if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
-  if (!user_id) {
-    return errorHandler(res, 400, { message: "Must provide user_id." });
-  }
   try {
     const notifications = await Notifications.find({
       user_id: { $elemMatch: { $eq: user_id } },
@@ -56,20 +53,19 @@ router.post("/api/notifications/read/:notification_id", auth, async (req, res) =
   if (!notification_id) {
     return missingHandler(res, { notification_id }); 
   }
-  const notification = await Notifications.findById(notification_id).exec();
-  if (!notification) {
-    errorHandler(res, 404, { message: "Notification not found." });
-  } else if (!notification.user_id.includes(req.user._id)) {
-    forbiddenHandler(res);
-  } else {
-    try {
-      notification.read = true;
-      await notification.save();
-      returnData(notification, res);
-    } catch (err) {
-      errorHandler(res, 400, err);
-    }
-  } 
+  try {
+    const notification = await Notifications.findById(notification_id).exec();
+    if (!notification) {
+      return errorHandler(res, 404, { message: "Notification not found." });
+    } else if (!notification.user_id.includes(req.user._id)) {
+      return forbiddenHandler(res);
+    } 
+    notification.read = true;
+    await notification.save();
+    returnData(notification, res);
+  } catch (err) {
+    errorHandler(res, 400, err);
+  }
 });
 
 /* Delete a notification */
@@ -78,12 +74,12 @@ router.delete("/api/notifications/:notification_id", auth, async (req, res) => {
   if (!notification_id) {
     return missingHandler(res, { notification_id });
   }
-  // check notification belongs to user
-  const notif = await Notifications.findById(notification_id).exec();
-  if (!notif.user_id.includes(req.user._id)) {
-    return forbiddenHandler(res);
-  }
   try {
+    // check notification belongs to user
+    const notif = await Notifications.findById(notification_id).exec();
+    if (!notif.user_id.includes(req.user._id)) {
+      return forbiddenHandler(res);
+    }
     // delete notification
     const result = await Notifications.findByIdAndDelete(
       notification_id

@@ -15,7 +15,7 @@ router.get("/api/majors/all", async (req, res) => {
 
 router.post("/api/majors", async (req, res) => {
   const major = req.body;
-  if (!major) {
+  if (!major || Object.keys(major).length === 0) {
     return missingHandler(res, { major });
   }
   try {

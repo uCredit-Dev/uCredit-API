@@ -60,14 +60,14 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
   if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
-  const plansTotal = [];
-  const user = await Users.findById(user_id).exec();
-  if (!user)
-    return errorHandler(res, 404, {
-      message: `${user} of ${user_id} User not found`,
-    });
-  let total = user.plan_ids.length;
   try {
+    const plansTotal = [];
+    const user = await Users.findById(user_id).exec();
+    if (!user)
+      return errorHandler(res, 404, {
+        message: `${user} of ${user_id} User not found`,
+      });
+    let total = user.plan_ids.length;
     for (let plan_id of user.plan_ids) {
       let plan = await Plans.findById(plan_id).populate("year_ids").exec();
       if (!plan) {
@@ -114,7 +114,7 @@ router.post("/api/plans", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   try {
-    const retrievedPlan = Plans.create(plan);
+    const retrievedPlan = await Plans.create(plan);
     //update user
     await Users
       .findByIdAndUpdate(
@@ -183,12 +183,12 @@ router.delete("/api/plans/:plan_id", auth, async (req, res) => {
   if (!plan_id) {
     return missingHandler(res, { plan_id });
   }
-  // check plan belongs to user
-  const plan = await Plans.findById(plan_id).exec();
-  if (req.user._id !== plan.user_id) {
-    return forbiddenHandler(res);
-  }
   try {
+    // check plan belongs to user
+    const plan = await Plans.findById(plan_id).exec();
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
     // delete plan
     await Plans.findByIdAndDelete(plan_id).exec();
     //delete distribution & courses
@@ -225,14 +225,14 @@ router.patch("/api/plans/update", auth, async (req, res) => {
   if (name) {
     updateBody.name = name;
   }
-  // check plan belongs to user
-  const plan = await Plans.findById(id).exec();
-  if (req.user._id !== plan.user_id) {
-    return forbiddenHandler(res);
-  }
   try {
+    // check plan belongs to user
+    let plan = await Plans.findById(id).exec();
+    if (req.user._id !== plan.user_id) {
+      return forbiddenHandler(res);
+    }
     // update plan
-    let plan = await Plans
+    plan = await Plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .exec();
     const reviewers = await Reviews

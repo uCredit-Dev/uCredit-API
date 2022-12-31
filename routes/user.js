@@ -80,16 +80,21 @@ router.delete("/api/user/:id", auth, async (req, res) => {
   if (req.user._id !== id) {
     return forbiddenHandler(res);
   }
-  const user = await Users.findByIdAndDelete(id).exec();
-  if (user) {
-    await Courses.deleteMany({ user_id: id }).exec();
-    await Distributions.deleteMany({ user_id: id }).exec();
-    await Years.deleteMany({ user_id: id }).exec();
-    await Plans.deleteMany({ user_id: id }).exec();
-    await Reviews.deleteMany({ reviewee_id: id }).exec();
-    res.status(204).json({});
-  } else {
-    errorHandler(res, 404, "User not found.");
+  try {
+
+    const user = await Users.findByIdAndDelete(id).exec();
+    if (user) {
+      await Courses.deleteMany({ user_id: id }).exec();
+      await Distributions.deleteMany({ user_id: id }).exec();
+      await Years.deleteMany({ user_id: id }).exec();
+      await Plans.deleteMany({ user_id: id }).exec();
+      await Reviews.deleteMany({ reviewee_id: id }).exec();
+      res.status(204).json({});
+    } else {
+      errorHandler(res, 404, "User not found.");
+    }
+  } catch (err) {
+    errorHandler(res, 500, err);
   }
 });
 
