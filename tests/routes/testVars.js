@@ -17,8 +17,24 @@ const TEST_TOKEN_2 = createToken(TEST_USER_2);
 const TEST_CS = "B.S. Computer Science (NEW - 2021 & after)";
 const TEST_AMS = "B.S. Applied Mathematics & Statistics";
 const TEST_DATE = new Date(1519129864400);
-const TEST_YEAR_1 = "AE UG Freshman";
-const TEST_YEAR_2 = "AE UG Sophomore";
+const SOPHOMORE = "AE UG SOPHOMORE";
+const FRESHMAN = "AE UG FRESHMAN";
+const JUNIOR = "AE UG JUNIOR";
+const SENIOR = "AE UG SENIOR";
+const TEST_PLAN_1 = {
+  name: TEST_PLAN_NAME_1,
+  user_id: TEST_USER_1._id,
+  majors: [ TEST_CS, TEST_AMS ],
+  expireAt: TEST_DATE,
+  year: "Junior",
+}
+const TEST_PLAN_2 = {
+  name: TEST_PLAN_NAME_2,
+  user_id: TEST_USER_2._id,
+  majors: [ TEST_AMS ],
+  expireAt: TEST_DATE,
+  year: "Freshman",
+}
 
 /* lacks plan_id and distribution_ids */ 
 const sampleCourses = [
@@ -81,4 +97,10 @@ export {
   TEST_DATE, 
   TEST_TOKEN_1, 
   TEST_TOKEN_2, 
+  TEST_PLAN_1, 
+  TEST_PLAN_2,
+  FRESHMAN, 
+  SOPHOMORE, 
+  JUNIOR, 
+  SENIOR
 }
