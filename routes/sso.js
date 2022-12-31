@@ -6,8 +6,8 @@ import bodyParser from "body-parser";
 import cryptoRandomString from "crypto-random-string";
 import { createToken } from "../util/token.js";
 import { returnData, errorHandler, missingHandler } from "./helperMethods.js";
-import users from "../model/User.js";
-import sessions from "../model/Session.js";
+import Users from "../model/User.js";
+import Sessions from "../model/Session.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -93,7 +93,7 @@ router.post(
   async (req, res) => {
     // the user data is in req.user
     const id = req.user[JHEDid];
-    let user = await users.findById(id).exec();
+    let user = await Users.findById(id).exec();
     //if user if not in db already, create and save one
     if (user === null) {
       user = {
@@ -104,14 +104,14 @@ router.post(
         grade: req.user[grade],
         school: req.user[school],
       };
-      await users.create(user);
+      await Users.create(user);
     } else {
       user.grade = req.user[grade];
       user.school = req.user[school];
       await user.save();
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
-    await sessions
+    await Sessions
       .findByIdAndUpdate(
         id,
         { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
@@ -132,12 +132,12 @@ router.get("/api/verifyLogin/:hash", async (req, res) => {
   if (!hash) {
     return missingHandler(res, { hash });
   }
-  const user = await sessions.findOne({ hash }).exec();
+  const user = await Sessions.findOne({ hash }).exec();
   if (!user) {
     return errorHandler(res, 401, "User not logged in.");
   }
   try {
-    const retrievedUser = await users.findById(user._id);
+    const retrievedUser = await Users.findById(user._id);
     const token = createToken(retrievedUser);
     returnData({ retrievedUser, token }, res);
   } catch (err) {
@@ -151,7 +151,7 @@ router.delete("/api/verifyLogin/:hash", async (req, res) => {
     return missingHandler(res, { hash });
   }
   try {
-    const user = await sessions.remove({ hash }).exec();
+    const user = await Sessions.remove({ hash }).exec();
     returnData(user, res);
   } catch (err) {
     errorHandler(res, 500, err);

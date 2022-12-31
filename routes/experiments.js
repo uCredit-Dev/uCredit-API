@@ -1,7 +1,7 @@
 import express from "express";
 import ExperimentDao from "../data/ExperimentDao.js";
 import ApiError from "../model/ApiError.js";
-import majors from "../model/Major.js";
+import Majors from "../model/Major.js";
 import { returnData } from "./helperMethods.js";
 
 const router = express.Router();
@@ -12,7 +12,7 @@ const experiments = new ExperimentDao();
 router.get("/", async (req, res) => {
   // simple fail proof db query
   try {
-    await majors.findOne({}).exec();
+    await Majors.findOne({}).exec();
     returnData("Welcome to uCredit backend!", res);
   } catch (err) {
     errorHandler(res, 500, err);

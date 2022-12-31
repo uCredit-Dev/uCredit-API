@@ -6,9 +6,9 @@ import {
   missingHandler,
 } from "./helperMethods.js";
 import { auth } from "../util/token.js";
-import plans from "../model/Plan.js";
-import planReviews from "../model/PlanReview.js";
-import users from "../model/User.js";
+import Plans from "../model/Plan.js";
+import Reviews from "../model/PlanReview.js";
+import Users from "../model/User.js";
 import nodemailer from "nodemailer";
 import express from "express";
 import dotenv from "dotenv";
@@ -30,7 +30,7 @@ router.post("/api/planReview/request", auth, async (req, res) => {
   if (req.user._id !== reviewee_id) {
     return forbiddenHandler(res);
   }
-  const _review = await planReviews
+  const _review = await Reviews
     .findOne({ reviewer_id, reviewee_id, plan_id })
     .exec();
   if (_review) {
@@ -46,15 +46,15 @@ router.post("/api/planReview/request", auth, async (req, res) => {
       requestTime: Date.now(),
       status: "PENDING",
     };
-    const review = await planReviews.create(planReview);
+    const review = await Reviews.create(planReview);
     await postNotification(
       `${reviewee_name} has requested you to review a plan.`,
       [reviewer_id],
       review._id,
       "PLANREVIEW"
     );
-    const reviewer = await users.findById(reviewer_id).exec();
-    const reviewee = await users.findById(reviewee_id).exec();
+    const reviewer = await Users.findById(reviewer_id).exec();
+    const reviewee = await Users.findById(reviewee_id).exec();
     await sendReviewMail(
       reviewee.name,
       reviewer.name,
@@ -92,7 +92,7 @@ router.post("/api/planReview/confirm", auth, async (req, res) => {
     return missingHandler(res, { review_id });
   }
   try {
-    const review = await planReviews
+    const review = await Reviews
       .findById(review_id)
       .populate("reviewer_id", "name")
       .exec();
@@ -113,7 +113,7 @@ router.post("/api/backdoor/planReview/confirm", async (req, res) => {
     return missingHandler(res, { reviewer_id });
   }
   try {
-    const review = await planReviews
+    const review = await Reviews
       .findOne({ reviewer_id })
       .populate("reviewer_id", "name")
       .exec();
@@ -133,13 +133,13 @@ router.get("/api/planReview/getReviewers", auth, async (req, res) => {
     return missingHandler(res, { plan_id });
   }
   // check that plan belongs to user
-  const plan = await plans.findById(plan_id).exec();
+  const plan = await Plans.findById(plan_id).exec();
   if (req.user._id !== plan.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // get plan reviews for given plan
-    const reviews = await planReviews
+    const reviews = await Reviews
       .find({ plan_id })
       .populate("reviewer_id", "name email affiliation school grade")
       .exec();
@@ -162,7 +162,7 @@ router.get("/api/planReview/plansToReview", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   try {
-    const reviews = await planReviews
+    const reviews = await Reviews
       .find({ reviewer_id })
       .populate("reviewee_id", "name email affiliation school grade")
       .exec();
@@ -192,7 +192,7 @@ router.post("/api/planReview/changeStatus", auth, async (req, res) => {
       message: "Invalid status. Must be APPROVED, REJECTED, or UNDERREVIEW.",
     });
   }
-  const review = await planReviews.findById(review_id).exec();
+  const review = await Reviews.findById(review_id).exec();
   if (!review) {
     return errorHandler(res, 404, { message: "planReview not found." });
   } else if (req.user._id !== review.reviewer_id) {
@@ -201,8 +201,8 @@ router.post("/api/planReview/changeStatus", auth, async (req, res) => {
     return errorHandler(res, 400, { message: "Review currently pending." });
   }
   try {
-    const reviewer = await users.findById(review.reviewer_id).exec();
-    const reviewee = await users.findById(review.reviewee_id).exec();
+    const reviewer = await Users.findById(review.reviewer_id).exec();
+    const reviewee = await Users.findById(review.reviewee_id).exec();
     review.status = status;
     // send email to review if status UNDERREVIEW
     if (status === "UNDERREVIEW") {
@@ -255,7 +255,7 @@ router.delete("/api/planReview/removeReview", auth, async (req, res) => {
     return missingHandler(res, { review_id });
   }
   // only reviewer or reviewee can delete a review
-  const review = await planReviews.findById(review_id).exec();
+  const review = await Reviews.findById(review_id).exec();
   if (
     req.user._id !== review.reviewer_id &&
     req.user._id !== review.reviewee_id
@@ -264,7 +264,7 @@ router.delete("/api/planReview/removeReview", auth, async (req, res) => {
   }
   try {
     // delete the review
-    const review = await planReviews.findByIdAndDelete(review_id).exec();
+    const review = await Reviews.findByIdAndDelete(review_id).exec();
     await postNotification(
       `A plan review request has been removed.`,
       [review.reviewee_id, review.reviewer_id],

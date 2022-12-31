@@ -5,13 +5,13 @@ import {
   forbiddenHandler,
   missingHandler,
 } from "./helperMethods.js";
-import courses from "../model/Course.js";
-import distributions from "../model/Distribution.js";
-import users from "../model/User.js";
-import plans from "../model/Plan.js";
-import years from "../model/Year.js";
+import Courses from "../model/Course.js";
+import Distributions from "../model/Distribution.js";
+import Users from "../model/User.js";
+import Plans from "../model/Plan.js";
+import Years from "../model/Year.js";
+import Reviews from "../model/PlanReview.js";
 import { auth } from "../util/token.js";
-import reviews from "../model/PlanReview.js";
 import express from "express";
 
 const router = express.Router();
@@ -24,7 +24,7 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
     return missingHandler(res, { p_id });
   }
   try {
-    const plan = await plans
+    const plan = await Plans
       .findById(p_id)
       .populate({
         path: "year_ids",
@@ -40,7 +40,7 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
     let result = { ...plan._doc };
     delete result.year_ids;
     result = { ...result, years };
-    const reviewers = await reviews
+    const reviewers = await Reviews
       .find({ plan_id: p_id })
       .populate("reviewer_id")
       .exec();
@@ -61,7 +61,7 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   const plansTotal = [];
-  const user = await users.findById(user_id).exec();
+  const user = await Users.findById(user_id).exec();
   if (!user)
     return errorHandler(res, 404, {
       message: `${user} of ${user_id} User not found`,
@@ -69,7 +69,7 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
   let total = user.plan_ids.length;
   try {
     for (let plan_id of user.plan_ids) {
-      let plan = await plans.findById(plan_id).populate("year_ids").exec();
+      let plan = await Plans.findById(plan_id).populate("year_ids").exec();
       if (!plan) {
         total--;
         continue;
@@ -77,7 +77,7 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
       plan.populate("year_ids.courses", async () => {
         plan = { ...plan._doc, years: plan.year_ids };
         delete plan.year_ids;
-        const reviewers = await reviews
+        const reviewers = await Reviews
           .find({ plan_id: plan_id })
           .populate("reviewer_id")
           .exec();
@@ -114,9 +114,9 @@ router.post("/api/plans", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   try {
-    const retrievedPlan = plans.create(plan);
+    const retrievedPlan = Plans.create(plan);
     //update user
-    await users
+    await Users
       .findByIdAndUpdate(
         retrievedPlan.user_id,
         { $push: { plan_ids: retrievedPlan._id } },
@@ -135,7 +135,7 @@ router.post("/api/plans", auth, async (req, res) => {
         expireAt:
           retrievedPlan.user_id === "guestUser" ? Date.now() : undefined,
       };
-      const newYear = await years.create(retrievedYear);
+      const newYear = await Years.create(retrievedYear);
       yearObjs.push(newYear);
       retrievedPlan.year_ids.push(newYear._id);
     }
@@ -184,19 +184,19 @@ router.delete("/api/plans/:plan_id", auth, async (req, res) => {
     return missingHandler(res, { plan_id });
   }
   // check plan belongs to user
-  const plan = await plans.findById(plan_id).exec();
+  const plan = await Plans.findById(plan_id).exec();
   if (req.user._id !== plan.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // delete plan
-    await plans.findByIdAndDelete(plan_id).exec();
+    await Plans.findByIdAndDelete(plan_id).exec();
     //delete distribution & courses
-    distributions.deleteMany({ plan_id: plan._id }).exec();
-    courses.deleteMany({ plan_id: plan._id }).exec();
-    years.deleteMany({ plan_id: plan._id }).exec();
-    // TODO: delete reviews
-    await users
+    await Distributions.deleteMany({ plan_id: plan._id }).exec();
+    await Courses.deleteMany({ plan_id: plan._id }).exec();
+    await Years.deleteMany({ plan_id: plan._id }).exec();
+    await Reviews.deleteMany({ plan_id: plan._id }).exec();
+    await Users
       .findByIdAndUpdate(
         //delete plan_id from user
         plan.user_id,
@@ -226,16 +226,16 @@ router.patch("/api/plans/update", auth, async (req, res) => {
     updateBody.name = name;
   }
   // check plan belongs to user
-  const plan = await plans.findById(id).exec();
+  const plan = await Plans.findById(id).exec();
   if (req.user._id !== plan.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // update plan
-    let plan = await plans
+    let plan = await Plans
       .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
       .exec();
-    const reviewers = await reviews
+    const reviewers = await Reviews
       .find({ plan_id: id })
       .populate("reviewer_id")
       .exec();

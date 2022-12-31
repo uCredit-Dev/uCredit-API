@@ -7,10 +7,10 @@ import {
   missingHandler,
 } from "./helperMethods.js";
 import { auth } from "../util/token.js";
-import courses from "../model/Course.js";
-import distributions from "../model/Distribution.js";
-import plans from "../model/Plan.js";
-import years from "../model/Year.js";
+import Courses from "../model/Course.js";
+import Distributions from "../model/Distribution.js";
+import Plans from "../model/Plan.js";
+import Years from "../model/Year.js";
 import express from "express";
 
 const router = express.Router();
@@ -21,7 +21,7 @@ router.get("/api/years/:plan_id", auth, async (req, res) => {
   if (!plan_id) {
     return missingHandler(res, { plan_id });
   }
-  const plan = await plans.findById(plan_id).populate("year_ids").exec();
+  const plan = await Plans.findById(plan_id).populate("year_ids").exec();
   if (req.user._id !== plan.user_id) {
     return forbiddenHandler(res);
   }
@@ -46,8 +46,8 @@ router.post("/api/years", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   try {
-    const year = await years.create(newYear);
-    await plans
+    const year = await Years.create(newYear);
+    await Plans
       .findByIdAndUpdate(
         newYear.plan_id,
         { $push: { year_ids: year._id } },
@@ -68,13 +68,13 @@ router.patch("/api/years/changeOrder", auth, async (req, res) => {
     return missingHandler(res, { year_ids, plan_id });
   }
   // check that plan belongs to user
-  const plan = await plans.findById(plan_id).exec();
+  const plan = await Plans.findById(plan_id).exec();
   if (req.user._id !== plan.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // update plan
-    const plan = await plans
+    const plan = await Plans
       .findByIdAndUpdate(
         plan_id,
         { year_ids: year_ids },
@@ -95,14 +95,14 @@ router.patch("/api/years/updateName", auth, async (req, res) => {
     return missingHandler(res, { name, year_id });
   }
   // check that year belongs to user
-  const year = await years.findById(year_id).exec();
+  const year = await Years.findById(year_id).exec();
   if (req.user._id !== year.user_id) {
     return forbiddenHandler(res);
   }
   try {
     year.name = name;
     await year.save();
-    await courses.updateMany({ year_id }, { year: name }).exec();
+    await Courses.updateMany({ year_id }, { year: name }).exec();
     returnData(year, res);
   } catch (err) {
     errorHandler(res, 400, err);
@@ -118,7 +118,7 @@ router.patch("/api/years/updateYear", auth, async (req, res) => {
   }
   try {
     // check that year belongs to user
-    const retrievedYear = await years.findById(year_id).exec();
+    const retrievedYear = await Years.findById(year_id).exec();
     if (req.user._id !== retrievedYear.user_id) {
       return forbiddenHandler(res);
     }
@@ -137,17 +137,17 @@ router.delete("/api/years/:year_id", auth, async (req, res) => {
     return errorHandler(res, 400, "must specify a valid year_id");
   }
   // check that year belongs to user
-  const year = await years.findById(year_id).exec();
+  const year = await Years.findById(year_id).exec();
   if (req.user._id !== year.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // delete the year
-    const year = await years.findByIdAndDelete(year_id).exec();
+    const year = await Years.findByIdAndDelete(year_id).exec();
     year.courses.forEach(async (c_id) => {
-      const course = await courses.findByIdAndDelete(c_id).exec();
+      const course = await Courses.findByIdAndDelete(c_id).exec();
       course.distribution_ids.forEach(async (id) => {
-        const distribution = await distributions
+        const distribution = await Distributions
           .findByIdAndUpdate(
             id,
             { $pull: { courses: c_id } },
@@ -157,7 +157,7 @@ router.delete("/api/years/:year_id", auth, async (req, res) => {
         await distributionCreditUpdate(distribution, course, false);
       });
     });
-    let plan = await plans.findById(year.plan_id).exec();
+    let plan = await Plans.findById(year.plan_id).exec();
     plan.year_ids = plan.year_ids.filter((y) => y != year._id); //remove year_id from plan
     if (year.year) {
       //not a preUniversity year, delete last year

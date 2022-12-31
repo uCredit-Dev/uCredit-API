@@ -6,9 +6,9 @@ import {
   missingHandler,
 } from "./helperMethods.js";
 import { auth } from "../util/token.js";
-import courses from "../model/Course.js";
-import distributions from "../model/Distribution.js";
-import plans from "../model/Plan.js";
+import Courses from "../model/Course.js";
+import Distributions from "../model/Distribution.js";
+import Plans from "../model/Plan.js";
 import express from "express";
 
 const router = express.Router();
@@ -20,7 +20,7 @@ router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
     return missingHandler(res, { d_id });
   }
   try {
-    const distribution = await distributions.findById(d_id).exec();
+    const distribution = await Distributions.findById(d_id).exec();
     // verify that distribution belongs to user
     if (req.user._id !== distribution.user_id) {
       forbiddenHandler(res);
@@ -39,7 +39,7 @@ router.get("/api/distributionsByPlan/:plan_id", auth, async (req, res) => {
     return missingHandler(res, { plan_id });
   }
   try {
-    const plan = await plans
+    const plan = await Plans
       .findById(plan_id)
       .populate({ path: "distribution_ids" })
       .exec();
@@ -64,8 +64,8 @@ router.post("/api/distributions", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   try {
-    const retrievedDistribution = await distributions.create(distribution);
-    await plans
+    const retrievedDistribution = await Distributions.create(distribution);
+    await Plans
       .findByIdAndUpdate(
         //update plan
         retrievedDistribution.plan_id,
@@ -80,17 +80,14 @@ router.post("/api/distributions", auth, async (req, res) => {
 });
 
 //change required credit setting for distribution
-router.patch(
-  "/api/distributions/updateRequiredCredits",
-  auth,
-  async (req, res) => {
+router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) => {
     const required = req.query.required;
     const id = req.query.id;
     if (!required || !id) {
       return missingHandler(res, { required, id });
     }
     try {
-      const distribution = await distributions.findById(id).exec();
+      const distribution = await Distributions.findById(id).exec();
       // verify that distribution belongs to user
       if (req.user._id !== distribution.user_id) {
         return forbiddenHandler(res);
@@ -114,7 +111,7 @@ router.patch("/api/distributions/updateName", auth, async (req, res) => {
     return missingHandler(res, { name, id });
   }
   try {
-    const distribution = await distributions.findById(id).exec();
+    const distribution = await Distributions.findById(id).exec();
     // verify that distribution belongs to user
     if (req.user._id !== distribution.user_id) {
       return forbiddenHandler(res);
@@ -136,14 +133,14 @@ router.delete("/api/distributions/:d_id", auth, async (req, res) => {
     return missingHandler(res, { d_id });
   }
   // verify that distribution belongs to user
-  const distribution = await distributions.findById(d_id).exec();
+  const distribution = await Distributions.findById(d_id).exec();
   if (req.user._id !== distribution.user_id) {
     return forbiddenHandler(res);
   }
   try {
-    await distributions.findByIdAndDelete(d_id).exec();
+    await Distributions.findByIdAndDelete(d_id).exec();
     //update plan
-    await plans
+    await Plans
       .findByIdAndUpdate(
         distribution.plan_id,
         { $pull: { distribution_ids: distribution._id } },
@@ -151,7 +148,7 @@ router.delete("/api/distributions/:d_id", auth, async (req, res) => {
       )
       .exec();
     //delete courses that only belong to the distribution
-    await courses
+    await Courses
       .deleteMany({
         $and: [
           { distribution_ids: distribution._id },

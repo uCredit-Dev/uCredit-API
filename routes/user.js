@@ -1,11 +1,11 @@
 import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
-import users from "../model/User.js";
-import plans from "../model/Plan.js";
+import Users from "../model/User.js";
+import Plans from "../model/Plan.js";
 import { createToken, auth } from "../util/token.js";
-import years from "../model/Plan.js";
-import courses from "../model/Course.js";
-import distributions from "../model/Distribution.js";
-import planReviews from "../model/PlanReview.js";
+import Years from "../model/Plan.js";
+import Courses from "../model/Course.js";
+import Distributions from "../model/Distribution.js";
+import Reviews from "../model/PlanReview.js";
 import express from "express";
 import dotenv from "dotenv";
 
@@ -26,7 +26,7 @@ router.get("/api/user", async (req, res) => {
     affiliation: { $regex: affiliation, $options: "i" },
   };
   try {
-    let users = await users.find(query).exec();
+    let users = await Users.find(query).exec();
     users = users.map((user) => ({
       _id: user._id,
       name: user.name,
@@ -50,7 +50,7 @@ router.get("/api/backdoor/verification/:id", async (req, res) => {
     return missingHandler(res, { id });
   }
   try {
-    const user = await users.findById(id).exec();
+    const user = await Users.findById(id).exec();
     if (user) {
       const token = createToken(user);
       returnData({ user, token }, res);
@@ -63,7 +63,7 @@ router.get("/api/backdoor/verification/:id", async (req, res) => {
         grade: "AE UG Freshman",
         school: "jooby hooby",
       };
-      user = await users.create(user);
+      user = await Users.create(user);
       const token = createToken(user);
       returnData({ user, token }, res);
     }
@@ -80,13 +80,13 @@ router.delete("/api/user/:id", auth, async (req, res) => {
   if (req.user._id !== id) {
     return forbiddenHandler(res);
   }
-  const user = await users.findByIdAndDelete(id).exec();
+  const user = await Users.findByIdAndDelete(id).exec();
   if (user) {
-    await courses.deleteMany({ user_id: id }).exec();
-    await distributions.deleteMany({ user_id: id }).exec();
-    await years.deleteMany({ user_id: id }).exec();
-    await plans.deleteMany({ user_id: id }).exec();
-    await planReviews.deleteMany({ reviewee_id: id }).exec();
+    await Courses.deleteMany({ user_id: id }).exec();
+    await Distributions.deleteMany({ user_id: id }).exec();
+    await Years.deleteMany({ user_id: id }).exec();
+    await Plans.deleteMany({ user_id: id }).exec();
+    await Reviews.deleteMany({ reviewee_id: id }).exec();
     res.status(204).json({});
   } else {
     errorHandler(res, 404, "User not found.");

@@ -6,10 +6,10 @@ import {
   forbiddenHandler,
   missingHandler,
 } from "./helperMethods.js";
-import courses from "../model/Course.js";
-import distributions from "../model/Distribution.js";
-import plans from "../model/Plan.js";
-import years from "../model/Year.js";
+import Courses from "../model/Course.js";
+import Distributions from "../model/Distribution.js";
+import Plans from "../model/Plan.js";
+import Years from "../model/Year.js";
 import { auth } from "../util/token.js";
 import express from "express";
 
@@ -23,12 +23,12 @@ router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   }
   try {
     // verify that plan belongs to request user
-    const plan = await plans.findById(plan_id).exec();
+    const plan = await Plans.findById(plan_id).exec();
     if (req.user._id !== plan.user_id) {
       return forbiddenHandler(res);
     }
     // return courses associated with plan
-    const retrievedCourses = await courses.findByPlanId(plan_id).exec();
+    const retrievedCourses = await Courses.findByPlanId(plan_id).exec();
     returnData(retrievedCourses, res);
   } catch (err) {
     errorHandler(res, 400, err);
@@ -43,12 +43,12 @@ router.get("/api/coursesByDistribution/:distribution_id", auth, async (req, res)
   }
   // verify that distribution belongs to request user
   try {
-    const dist = await distributions.findById(d_id).exec();
+    const dist = await Distributions.findById(d_id).exec();
     if (req.user._id !== dist.user_id) {
       return forbiddenHandler(res);
     }
     // return courses associated with distribution
-    const retrievedCourses = await courses.findByDistributionId(d_id).exec();
+    const retrievedCourses = await Courses.findByDistributionId(d_id).exec();
     returnData(retrievedCourses, res);
   } catch (err) {
     errorHandler(res, 400, err);
@@ -61,7 +61,7 @@ router.get("/api/courses/:course_id", async (req, res) => {
     return missingHandler(res, { c_id });
   }
   try {
-    const course = await courses.findById(c_id).exec();
+    const course = await Courses.findById(c_id).exec();
     returnData(course, res);
   } catch (err) {
     errorHandler(res, 400, err);
@@ -77,7 +77,7 @@ router.get("/api/coursesByTerm/:plan_id", auth, async (req, res) => {
     return missingHandler(res, { plan_id, year, term });
   }
   try {
-    const retrievedYear = await years
+    const retrievedYear = await Years
       .findOne({ plan_id, name: year })
       .populate({ path: "courses", match: term })
       .exec();
@@ -103,17 +103,17 @@ router.post("/api/courses", auth, async (req, res) => {
   }
   try {
     // check that course distributions belong to plan
-    const plan = plans.findById(course.plan_id);
-    course.distribution_ids.forEach((id) => {
+    const plan = Plans.findById(course.plan_id);
+    Course.distribution_ids.forEach((id) => {
       if (!plan.distribution_ids.includes(id))
         errorHandler(res, 400, {
           message: "Invalid combination of plan_id and distribution_ids.",
         });
     });
     // create course and update distributiosn
-    const retrievedCourse = await courses.create(course);
+    const retrievedCourse = await Courses.create(course);
     for (let id of retrievedCourse.distribution_ids) {
-      const distribution = await distributions
+      const distribution = await Distributions
         .findByIdAndUpdate(
           id,
           { $push: { courses: retrievedCourse._id } },
@@ -125,10 +125,10 @@ router.post("/api/courses", auth, async (req, res) => {
     // update year with new course
     let query = {};
     query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
-    await plans
+    await Plans
       .findByIdAndUpdate(retrievedCourse.plan_id, { $push: query })
       .exec();
-    await years
+    await Years
       .findByIdAndUpdate(retrievedCourse.year_id, {
         $push: { courses: retrievedCourse._id },
       })
@@ -148,7 +148,7 @@ router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
     return missingHandler(res, { c_id });
   }
   // verify that course belongs to user
-  const oldCourse = await courses.findById(c_id);
+  const oldCourse = await Courses.findById(c_id);
   if (req.user._id !== oldCourse.user_id) {
     return forbiddenHandler(res);
   }
@@ -156,11 +156,11 @@ router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
     return errorHandler(res, 400, { message: "Invalid taken status." });
   }
   try {
-    const course = await courses
+    const course = await Courses
       .findByIdAndUpdate(c_id, { taken }, { new: true, runValidators: true })
       .exec();
     course.distribution_ids.forEach(async (id) => {
-      const distribution = await distributions.findById(id).exec();
+      const distribution = await Distributions.findById(id).exec();
       if (taken) {
         distribution.current += course.credits;
       } else {
@@ -185,13 +185,13 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
     return missingHandler(res, { newYear_id, oldYear_id, c_id, newTerm });
   }
   // verify that course belongs to user
-  const course = await courses.findById(c_id).exec();
+  const course = await Courses.findById(c_id).exec();
   if (req.user._id !== course.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // remove course from old year
-    await years
+    await Years
       .findByIdAndUpdate(
         oldYear_id,
         { $pull: { courses: c_id } },
@@ -199,7 +199,7 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
       )
       .exec();
     // add course to new year
-    const y = await years
+    const y = await Years
       .findByIdAndUpdate(
         newYear_id,
         { $push: { courses: c_id } },
@@ -207,7 +207,7 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
       )
       .exec();
     // update course document with new year
-    const c = await courses
+    const c = await Courses
       .findByIdAndUpdate(
         c_id,
         {
@@ -233,15 +233,15 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
     return missingHandler(res, { c_id });
   }
   // verify that course belongs to req user
-  const course = await courses.findById(c_id).exec();
+  const course = await Courses.findById(c_id).exec();
   if (req.user._id !== course.user_id) {
     return forbiddenHandler(res);
   }
   try {
     // delete course and update distributions
-    const course = await courses.findByIdAndDelete(c_id).exec();
+    const course = await Courses.findByIdAndDelete(c_id).exec();
     course.distribution_ids.forEach(async (id) => {
-      const distribution = await distributions
+      const distribution = await Distributions
         .findByIdAndUpdate(
           id,
           { $pull: { courses: c_id } },
@@ -257,13 +257,13 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
     //delete course id to user's year array
     let query = {};
     query[course.year] = course._id; //e.g. { freshman: id }
-    await plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
-    const y = await years.findById(course.year_id).exec();
+    await Plans.findByIdAndUpdate(course.plan_id, { $pull: query }).exec();
+    const y = await Years.findById(course.year_id).exec();
     const yearArr = y.courses;
     const index = yearArr.indexOf(course._id);
     if (index !== -1) {
       yearArr.splice(index, 1);
-      await years
+      await Years
         .findByIdAndUpdate(
           course.year_id,
           { courses: yearArr },

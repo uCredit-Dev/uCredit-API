@@ -1,5 +1,5 @@
 import { returnData, errorHandler, missingHandler } from "./helperMethods.js";
-import evaluation from "../model/Evaluation.js";
+import Evaluations from "../model/Evaluation.js";
 import express from "express";
 
 const router = express.Router();
@@ -11,7 +11,7 @@ router.get("/api/evals/:number", async (req, res) => {
     return missingHandler(res, { num });
   }
   try {
-    const review = await evaluation.findOne({ num }).exec();
+    const review = await Evaluations.findOne({ num }).exec();
     returnData(review, res);
   } catch (err) {
     errorHandler(res, 500, err);
