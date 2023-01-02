@@ -49,10 +49,15 @@ router.get("/api/coursesByDistribution/:distribution_id", auth, async (req, res)
   }
 });
 
-router.get("/api/courses/:course_id", async (req, res) => {
+router.get("/api/courses/:course_id",auth, async (req, res) => {
   const c_id = req.params.course_id;
   try {
     const course = await Courses.findById(c_id).exec();
+    if (!course) {
+      return errorHandler(res, 404, { message: "Course not found" }); 
+    } else if (course.user_id !== req.user._id) {
+      return forbiddenHandler(res);
+    }
     returnData(course, res);
   } catch (err) {
     errorHandler(res, 400, err);
@@ -72,11 +77,12 @@ router.get("/api/coursesByTerm/:plan_id", auth, async (req, res) => {
       .findOne({ plan_id, name: year })
       .populate({ path: "courses", match: { term } })
       .exec();
-    if (req.user._id !== retrievedYear.user_id) {
-      forbiddenHandler(res);
-    } else {
-      returnData(retrievedYear.courses, res);
-    }
+    if (!retrievedYear) {
+      return errorHandler(res, 404, { message: "Year not found. Please check year and term." }); 
+    } else if (req.user._id !== retrievedYear.user_id) {
+      return forbiddenHandler(res);
+    } 
+    returnData(retrievedYear.courses, res);
   } catch (err) {
     errorHandler(res, 400, err);
   }
@@ -86,7 +92,7 @@ router.get("/api/coursesByTerm/:plan_id", auth, async (req, res) => {
 //distribution field is also updated
 router.post("/api/courses", auth, async (req, res) => {
   const course = req.body;
-  if (!course) {
+  if (!course || Object.keys(course).length == 0) {
     return missingHandler(res, { course });
   }
   if (course.user_id !== req.user._id) {
@@ -114,11 +120,6 @@ router.post("/api/courses", auth, async (req, res) => {
       await distributionCreditUpdate(distribution, retrievedCourse, true);
     }
     // update year with new course
-    let query = {};
-    query[retrievedCourse.year] = retrievedCourse._id; //e.g. { freshman: id }
-    await Plans
-      .findByIdAndUpdate(retrievedCourse.plan_id, { $push: query })
-      .exec();
     await Years
       .findByIdAndUpdate(retrievedCourse.year_id, {
         $push: { courses: retrievedCourse._id },
@@ -141,7 +142,9 @@ router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
   try {
     // verify that course belongs to user
     const oldCourse = await Courses.findById(c_id);
-    if (req.user._id !== oldCourse.user_id) {
+    if (!oldCourse) {
+      return errorHandler(res, 404, "Course not found."); 
+    } else if (req.user._id !== oldCourse.user_id) {
       return forbiddenHandler(res);
     }
     const course = await Courses
@@ -158,7 +161,7 @@ router.patch("/api/courses/changeStatus/:course_id", auth, async (req, res) => {
     }
     returnData(course, res);
   } catch (err) {
-    errorHandler(res, 404, err);
+    errorHandler(res, 500, err);
   }
 });
 
@@ -220,7 +223,9 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
   try {
     // verify that course belongs to req user
     const course = await Courses.findById(c_id).exec();
-    if (req.user._id !== course.user_id) {
+    if (!course) {
+      return errorHandler(res, 404, "Course not found."); 
+    } else if (req.user._id !== course.user_id) {
       return forbiddenHandler(res);
     }
     // delete course and update distributions

@@ -47,12 +47,9 @@ router.get("/api/user", async (req, res) => {
 router.get("/api/backdoor/verification/:id", async (req, res) => {
   const id = req.params.id;
   try {
-    const user = await Users.findById(id).exec();
-    if (user) {
-      const token = createToken(user);
-      returnData({ user, token }, res);
-    } else {
-      user = {
+    let user = await Users.findById(id).exec();
+    if (!user) {
+      const body = {
         _id: id,
         name: id,
         email: `ucredittest@gmail.com`,
@@ -60,10 +57,10 @@ router.get("/api/backdoor/verification/:id", async (req, res) => {
         grade: "AE UG Freshman",
         school: "jooby hooby",
       };
-      user = await Users.create(user);
-      const token = createToken(user);
-      returnData({ user, token }, res);
+      user = await Users.create(body);
     }
+    const token = createToken(user);
+    returnData({ user, token }, res);
   } catch (err) {
     errorHandler(res, 500, err);
   }
@@ -75,7 +72,6 @@ router.delete("/api/user/:id", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   try {
-
     const user = await Users.findByIdAndDelete(id).exec();
     if (user) {
       await Courses.deleteMany({ user_id: id }).exec();

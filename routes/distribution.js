@@ -51,7 +51,7 @@ router.get("/api/distributionsByPlan/:plan_id", auth, async (req, res) => {
 //create distribution and update its plan
 router.post("/api/distributions", auth, async (req, res) => {
   const distribution = req.body;
-  if (!distribution) {
+  if (!distribution || Object.keys(distribution).length == 0) {
     return missingHandler(res, { distribution });
   }
   if (distribution.user_id !== req.user._id) {
@@ -123,12 +123,12 @@ router.patch("/api/distributions/updateName", auth, async (req, res) => {
 //return the deleted courses
 router.delete("/api/distributions/:d_id", auth, async (req, res) => {
   const d_id = req.params.d_id;
-  // verify that distribution belongs to user
-  const distribution = await Distributions.findById(d_id).exec();
-  if (req.user._id !== distribution.user_id) {
-    return forbiddenHandler(res);
-  }
   try {
+    // verify that distribution belongs to user
+    const distribution = await Distributions.findById(d_id).exec();
+    if (req.user._id !== distribution.user_id) {
+      return forbiddenHandler(res);
+    }
     await Distributions.findByIdAndDelete(d_id).exec();
     //update plan
     await Plans

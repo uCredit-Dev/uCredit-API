@@ -22,7 +22,7 @@ router.post("/api/majors", async (req, res) => {
     const newMajor = await Majors.create(major);
     returnData(newMajor, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 

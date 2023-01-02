@@ -44,7 +44,7 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
     result = { ...result, reviewers };
     returnData(result, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 
@@ -83,7 +83,7 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
       });
     }
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 
@@ -138,7 +138,7 @@ router.post("/api/plans", auth, async (req, res) => {
     delete resp.year_ids;
     returnData(resp, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 
@@ -197,7 +197,7 @@ router.delete("/api/plans/:plan_id", auth, async (req, res) => {
       .exec();
     returnData(plan, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 
@@ -233,7 +233,7 @@ router.patch("/api/plans/update", auth, async (req, res) => {
     plan = { ...plan, reviewers };
     returnData(plan, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 

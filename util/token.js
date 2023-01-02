@@ -56,4 +56,4 @@ const auth = async (req, res, next) => {
   forbiddenHandler(res);
 };
 
-export { createToken, auth };
+export { createToken, decodeToken, auth };

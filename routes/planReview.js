@@ -96,11 +96,12 @@ router.post("/api/planReview/confirm", auth, async (req, res) => {
       .findById(review_id)
       .populate("reviewer_id", "name")
       .exec();
-    if (req.user._id !== review.reviewer_id) {
-      forbiddenHandler(res);
-    } else {
-      await confirmPlanReview(review, res);
-    }
+    if (!review) {
+      return errorHandler(res, 404, { message: "Review not found." }); 
+    } else if (req.user._id !== review.reviewer_id._id) {
+      return forbiddenHandler(res);
+    } 
+    await confirmPlanReview(review, res);
   } catch (err) {
     errorHandler(res, 500, err);
   }
@@ -135,7 +136,9 @@ router.get("/api/planReview/getReviewers", auth, async (req, res) => {
   try {
     // check that plan belongs to user
     const plan = await Plans.findById(plan_id).exec();
-    if (req.user._id !== plan.user_id) {
+    if (!plan) {
+      return errorHandler(res, 404, { message: "Plan not found." }); 
+    } else if (req.user._id !== plan.user_id) {
       return forbiddenHandler(res);
     }
     // get plan reviews for given plan
@@ -157,11 +160,14 @@ router.get("/api/planReview/plansToReview", auth, async (req, res) => {
   if (!reviewer_id) {
     return missingHandler(res, { reviewer_id });
   }
-  // only reviewer can get their plans to review
-  if (req.user._id !== reviewer_id) {
-    return forbiddenHandler(res);
-  }
   try {
+    // only reviewer can get their plans to review
+    const reviewer = await Users.findById(reviewer_id).exec(); 
+    if (!reviewer) {
+      return errorHandler(res, 404, { message: "Reviewer not found." }); 
+    } else if (req.user._id !== reviewer._id) {
+      return forbiddenHandler(res);
+    }
     const reviews = await Reviews
       .find({ reviewer_id })
       .populate("reviewee_id", "name email affiliation school grade")
@@ -257,7 +263,9 @@ router.delete("/api/planReview/removeReview", auth, async (req, res) => {
   try {
     // only reviewer or reviewee can delete a review
     let review = await Reviews.findById(review_id).exec();
-    if (
+    if (!review) {
+      return errorHandler(res, 404, { message: "Review not found." }); 
+    } else if (
       req.user._id !== review.reviewer_id &&
       req.user._id !== review.reviewee_id
     ) {
