@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 import supertest from "supertest";
-import users from "../../model/User";
+import Users from "../../model/User";
+import Plans from "../../model/Plan"; 
+import { decodeToken } from "../../util/token";
 import createApp from "../../app";
-import { FRESHMAN, SOPHOMORE, JUNIOR, SENIOR } from "./testVars"; 
+import { FRESHMAN, SOPHOMORE, JUNIOR, SENIOR, TEST_USER_1, TEST_TOKEN_1, TEST_TOKEN_2, TEST_PLAN_1 } from "./testVars"; 
 
 beforeEach((done) => {
   const samples = [];
@@ -24,7 +26,7 @@ beforeEach((done) => {
       }
       samples.push({ _id: `mtiavis1`, name: `mtiavis1`, affiliation: JUNIOR });
       samples.push({ _id: `wtong10`, name: `wtong10`, affiliation: SOPHOMORE });
-      await users.insertMany(samples);
+      await Users.insertMany(samples);
       done();
     });
 });
@@ -36,8 +38,8 @@ afterEach(async () => {
 
 const request = supertest(createApp());
 
-describe("GET user route", () => {
-  it("should select a list of users for username number filters", async () => {
+describe("User Routes: GET /api/user", () => {
+  it("Should select a list of users for username number filters", async () => {
     const userResp = await request.get("/api/user?username=1");
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
@@ -47,7 +49,7 @@ describe("GET user route", () => {
     }
   });
 
-  it("should select a list of users for username word filters", async () => {
+  it("Should select a list of users for username word filters", async () => {
     const userResp = await request.get("/api/user?username=User");
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
@@ -57,14 +59,14 @@ describe("GET user route", () => {
     }
   });
 
-  it("should select all users for empty username word filters", async () => {
+  it("Should select all users for empty username word filters", async () => {
     const userResp = await request.get("/api/user?username=");
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
     expect(userResp.body.data.length).toBe(100);
   });
 
-  it("should select all users for freshman affiliation filters", async () => {
+  it("Should select all users for freshman affiliation filters", async () => {
     const userResp = await request.get("/api/user?affiliation=" + FRESHMAN);
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
@@ -74,7 +76,7 @@ describe("GET user route", () => {
     }
   });
 
-  it("should select all users for sophomore affiliation filters", async () => {
+  it("Should select all users for sophomore affiliation filters", async () => {
     const userResp = await request.get("/api/user?affiliation=" + SOPHOMORE);
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
@@ -84,7 +86,7 @@ describe("GET user route", () => {
     }
   });
 
-  it("should select all users for junior affiliation filters", async () => {
+  it("Should select all users for junior affiliation filters", async () => {
     const userResp = await request.get("/api/user?affiliation=" + JUNIOR);
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
@@ -94,7 +96,7 @@ describe("GET user route", () => {
     }
   });
 
-  it("should select all users for senior affiliation filters", async () => {
+  it("Should select all users for senior affiliation filters", async () => {
     const userResp = await request.get("/api/user?affiliation=" + SENIOR);
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
@@ -104,21 +106,21 @@ describe("GET user route", () => {
     }
   });
 
-  it("should select all users for empty affiliation word filters", async () => {
+  it("Should select all users for empty affiliation word filters", async () => {
     const userResp = await request.get("/api/user?affiliation=");
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
     expect(userResp.body.data.length).toBe(100);
   });
 
-  it("should select all users for empty affiliation and user filters", async () => {
+  it("Should select all users for empty affiliation and user filters", async () => {
     const userResp = await request.get("/api/user");
     expect(userResp).toBeTruthy();
     expect(userResp.status).toBe(200);
     expect(userResp.body.data.length).toBe(100);
   });
 
-  it("should select all users for nonempty affiliation and user filters", async () => {
+  it("Should select all users for nonempty affiliation and user filters", async () => {
     const userResp = await request.get(
       "/api/user?username=1&affiliation=" + FRESHMAN
     );
@@ -132,4 +134,81 @@ describe("GET user route", () => {
   });
 });
 
+describe("User Routes: GET /api/backdoor/verification/:id", () => {
+  it("Should create new user", async () => {
+    let res = await request.get(`/api/backdoor/verification/${TEST_USER_1._id}`);
+    expect(res.status).toBe(200);
+    const data = res.body.data; 
+    expect(data.user._id).toBe(TEST_USER_1._id); 
+    expect(data.user.school).toBe("jooby hooby"); 
+    expect(data.token).toBeTruthy();
+    const decoded = decodeToken(data.token);
+    expect(decoded._id).toBe(data.user._id); 
+    expect(decoded.name).toBe(data.user.name); 
+    expect(decoded.affiliation).toBe(data.user.affiliation); 
+    // db check 
+    const user = await Users.findById(TEST_USER_1._id); 
+    expect(user).toBeTruthy();
+  });
+
+  it("Should not create new user if already exists", async () => {
+    await Users.create(TEST_USER_1);
+    let res = await request.get(`/api/backdoor/verification/${TEST_USER_1._id}`);
+    expect(res.status).toBe(200);
+    const data = res.body.data; 
+    expect(data.user._id).toBe(TEST_USER_1._id); 
+    expect(data.token).toBeTruthy();
+    const decoded = decodeToken(data.token);
+    expect(decoded._id).toBe(TEST_USER_1._id); 
+    expect(decoded.name).toBe(TEST_USER_1.name); 
+    expect(decoded.affiliation).toBe(TEST_USER_1.affiliation); 
+    // db check 
+    const users = await Users.find({ name: TEST_USER_1.name }); 
+    expect(users.length).toBe(1); 
+  });
+});
+
+describe("User Routes: DELETE /api/user/:id", () => {
+  it("Should delete user", async () => {
+    await Users.create(TEST_USER_1);
+    let res = await request
+      .delete(`/api/user/${TEST_USER_1._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
+    expect(res.status).toBe(204);
+    // db check 
+    const user = await Users.findById(TEST_USER_1._id); 
+    expect(user).toBeNull();
+  });
+
+  it("Should throw 404 if user not found", async () => {
+    let res = await request
+      .delete(`/api/user/${TEST_USER_1._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
+    expect(res.status).toBe(404);
+  });
+
+  it("Should throw 403 if wrong user", async () => {
+    await Users.create(TEST_USER_1);
+    let res = await request
+      .delete(`/api/user/${TEST_USER_1._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`); 
+    expect(res.status).toBe(403);
+  });
+
+  it("Should delete user's plans", async () => {
+    await Users.create(TEST_USER_1);
+    await Plans.create(TEST_PLAN_1); 
+    // check that plan successfully created 
+    let plans = await Plans.find({ user_id: TEST_USER_1._id }); 
+    expect(plans.length).toBe(1);
+    let res = await request
+      .delete(`/api/user/${TEST_USER_1._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
+    expect(res.status).toBe(204);
+    // check that plan deleted with user 
+    plans = await Plans.find({ user_id: TEST_USER_1._id }); 
+    expect(plans.length).toBe(0);
+  });
+
+})
 const data = { test: true };

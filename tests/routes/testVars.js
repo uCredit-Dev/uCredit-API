@@ -1,16 +1,21 @@
 import { createToken } from "../../util/token";
+import mongoose from "mongoose";
 
+const INVALID_ID = "%00";
+const VALID_ID = new mongoose.Types.ObjectId();
 const TEST_PLAN_NAME_1 = "testPlan1";
 const TEST_PLAN_NAME_2 = "testPlan2";
 const TEST_USER_1 = {
-  _id: "User1",
+  _id: "user1",
   name: "User One",
   affiliation: "STUDENT",
+  email: "user1@email.com"
 }
 const TEST_USER_2 = {
-  _id: "User2",
+  _id: "user2",
   name: "User Two",
   affiliation: "STUDENT",
+  email: "user2@email.com"
 }
 const TEST_TOKEN_1 = createToken(TEST_USER_1);
 const TEST_TOKEN_2 = createToken(TEST_USER_2);
@@ -37,7 +42,7 @@ const TEST_PLAN_2 = {
 }
 
 /* lacks plan_id and distribution_ids */ 
-const sampleCourses = [
+const SAMEPLE_COURSES = [
   {
     user_id: TEST_USER_1._id,
     title: "Gateway Computing: Java",
@@ -86,8 +91,59 @@ const sampleCourses = [
   },
 ];
 
+const SAMEPLE_SIS_COURSES = [
+  {
+    title: "Title1",
+    number: "Number1",
+    terms: ["fall", "spring"],
+    versions: [
+      {
+        areas: "HS", 
+        term: "fall", 
+        school: "EN", 
+        credits: 3, 
+        wi: false
+      }, 
+      {
+        areas: "HS", 
+        term: "spring", 
+        school: "EN", 
+        credits: 3, 
+        wi: false
+      }
+    ]
+  },
+  {
+    title: "Title2",
+    number: "Number2",
+    terms: ["fall"],
+    versions: [
+      {
+        areas: "Q", 
+        term: "fall", 
+        school: "AS", 
+        credits: 4, 
+        wi: false
+      }, 
+    ]
+  },
+  {
+    title: "Title3",
+    number: "Number3",
+    terms: ["spring"],
+    versions: [
+      {
+        areas: "NS", 
+        term: "spring", 
+        school: "AS", 
+        credits: 1, 
+        wi: true
+      }, 
+    ]
+  },
+];
+
 export {
-  sampleCourses,
   TEST_PLAN_NAME_1, 
   TEST_PLAN_NAME_2, 
   TEST_USER_1, 
@@ -102,5 +158,9 @@ export {
   FRESHMAN, 
   SOPHOMORE, 
   JUNIOR, 
-  SENIOR
+  SENIOR, 
+  INVALID_ID, 
+  VALID_ID, 
+  SAMEPLE_COURSES,
+  SAMEPLE_SIS_COURSES
 }

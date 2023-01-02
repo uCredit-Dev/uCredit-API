@@ -15,8 +15,6 @@ beforeEach((done) => {
   mongoose
     .connect("mongodb://localhost:27017/years", { useNewUrlParser: true })
     .then(async () => {
-      await Users.create( TEST_USER_1 );
-      await Users.create( TEST_USER_2 );
       const resp1 = await request
         .post("/api/plans")
         .set("Authorization", `Bearer ${TEST_TOKEN_1}`)

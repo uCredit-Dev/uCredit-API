@@ -1,36 +1,15 @@
 import mongoose from "mongoose";
 import supertest from "supertest";
-import plans from "../../model/Plan";
 import createApp from "../../app";
-import users from "../../model/User";
-import courses from "../../model/Course";
-import distributions from "../../model/Distribution";
-import years from "../../model/Year";
+import Plans from "../../model/Plan";
+import Users from "../../model/User";
+import Courses from "../../model/Course";
+import Distributions from "../../model/Distribution";
+import Years from "../../model/Year";
+import { FRESHMAN, TEST_PLAN_1, TEST_PLAN_2, TEST_USER_1, TEST_USER_2, TEST_TOKEN_1, TEST_TOKEN_2 } from "./testVars";
 
-const TEST_PLAN_NAME_1 = "testPlan1";
-const TEST_USER_1 = "User1";
-const TEST_MAJOR_1 = "Computer Science";
-const TEST_MAJOR_2 = "Math";
-const TEST_DATE = new Date(1519129864400);
-const TEST_YEAR_1 = "AE UG Freshman";
-const TEST_PLAN_NAME_2 = "testPlan2";
-const TEST_USER_2 = "User2";
-const TEST_YEAR_2 = "AE UG Sophomore";
-const postBody1 = {
-  name: TEST_PLAN_NAME_1,
-  user_id: TEST_USER_1,
-  majors: [TEST_MAJOR_1, TEST_MAJOR_2],
-  expireAt: TEST_DATE,
-  year: TEST_YEAR_1,
-};
-
-const postBody2 = {
-  name: TEST_PLAN_NAME_2,
-  user_id: TEST_USER_2,
-  majors: [TEST_MAJOR_1],
-  expireAt: TEST_DATE,
-  year: TEST_YEAR_2,
-};
+let distributions; 
+let plans; 
 
 beforeEach((done) => {
   mongoose
@@ -38,43 +17,50 @@ beforeEach((done) => {
       useNewUrlParser: true,
     })
     .then(async () => {
-      await users.create({ _id: TEST_USER_1 });
-      await users.create({ _id: TEST_USER_2 });
-      const resp1 = await request.post("/api/plans").send(postBody1);
-      const resp2 = await request.post("/api/plans").send(postBody2);
+      await Users.create( TEST_USER_1 );
+      await Users.create( TEST_USER_2 );
+      const res1 = await request
+        .post("/api/plans")
+        .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+        .send(TEST_PLAN_1);
+      const res2 = await request
+        .post("/api/plans")
+        .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+        .send(TEST_PLAN_2);
       for (let i = 0; i < 5; i++) {
-        const plan = i < 3 ? resp1.body.data : resp2.body.data;
-        const courseResp = await courses.create({
+        const plan = i < 3 ? res1.body.data : res2.body.data;
+        const courseResp = await Courses.create({
           name: `course${i}`,
           plan_id: plan._id,
-          year_id: plan.year_ids[0],
-          user_id: TEST_USER_1,
-          year: TEST_YEAR_1,
+          year_id: plan.years[0]._id,
+          user_id: TEST_USER_1._id,
+          year: FRESHMAN,
           term: "fall",
           credits: 0,
           title: i,
+          level: "Lower Level Undergraduate"
         });
 
-        await years.findByIdAndUpdate(plan.year_ids[0], {
+        await Years.findByIdAndUpdate(plan.years[0]._id, {
           $push: { courses: courseResp._id },
         });
-        const distributionResp = await distributions.create({
+        const distributionResp = await Distributions.create({
           plan_id: plan._id,
           course_id: courseResp._id,
-          user_id: TEST_USER_1,
-          year: TEST_YEAR_1,
+          user_id: TEST_USER_1._id,
+          year: FRESHMAN,
           term: "fall",
           name: i,
           required: true,
-          year_id: plan.year_ids[0],
+          year_id: plan.years[0]._id,
         });
-        await distributions.findByIdAndUpdate(distributionResp._id, {
+        await Courses.findByIdAndUpdate(distributionResp._id, {
           $push: { courses: courseResp._id },
         });
-        await courses.findByIdAndUpdate(courseResp._id, {
+        await Courses.findByIdAndUpdate(courseResp._id, {
           $push: { distribution_ids: distributionResp._id },
         });
-        await plans.findByIdAndUpdate(plan._id, {
+        await Plans.findByIdAndUpdate(plan._id, {
           $push: { distribution_ids: distributionResp._id },
         });
       }
@@ -91,9 +77,11 @@ const request = supertest(createApp());
 
 describe("GET /api/distributions/:distribution_id", () => {
   it("should return a distribution by distribution id", async () => {
-    const distributionList = await distributions.find({});
-    const distribution = distributionList[0];
-    const resp = await request.get("/api/distributions/" + distribution._id);
+    distributions = await Distributions.find({});
+    const distribution = distributions[0];
+    const resp = await request
+      .get("/api/distributions/" + distribution._id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.body.data).toBeTruthy();
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data._id)).toBe(
@@ -102,18 +90,31 @@ describe("GET /api/distributions/:distribution_id", () => {
   });
 
   it("should throw status 400 on null id", async () => {
-    const response = await request.get("/api/distributions/%00");
+    const response = await request
+      .get("/api/distributions/%00")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
+  });
+
+  it("should throw status 403 on wrong user", async () => {
+    distributions = await Distributions.find({});
+    const distribution = distributions[0];
+    const response = await request
+      .get(`/api/distributions/${distribution._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    expect(response.status).toBe(403);
   });
 });
 
 describe("GET /api/distributionsByPlan/:plan_id", () => {
   it("should return a distribution by plan id", async () => {
-    const planList = await plans.find({});
-    const plan_id = planList[0]._id;
-    const distributionList = await distributions.find({});
-    const distribution = distributionList[0];
-    const resp = await request.get("/api/distributionsByPlan/" + plan_id);
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    distributions = await Distributions.find({});
+    const distribution = distributions[0];
+    const resp = await request
+      .get("/api/distributionsByPlan/" + plan_id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.body.data).toBeTruthy();
     expect(resp.status).toBe(200);
     expect(resp.body.data.length).toBe(3);
@@ -123,160 +124,238 @@ describe("GET /api/distributionsByPlan/:plan_id", () => {
   });
 
   it("should throw status 400 on null id", async () => {
-    const response = await request.get("/api/distributions/%00");
+    const response = await request
+      .get("/api/distributions/%00")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
+  });
+
+  it("should throw status 403 on wrong user", async () => {
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    const resp = await request
+      .get("/api/distributionsByPlan/" + plan_id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    expect(resp.status).toBe(403);
   });
 });
 
 describe("POST /api/distributions", () => {
   it("should return the created distribution", async () => {
-    const planList = await plans.find({});
-    const plan_id = planList[0]._id;
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
     const newDistribution = {
       plan_id: plan_id,
       course_id: plan_id,
-      user_id: TEST_USER_1,
-      year: TEST_YEAR_1,
+      user_id: TEST_USER_1._id,
+      year: FRESHMAN,
       term: "fall",
       name: "test",
       required: 0,
-      year_id: planList[0].year_ids[0],
+      year_id: plans[0].year_ids[0],
     };
-    const resp = await request.post("/api/distributions").send(newDistribution);
-    expect(resp.body.data).toBeTruthy();
+    const resp = await request
+      .post("/api/distributions")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send(newDistribution);
     expect(resp.status).toBe(200);
+    expect(resp.body.data).toBeTruthy();
     expect(JSON.stringify(resp.body.data.plan_id)).toBe(
       JSON.stringify(plan_id)
     );
-    const updatedPlans = await plans.find({ _id: plan_id });
-    expect(updatedPlans).toBeTruthy();
-    expect(JSON.stringify(updatedPlans[0].distribution_ids[3])).toBe(
+    const updatedPlan = await Plans.findById(plan_id );
+    expect(updatedPlan).toBeTruthy();
+    expect(JSON.stringify(updatedPlan.distribution_ids[3])).toBe(
       JSON.stringify(resp.body.data._id)
     );
   });
 
   it("should throw status 400 on empty body", async () => {
-    const response = await request.post("/api/distributions");
+    const response = await request
+      .post("/api/distributions")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
   });
 
   it("should throw status 400 on incomplete body", async () => {
-    const response = await request.post("/api/distributions").send({});
+    const response = await request
+      .post("/api/distributions")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send({});
     expect(response.status).toBe(400);
+  });
+
+  it("should throw 403 on wrong user ", async () => {
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    const newDistribution = {
+      plan_id: plan_id,
+      course_id: plan_id,
+      user_id: TEST_USER_1._id,
+      year: FRESHMAN,
+      term: "fall",
+      name: "test",
+      required: 0,
+      year_id: plans[0].year_ids[0],
+    };
+    const resp = await request
+      .post("/api/distributions")
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+      .send(newDistribution);
+    expect(resp.status).toBe(403);
   });
 });
 
 describe("PATCH /api/distributions/updateRequiredCredit", () => {
   it("should return the updated distribution", async () => {
-    const planList = await plans.find({});
-    const plan_id = planList[0]._id;
-    const distributionID = planList[0].distribution_ids[0];
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    const dist_id = plans[0].distribution_ids[0];
     const resp = await request.patch(
       "/api/distributions/updateRequiredCredits" +
         "?id=" +
-        distributionID +
+        dist_id +
         "&required=1"
-    );
+    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data._id)).toBe(
-      JSON.stringify(distributionID)
+      JSON.stringify(dist_id)
     );
     expect(resp.body.data.required).toBe(1);
-    const updatedPlans = await plans.find({ _id: plan_id });
-    expect(updatedPlans).toBeTruthy();
-    expect(JSON.stringify(updatedPlans[0].distribution_ids[0])).toBe(
-      JSON.stringify(distributionID)
+    const updatedPlan = await Plans.findById(plan_id); 
+    expect(updatedPlan).toBeTruthy();
+    expect(JSON.stringify(updatedPlan.distribution_ids[0])).toBe(
+      JSON.stringify(dist_id)
     );
-    const updatedDistribution = await distributions.find({
-      _id: updatedPlans[0].distribution_ids[0],
-    });
-    expect(updatedDistribution[0].required).toBe(1);
+    const updatedDistribution = await Distributions.findById(
+      updatedPlan.distribution_ids[0]
+    );
+    expect(updatedDistribution.required).toBe(1);
   });
 
   it("should throw status 400 on empty query", async () => {
     const response = await request.patch(
       "/api/distributions/updateRequiredCredits"
-    );
+    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
   });
 
   it("should throw status 400 on null id", async () => {
     const response = await request.patch(
       "/api/distributions/updateRequiredCredits?id=%00&required=1"
-    );
+    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
   });
 
   it("should throw status 400 on null required", async () => {
-    const planList = await plans.find({});
-    const distributionID = planList[0].distribution_ids[0];
+    plans = await Plans.find({});
+    const dist_id = plans[0].distribution_ids[0];
     const response = await request.patch(
       "/api/distributions/updateRequiredCredits?id=" +
-        distributionID +
+      dist_id +
         "&required=%00"
-    );
+    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
+  });
+
+  it("should return the updated distribution", async () => {
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    const dist_id = plans[0].distribution_ids[0];
+    const resp = await request.patch(
+      "/api/distributions/updateRequiredCredits" +
+        "?id=" +
+        dist_id +
+        "&required=1"
+    ).set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    expect(resp.status).toBe(403);
   });
 });
 
 describe("PATCH /api/distributions/updateName", () => {
   it("should return the updated distribution", async () => {
-    const planList = await plans.find({});
-    const plan_id = planList[0]._id;
-    const distributionID = planList[0].distribution_ids[0];
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    const dist_id = plans[0].distribution_ids[0];
     const resp = await request.patch(
-      "/api/distributions/updateName" + "?id=" + distributionID + "&name=new"
-    );
+      "/api/distributions/updateName" + "?id=" + dist_id + "&name=new"
+    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data._id)).toBe(
-      JSON.stringify(distributionID)
+      JSON.stringify(dist_id)
     );
     expect(resp.body.data.name).toBe("new");
-    const updatedPlans = await plans.find({ _id: plan_id });
+    const updatedPlans = await Plans.find({ _id: plan_id });
     expect(updatedPlans).toBeTruthy();
     expect(JSON.stringify(updatedPlans[0].distribution_ids[0])).toBe(
-      JSON.stringify(distributionID)
+      JSON.stringify(dist_id)
     );
-    const updatedDistribution = await distributions.find({
-      _id: updatedPlans[0].distribution_ids[0],
-    });
-    expect(updatedDistribution[0].name).toBe("new");
+
+    const updatedDistribution = await Distributions.findById(dist_id); 
+    expect(updatedDistribution.name).toBe("new");
   });
 
   it("should throw status 400 on empty query", async () => {
-    const response = await request.patch("/api/distributions/updateName");
+    const response = await request
+      .patch("/api/distributions/updateName")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
   });
 
   it("should throw status 400 on null id", async () => {
     const response = await request.patch(
       "/api/distributions/updateName?id=%00&name=new"
-    );
+    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
+  });
+
+  it("should return the updated distribution", async () => {
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    const dist_id = plans[0].distribution_ids[0];
+    const resp = await request.patch(
+      "/api/distributions/updateName" + "?id=" + dist_id + "&name=new"
+    ).set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    expect(resp.status).toBe(403);
   });
 });
 
 describe("DELETE /api/distributions/:d_id", () => {
   it("should return the deleted distribution", async () => {
-    const planList = await plans.find({});
-    const plan_id = planList[0]._id;
-    const distributionID = planList[0].distribution_ids[0];
-    const resp = await request.delete("/api/distributions/" + distributionID);
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    const dist_id = plans[0].distribution_ids[0];
+    const resp = await request
+      .delete("/api/distributions/" + dist_id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
     expect(JSON.stringify(resp.body.data._id)).toBe(
-      JSON.stringify(distributionID)
+      JSON.stringify(dist_id)
     );
-    const updatedPlans = await plans.find({ _id: plan_id });
-    expect(updatedPlans).toBeTruthy();
-    updatedPlans[0].distribution_ids.forEach((id) => {
-      expect(JSON.stringify(id)).not.toBe(JSON.stringify(distributionID));
+    const updatedPlan = await Plans.findById(plan_id);
+    expect(updatedPlan).toBeTruthy();
+    updatedPlan.distribution_ids.forEach((id) => {
+      expect(JSON.stringify(id)).not.toBe(JSON.stringify(dist_id));
     });
   });
 
   it("should throw status 400 on invalid id", async () => {
-    const resp = await request.delete("/api/distributions/invalid");
+    const resp = await request
+      .delete("/api/distributions/invalid")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(400);
   });
+
+  it("should return the deleted distribution", async () => {
+    plans = await Plans.find({});
+    const plan_id = plans[0]._id;
+    const dist_id = plans[0].distribution_ids[0];
+    const resp = await request
+      .delete("/api/distributions/" + dist_id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    expect(resp.status).toBe(403);
+  });
+
 });
 
 const data = { test: true };

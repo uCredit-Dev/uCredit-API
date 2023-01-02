@@ -10,16 +10,16 @@ beforeEach((done) => {
 });
 
 afterEach(async () => {
-  await mongoose.connection.db.collection("majors").drop(); 
+  await mongoose.connection.db.dropDatabase(); 
   await mongoose.connection.close();
 });
 
 const request = supertest(createApp());
 
-describe("major routes", () => {
+describe(("Major Routes: POST /api/majors"), () => {
   it("should create a new major", async () => {
     const bsCS_Old = allMajors[1]; 
-    await request
+    const res = await request
       .post("/api/majors")
       .send(bsCS_Old); 
     // major obj from db 
@@ -28,41 +28,48 @@ describe("major routes", () => {
   });
 
   it("should throw error on invalid major data", async () => {
-    const response = await request.post("/api/majors").send({});
-    expect(response.status).toBe(400);
+    const res = await request.post("/api/majors").send(undefined);
+    expect(res.status).toBe(400);
+  });
+
+  it("should throw error on invalid major data", async () => {
+    const res = await request.post("/api/majors").send({});
+    expect(res.status).toBe(400);
   });
 
   it("should return a major after posting", async () => {
     const bsCS_Old = allMajors[1]; 
-    await request
+    const res = await request
       .post("/api/majors")
-      .send(bsCS_Old)
-      .then(async (res) => {
-        const data = res.body.data;
-        expect(data.degree_name).toBe(bsCS_Old.degree_name);
-      });
+      .send(bsCS_Old); 
+    const data = res.body.data;
+    expect(data.degree_name).toBe(bsCS_Old.degree_name);
   });
 
+  it("should return status 500 for invalid major", async () => {
+    const bsCS_Old = { ...allMajors[1], degree_name: null }; 
+    const res = await request
+      .post("/api/majors")
+      .send(bsCS_Old); 
+    expect(res.status).toBe(500);
+  });
+}); 
+
+describe(("Major Routes: GET /api/majors/all"), () => {
   it("should return 0 majors when calling all majors initially", async () => {
-    const resp = await request.get("/api/majors/all");
-    expect(resp.body.data.length).toBe(0);
-  });
-
-  it("should return one major when calling all majors after one post", async () => {
-    await request.post("/api/majors").send(allMajors[0]);
-    const resp = await request.get("/api/majors/all");
-    const majors = resp.body.data; 
-    expect(majors.length).toBe(1);
-    expect(majors[0].degree_name).toBe(allMajors[0].degree_name);
+    const res = await request.get("/api/majors/all");
+    expect(res.body.data.length).toBe(0);
   });
 
   it("should return 2 majors when calling all majors after two posts", async () => {
-    await request.post("/api/majors").send(allMajors[0]);
-    await request.post("/api/majors").send(allMajors[1]);
-    const resp = await request.get("/api/majors/all");
-    const majors = resp.body.data; 
+    let res = await request.post("/api/majors").send(allMajors[0]);
+    expect(res.status).toBe(200); 
+    res = await request.post("/api/majors").send(allMajors[1]);
+    expect(res.status).toBe(200); 
+    res = await request.get("/api/majors/all");
+    const majors = res.body.data; 
     expect(majors.length).toBe(2);
   });
-});
+}); 
 
 const data = { test: true };
