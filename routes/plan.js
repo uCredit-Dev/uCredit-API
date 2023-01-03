@@ -21,6 +21,10 @@ const yearName = ["AP/Transfer", "Freshman", "Sophomore", "Junior", "Senior"];
 router.get("/api/plans/:plan_id", auth, async (req, res) => {
   const p_id = req.params.plan_id;
   try {
+    const user = await Users.findById(req.user._id).exec();
+    if (!user) { // if valid user 
+      return forbiddenHandler(res);
+    }
     const plan = await Plans
       .findById(p_id)
       .populate({
@@ -30,9 +34,6 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
         },
       })
       .exec();
-    if (req.user._id !== plan.user_id) {
-      return forbiddenHandler(res);
-    }
     const years = plan.year_ids;
     let result = { ...plan._doc };
     delete result.year_ids;

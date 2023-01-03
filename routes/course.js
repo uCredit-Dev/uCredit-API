@@ -10,6 +10,7 @@ import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
+import Users from "../model/User.js";
 import { auth } from "../util/token.js";
 import express from "express";
 
@@ -20,8 +21,8 @@ router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   try {
     // verify that plan belongs to request user
-    const plan = await Plans.findById(plan_id).exec();
-    if (req.user._id !== plan.user_id) {
+    const user = await Users.findById(req.user._id).exec();
+    if (!user) {
       return forbiddenHandler(res);
     }
     // return courses associated with plan
@@ -49,15 +50,13 @@ router.get("/api/coursesByDistribution/:distribution_id", auth, async (req, res)
   }
 });
 
-router.get("/api/courses/:course_id",auth, async (req, res) => {
+router.get("/api/courses/:course_id", async (req, res) => {
   const c_id = req.params.course_id;
   try {
     const course = await Courses.findById(c_id).exec();
     if (!course) {
       return errorHandler(res, 404, { message: "Course not found" }); 
-    } else if (course.user_id !== req.user._id) {
-      return forbiddenHandler(res);
-    }
+    } 
     returnData(course, res);
   } catch (err) {
     errorHandler(res, 400, err);
