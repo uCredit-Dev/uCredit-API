@@ -69,6 +69,21 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
   const n = await Notifications.create(notification);
   return n;
 }
+
+const REVIEW_STATUS = {
+  PENDING: "PENDING", 
+  UNDERREVIEW: "UNDERREVIEW", 
+  APPROVED: "APPROVED", 
+  REJECTED: "REJECTED"
+}; 
+
+const NOTIF_TYPE = {
+  PLAN: "PLAN", 
+  PLANREVIEW: "PLANREVIEW", 
+  USER: "USER", 
+  DISTRIBUTION: "DISTRIBUTION"
+}
+
 export {
   returnData,
   errorHandler,
@@ -76,4 +91,6 @@ export {
   missingHandler,
   distributionCreditUpdate,
   postNotification,
+  REVIEW_STATUS, 
+  NOTIF_TYPE
 };

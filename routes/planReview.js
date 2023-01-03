@@ -4,6 +4,8 @@ import {
   postNotification,
   forbiddenHandler,
   missingHandler,
+  REVIEW_STATUS,
+  NOTIF_TYPE
 } from "./helperMethods.js";
 import { auth } from "../util/token.js";
 import Plans from "../model/Plan.js";
@@ -31,10 +33,10 @@ router.post("/api/planReview/request", auth, async (req, res) => {
     return forbiddenHandler(res);
   }
   try {
-    const _review = await Reviews
+    let review = await Reviews
       .findOne({ reviewer_id, reviewee_id, plan_id })
       .exec();
-    if (_review) {
+    if (review) {
       return errorHandler(res, 409, {
         message: "Review request already created.",
       });
@@ -44,14 +46,14 @@ router.post("/api/planReview/request", auth, async (req, res) => {
       reviewer_id,
       plan_id,
       requestTime: Date.now(),
-      status: "PENDING",
+      status: REVIEW_STATUS.PENDING,
     };
-    const review = await Reviews.create(planReview);
+    review = await Reviews.create(planReview);
     await postNotification(
       `${reviewee_name} has requested you to review a plan.`,
       [reviewer_id],
       review._id,
-      "PLANREVIEW"
+      NOTIF_TYPE.PLANREVIEW
     );
     const reviewer = await Users.findById(reviewer_id).exec();
     const reviewee = await Users.findById(reviewee_id).exec();
@@ -70,16 +72,16 @@ router.post("/api/planReview/request", auth, async (req, res) => {
 const confirmPlanReview = async (review, res) => {
   if (!review) {
     errorHandler(res, 404, { message: "planReview not found." });
-  } else if (review.status === "UNDERREVIEW") {
+  } else if (review.status === REVIEW_STATUS.UNDERREVIEW) {
     errorHandler(res, 400, { message: "Reviewer already confirmed." });
   } else {
-    review.status = "UNDERREVIEW";
+    review.status = REVIEW_STATUS.UNDERREVIEW;
     await review.save();
     await postNotification(
       `${review.reviewer_id.name} has accepted your plan review request.`,
       [review.reviewee_id],
       review._id,
-      "PLANREVIEW"
+      NOTIF_TYPE.PLANREVIEW
     );
     returnData(review, res);
   }
@@ -189,9 +191,9 @@ router.post("/api/planReview/changeStatus", auth, async (req, res) => {
   }
   if (
     !(
-      status === "REJECTED" ||
-      status === "APPROVED" ||
-      status === "UNDERREVIEW"
+      status === REVIEW_STATUS.REJECTED ||
+      status === REVIEW_STATUS.APPROVED ||
+      status === REVIEW_STATUS.UNDERREVIEW
     )
   ) {
     return errorHandler(res, 400, {
@@ -204,14 +206,14 @@ router.post("/api/planReview/changeStatus", auth, async (req, res) => {
       return errorHandler(res, 404, { message: "planReview not found." });
     } else if (req.user._id !== review.reviewer_id) {
       return forbiddenHandler(res);
-    } else if (review.status === "PENDING") {
+    } else if (review.status === REVIEW_STATUS.PENDING) {
       return errorHandler(res, 400, { message: "Review currently pending." });
     }
     const reviewer = await Users.findById(review.reviewer_id).exec();
     const reviewee = await Users.findById(review.reviewee_id).exec();
     review.status = status;
     // send email to review if status UNDERREVIEW
-    if (status === "UNDERREVIEW") {
+    if (status === REVIEW_STATUS.UNDERREVIEW) {
       review.requestTime = Date.now();
       await sendReviewMail(
         reviewee.name,
@@ -225,7 +227,7 @@ router.post("/api/planReview/changeStatus", auth, async (req, res) => {
       `A plan review status has changed to ${status}.`,
       [review.reviewee_id],
       review_id,
-      "PLANREVIEW"
+      NOTIF_TYPE.PLANREVIEW
     );
     returnData(review, res);
   } catch (err) {
@@ -277,7 +279,7 @@ router.delete("/api/planReview/removeReview", auth, async (req, res) => {
       `A plan review request has been removed.`,
       [review.reviewee_id, review.reviewer_id],
       review_id,
-      "PLANREVIEW"
+      NOTIF_TYPE.PLANREVIEW
     );
     returnData(review, res);
   } catch (err) {

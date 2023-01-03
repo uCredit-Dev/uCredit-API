@@ -27,7 +27,6 @@ router.get("/api/user", async (req, res) => {
   };
   try {
     let users = await Users.find(query).exec();
-    console.log(users);
     users = users.map((user) => ({
       _id: user._id,
       name: user.name,
@@ -43,8 +42,6 @@ router.get("/api/user", async (req, res) => {
   }
 });
 
-// TODO: Temporarily disabled for OOSE dev deployment
-// if (DEBUG) {
 router.get("/api/backdoor/verification/:id", async (req, res) => {
   const id = req.params.id;
   try {
