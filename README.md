@@ -13,6 +13,8 @@ Please allow a few seconds for the server to start up.
 - Database connection made in ./data/db.js
 
 ### Run locally
+Pre-requisites: [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), [git](https://github.com/git-guides/install-git), [mongodb](https://www.mongodb.com/docs/manual/administration/install-community/)
+
 1. Clone this repository. 
 ```
 git clone https://github.com/uCredit-Dev/uCredit-API.git
@@ -35,7 +37,7 @@ npm start
 
 To run program from a fresh clone:
 
-1. Create a `.env` file with the following content:
+1. Update .env file with the following:
 
 ```
 DEBUG=True
