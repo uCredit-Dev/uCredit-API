@@ -11,7 +11,7 @@ import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
-import SISCV from "../model/SISCourseV"; 
+import SISCV from "../model/SISCourseV.js"; 
 import { auth } from "../util/token.js";
 import express from "express";
 
