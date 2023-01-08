@@ -5,26 +5,31 @@ import Users from "../../model/User";
 import { TEST_TOKEN_1, TEST_PLAN_1, TEST_PLAN_2, TEST_TOKEN_2, INVALID_ID, TEST_USER_1, TEST_CS, TEST_AMS } from "./testVars"; 
 
 const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
 let plan = [];
 
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/plans", { useNewUrlParser: true })
-    .then(async () => {
-      await Users.create(TEST_USER_1); 
-      const response = await request
-        .post("/api/plans")
-        .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
-        .send(TEST_PLAN_1);
-      plan = response.body.data;
-      done();
-    });
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/plan", { useNewUrlParser: true }); 
+  done();
+});
+
+beforeEach(async () => {
+  await Users.create(TEST_USER_1); 
+  const response = await request
+    .post("/api/plans")
+    .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+    .send(TEST_PLAN_1);
+  plan = response.body.data;
 });
 
 afterEach(async () => {
   await mongoose.connection.db.dropDatabase(); 
-  await mongoose.connection.close();
 });
+
+afterAll(async () => {
+  await mongoose.connection.close();
+})
 
 describe(("Plan Routes: GET /api/plans/:plan_id"), () => {
   it("Should return plan with the given _id", async () => {

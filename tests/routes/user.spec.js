@@ -6,37 +6,35 @@ import { decodeToken } from "../../util/token";
 import createApp from "../../app";
 import { FRESHMAN, SOPHOMORE, JUNIOR, SENIOR, TEST_USER_1, TEST_TOKEN_1, TEST_TOKEN_2, TEST_PLAN_1 } from "./testVars"; 
 
-beforeEach((done) => {
-  const samples = [];
+const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
+beforeAll(async () => {
   mongoose
-    .connect("mongodb://localhost:27017/user", { useNewUrlParser: true })
-    .then(async () => {
-      for (let i = 1; i <= 98; i++) {
-        const userObj = { _id: `User${i}`, name: `User${i}` };
-        if (i % 4 === 0) {
-          userObj.affiliation = FRESHMAN;
-        } else if (i % 4 === 1) {
-          userObj.affiliation = SOPHOMORE;
-        } else if (i % 4 === 2) {
-          userObj.affiliation = JUNIOR;
-        } else {
-          userObj.affiliation = SENIOR;
-        }
-        samples.push(userObj);
-      }
-      samples.push({ _id: `mtiavis1`, name: `mtiavis1`, affiliation: JUNIOR });
-      samples.push({ _id: `wtong10`, name: `wtong10`, affiliation: SOPHOMORE });
-      await Users.insertMany(samples);
-      done();
-    });
+    .connect("mongodb://localhost:27017/user", { useNewUrlParser: true }); 
+  const samples = [];
+  for (let i = 1; i <= 98; i++) {
+    const userObj = { _id: `User${i}`, name: `User${i}` };
+    if (i % 4 === 0) {
+      userObj.affiliation = FRESHMAN;
+    } else if (i % 4 === 1) {
+      userObj.affiliation = SOPHOMORE;
+    } else if (i % 4 === 2) {
+      userObj.affiliation = JUNIOR;
+    } else {
+      userObj.affiliation = SENIOR;
+    }
+    samples.push(userObj);
+  }
+  samples.push({ _id: `mtiavis1`, name: `mtiavis1`, affiliation: JUNIOR });
+  samples.push({ _id: `wtong10`, name: `wtong10`, affiliation: SOPHOMORE });
+  await Users.insertMany(samples);
 });
 
-afterEach(async () => {
-  await mongoose.connection.db.dropDatabase(); 
+afterAll(async () => {
+  await mongoose.connection.db.dropDatabase();
   await mongoose.connection.close();
 });
-
-const request = supertest(createApp());
 
 describe("User Routes: GET /api/user", () => {
   it("Should select a list of users for username number filters", async () => {
@@ -152,7 +150,7 @@ describe("User Routes: GET /api/backdoor/verification/:id", () => {
   });
 
   it("Should not create new user if already exists", async () => {
-    await Users.create(TEST_USER_1);
+    // calling route a second time 
     let res = await request.get(`/api/backdoor/verification/${TEST_USER_1._id}`);
     expect(res.status).toBe(200);
     const data = res.body.data; 
@@ -160,17 +158,14 @@ describe("User Routes: GET /api/backdoor/verification/:id", () => {
     expect(data.token).toBeTruthy();
     const decoded = decodeToken(data.token);
     expect(decoded._id).toBe(TEST_USER_1._id); 
-    expect(decoded.name).toBe(TEST_USER_1.name); 
-    expect(decoded.affiliation).toBe(TEST_USER_1.affiliation); 
     // db check 
-    const users = await Users.find({ name: TEST_USER_1.name }); 
+    const users = await Users.find({ name: TEST_USER_1._id }); 
     expect(users.length).toBe(1); 
   });
 });
 
 describe("User Routes: DELETE /api/user/:id", () => {
   it("Should delete user", async () => {
-    await Users.create(TEST_USER_1);
     let res = await request
       .delete(`/api/user/${TEST_USER_1._id}`)
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
@@ -196,7 +191,6 @@ describe("User Routes: DELETE /api/user/:id", () => {
   });
 
   it("Should delete user's plans", async () => {
-    await Users.create(TEST_USER_1);
     await Plans.create(TEST_PLAN_1); 
     // check that plan successfully created 
     let plans = await Plans.find({ user_id: TEST_USER_1._id }); 

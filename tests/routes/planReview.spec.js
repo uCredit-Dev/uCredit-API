@@ -5,40 +5,44 @@ import Reviews from "../../model/PlanReview";
 import createApp from "../../app";
 import { INVALID_ID, TEST_PLAN_1, TEST_PLAN_2, TEST_TOKEN_1, TEST_TOKEN_2, TEST_USER_1, TEST_USER_2, VALID_ID } from "./testVars";
 
+const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
 let plan; 
 let user1; 
 let user2; 
 let review; 
 
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/planReview", { useNewUrlParser: true })
-    .then(async () => {
-      user1 = await Users.create(TEST_USER_1);
-      user2 = await Users.create(TEST_USER_2);
-      let res = await request.post("/api/plans")
-        .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
-        .send(TEST_PLAN_1);
-      plan = res.body.data; 
-      const plan_id = plan._id;
-      const reviewee_id = user1._id;
-      const reviewee_name = user1.name; 
-      const reviewer_id = user2._id;
-      res = await request
-        .post("/api/planReview/request")
-        .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
-        .send({ plan_id, reviewer_id, reviewee_id, reviewee_name });
-      review = res.body.data; 
-      done();
-    });
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/planReview", { useNewUrlParser: true }); 
+  done();
+});
+
+beforeEach(async () => {
+  user1 = await Users.create(TEST_USER_1);
+  user2 = await Users.create(TEST_USER_2);
+  let res = await request.post("/api/plans")
+    .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+    .send(TEST_PLAN_1);
+  plan = res.body.data; 
+  const plan_id = plan._id;
+  const reviewee_id = user1._id;
+  const reviewee_name = user1.name; 
+  const reviewer_id = user2._id;
+  res = await request
+    .post("/api/planReview/request")
+    .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+    .send({ plan_id, reviewer_id, reviewee_id, reviewee_name });
+  review = res.body.data; 
 });
 
 afterEach(async () => {
   await mongoose.connection.db.dropDatabase(); 
-  await mongoose.connection.close();
 });
 
-const request = supertest(createApp());
+afterAll(async () => {
+  await mongoose.connection.close();
+})
 
 describe("Review Routes: POST /api/planReview/requests", () => {
   it("Should create a new plan review and return the updated plan", async () => {

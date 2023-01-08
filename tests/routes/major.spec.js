@@ -4,17 +4,22 @@ import Majors from "../../model/Major";
 import createApp from "../../app";
 import { allMajors } from "../../data/majors";
 
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/majors", { useNewUrlParser: true }, async () => done()); 
+const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/major", { useNewUrlParser: true }); 
+  done();
 });
 
 afterEach(async () => {
   await mongoose.connection.db.dropDatabase(); 
-  await mongoose.connection.close();
 });
 
-const request = supertest(createApp());
+afterAll(async () => {
+  await mongoose.connection.close();
+})
+
 
 describe(("Major Routes: POST /api/majors"), () => {
   it("should create a new major", async () => {

@@ -8,17 +8,20 @@ import { decodeToken } from "../../util/token";
 import { TEST_USER_1 } from "./testVars";
 
 const request = supertest(createApp());
+mongoose.set('strictQuery', true);
 
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/SSO", { useNewUrlParser: true })
-    .then(() => done());
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/SSO", { useNewUrlParser: true }); 
+  done();
 });
 
 afterEach(async () => {
   await mongoose.connection.db.dropDatabase(); 
-  await mongoose.connection.close();
 });
+
+afterAll(async () => {
+  await mongoose.connection.close();
+}); 
 
 describe("SSO Routes: GET /api/verifyLogin/:hash", () => {
   it("Should get user with hash", async () => {

@@ -2,20 +2,20 @@ import mongoose from "mongoose";
 import supertest from "supertest";
 import createApp from "../../app";
 
+const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
 const TEST_NAME = "test";
 
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/user", { useNewUrlParser: true })
-    .then(async () => done());
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/sisData", { useNewUrlParser: true }); 
+  done();
 });
 
-afterEach(async () => {
+afterAll(async () => {
   await mongoose.connection.db.dropDatabase(); 
   await mongoose.connection.close();
 });
-
-const request = supertest(createApp());
 
 describe("POST /api/sis/studentRecords student records", () => {
   it("should return posted data on post", async () => {

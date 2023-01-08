@@ -8,72 +8,73 @@ import Distributions from "../../model/Distribution";
 import Years from "../../model/Year";
 import { FRESHMAN, TEST_PLAN_1, TEST_PLAN_2, TEST_USER_1, TEST_USER_2, TEST_TOKEN_1, TEST_TOKEN_2 } from "./testVars";
 
+const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
 let distributions; 
 let plans; 
 
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/distributions", {
-      useNewUrlParser: true,
-    })
-    .then(async () => {
-      await Users.create( TEST_USER_1 );
-      await Users.create( TEST_USER_2 );
-      const res1 = await request
-        .post("/api/plans")
-        .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
-        .send(TEST_PLAN_1);
-      const res2 = await request
-        .post("/api/plans")
-        .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
-        .send(TEST_PLAN_2);
-      for (let i = 0; i < 5; i++) {
-        const plan = i < 3 ? res1.body.data : res2.body.data;
-        const courseResp = await Courses.create({
-          name: `course${i}`,
-          plan_id: plan._id,
-          year_id: plan.years[0]._id,
-          user_id: TEST_USER_1._id,
-          year: FRESHMAN,
-          term: "fall",
-          credits: 0,
-          title: i,
-          level: "Lower Level Undergraduate"
-        });
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/distribution", { useNewUrlParser: true }); 
+  done();
+});
 
-        await Years.findByIdAndUpdate(plan.years[0]._id, {
-          $push: { courses: courseResp._id },
-        });
-        const distributionResp = await Distributions.create({
-          plan_id: plan._id,
-          course_id: courseResp._id,
-          user_id: TEST_USER_1._id,
-          year: FRESHMAN,
-          term: "fall",
-          name: i,
-          required: true,
-          year_id: plan.years[0]._id,
-        });
-        await Courses.findByIdAndUpdate(distributionResp._id, {
-          $push: { courses: courseResp._id },
-        });
-        await Courses.findByIdAndUpdate(courseResp._id, {
-          $push: { distribution_ids: distributionResp._id },
-        });
-        await Plans.findByIdAndUpdate(plan._id, {
-          $push: { distribution_ids: distributionResp._id },
-        });
-      }
-      done();
+beforeEach(async () => {
+  await Users.create( TEST_USER_1 );
+  await Users.create( TEST_USER_2 );
+  const res1 = await request
+    .post("/api/plans")
+    .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+    .send(TEST_PLAN_1);
+  const res2 = await request
+    .post("/api/plans")
+    .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+    .send(TEST_PLAN_2);
+  for (let i = 0; i < 5; i++) {
+    const plan = i < 3 ? res1.body.data : res2.body.data;
+    const courseResp = await Courses.create({
+      name: `course${i}`,
+      plan_id: plan._id,
+      year_id: plan.years[0]._id,
+      user_id: TEST_USER_1._id,
+      year: FRESHMAN,
+      term: "fall",
+      credits: 0,
+      title: i,
+      level: "Lower Level Undergraduate"
     });
+    await Years.findByIdAndUpdate(plan.years[0]._id, {
+      $push: { courses: courseResp._id },
+    });
+    const distributionResp = await Distributions.create({
+      plan_id: plan._id,
+      course_id: courseResp._id,
+      user_id: TEST_USER_1._id,
+      year: FRESHMAN,
+      term: "fall",
+      name: i,
+      required: true,
+      year_id: plan.years[0]._id,
+    });
+    await Courses.findByIdAndUpdate(distributionResp._id, {
+      $push: { courses: courseResp._id },
+    });
+    await Courses.findByIdAndUpdate(courseResp._id, {
+      $push: { distribution_ids: distributionResp._id },
+    });
+    await Plans.findByIdAndUpdate(plan._id, {
+      $push: { distribution_ids: distributionResp._id },
+    });
+  }
 });
 
 afterEach(async () => {
   await mongoose.connection.db.dropDatabase(); 
-  await mongoose.connection.close();
 });
 
-const request = supertest(createApp());
+afterAll(async () => {
+  await mongoose.connection.close();
+});
 
 describe("GET /api/distributions/:distribution_id", () => {
   it("should return a distribution by distribution id", async () => {

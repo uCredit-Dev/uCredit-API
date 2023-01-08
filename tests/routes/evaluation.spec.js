@@ -4,18 +4,19 @@ import supertest from "supertest";
 import createApp from "../../app";
 
 const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
 const sampleEval = {
   n: "Test Course",
   num: "AS.420.690",
 };
 
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/majors", { useNewUrlParser: true }, async () => done()); 
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/evaluation", { useNewUrlParser: true }); 
+  done();
 });
 
-afterEach(async () => {
-  await mongoose.connection.db.dropDatabase(); 
+afterAll(async () => {
   await mongoose.connection.close();
 });
 

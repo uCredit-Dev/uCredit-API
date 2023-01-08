@@ -4,8 +4,10 @@ import createApp from "../../app";
 import ExperimentDao from "../../data/ExperimentDao";
 import User from "../../model/User";
 
-const experiments = new ExperimentDao();
 const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
+const experiments = new ExperimentDao();
 const endpoint = "/api/experiments";
 
 describe("Test experiments endpoints", () => {
@@ -22,7 +24,7 @@ describe("Test experiments endpoints", () => {
 
     const setupFunc = async (done) => {
       //This will be slow, usually beforeAll, but need to reset experiments because post routes would affect other tests
-      await mongoose.connect("mongodb://localhost:27017/experiments", {
+      mongoose.connect("mongodb://localhost:27017/experiments", {
         useNewUrlParser: true,
       });
       //Fake creation of 98 more users to use in post tests
@@ -50,7 +52,6 @@ describe("Test experiments endpoints", () => {
         blacklist: [WILL_JHED],
         active: [MARK_JHED],
       });
-
       done();
     };
 
@@ -60,11 +61,9 @@ describe("Test experiments endpoints", () => {
 
     afterEach(async () => {
       await mongoose.connection.db.dropDatabase(); 
-      await mongoose.connection.close();
     });
 
-    afterEach(async () => {
-      await mongoose.connection.db.dropDatabase(); 
+    afterAll(async () => {
       await mongoose.connection.close();
     });
 
@@ -169,11 +168,10 @@ describe("Test experiments endpoints", () => {
           const allExperiments = await request.get(
             `${endpoint}/allExperiments`
           );
-          console.log(allExperiments.body.data);
+          // console.log(allExperiments.body.data);
           const response = await request.get(
             `${endpoint}/percent/${EXPERIMENT_ONE}`
           );
-          console.log(response);
           expect(response.status).toBe(200);
           expect(response.body).toBe(2);
         });
@@ -189,7 +187,7 @@ describe("Test experiments endpoints", () => {
           const allExperiments = await request.get(
             `${endpoint}/allExperiments`
           );
-          console.log(allExperiments.body.data);
+          // console.log(allExperiments.body.data);
           const response = await request
             .post(`${endpoint}/${EXPERIMENT_ONE}`)
             .send({ percent_participating: 10 });

@@ -5,16 +5,13 @@ import createApp from "../../app";
 import { SAMEPLE_SIS_COURSES } from "./testVars";
 
 const request = supertest(createApp());
+mongoose.set('strictQuery', true);
 
 let courses; 
 
-beforeAll((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/search", { useNewUrlParser: true })
-    .then(async () => {
-      courses = await SISCV.insertMany(SAMEPLE_SIS_COURSES); 
-      done();
-    });
+beforeAll(async () => {
+  mongoose.connect("mongodb://localhost:27017/search", { useNewUrlParser: true });
+  courses = await SISCV.insertMany(SAMEPLE_SIS_COURSES); 
 });
 
 afterAll(async () => {
@@ -32,7 +29,7 @@ describe("GET Search Routes", () => {
 
   it("GET /api/search/skip/:num: Should return list of SIS courses of size num", async () => {
     const num = Math.floor(Math.random() * 3);
-    const res = await request.get(`/api/search/skip/${0}?mod=${num}`);
+    const res = await request.get(`/api/search/skip/0?mod=${num}`);
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(num);
     expect(res.body.data).toBeInstanceOf(Array);
@@ -87,6 +84,6 @@ describe("GET Search Routes", () => {
     expect(res.status).toBe(200);
     expect(res.body.data.title).toBe(query.title);
     expect(res.body.data.number).toBe(query.number);
-    expect(res.body.data.versions[0].term).toBe(query.version);
+    expect(res.body.data.version.term).toBe(query.version);
   });
 });
