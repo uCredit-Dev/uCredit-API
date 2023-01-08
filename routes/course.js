@@ -76,9 +76,7 @@ router.get("/api/coursesByTerm/:plan_id", auth, async (req, res) => {
       .findOne({ plan_id, name: year })
       .populate({ path: "courses", match: { term } })
       .exec();
-    if (!retrievedYear) {
-      return errorHandler(res, 404, { message: "Year not found. Please check year and term." }); 
-    } else if (req.user._id !== retrievedYear.user_id) {
+    if (req.user._id !== retrievedYear.user_id) {
       return forbiddenHandler(res);
     } 
     returnData(retrievedYear.courses, res);

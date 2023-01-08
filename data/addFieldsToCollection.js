@@ -4,18 +4,18 @@
     Then run this script with the model you want to update.
 */
 
-import db from "./db";
+import * as db from "./db.js";
 import plans from "../model/Plan.js";
 import users from "../model/User.js";
 import courses from "../model/Course.js";
-import SISCV from "../model/SISCourseV";
+import SISCV from "../model/SISCourseV.js";
 import years from "../model/Year.js";
 
 //addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
-// setLevelInCourses();
-setVersionInCourses();
+setLevelInCourses();
+// setVersionInCourses();
 
 async function addFieldsToCollection(model) {
   await db.connect();

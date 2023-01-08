@@ -27,14 +27,11 @@ router.get("/api/notifications/:user_id", auth, async (req, res) => {
 });
 
 /* Create a notification */
-router.post("/api/notifications", auth, async (req, res) => {
+router.post("/api/notifications", async (req, res) => {
   const notification = req.body;
-  if (!notification) {
+  if (!notification || Object.keys(notification).length == 0 ||
+      !notification.user_id || notification.user_id.length == 0) {
     return missingHandler(res, { notification });
-  }
-  // verify that notification belongs to user
-  if (!notification.user_id.includes(req.user._id)) {
-    return forbiddenHandler(res);
   }
   try {
     const result = await Notifications.create(notification);
@@ -68,7 +65,9 @@ router.delete("/api/notifications/:notification_id", auth, async (req, res) => {
   try {
     // check notification belongs to user
     const notif = await Notifications.findById(notification_id).exec();
-    if (!notif.user_id.includes(req.user._id)) {
+    if (!notif) {
+      return errorHandler(res, 404, { message: "Notification not found." }); 
+    } else if (!notif.user_id.includes(req.user._id)) {
       return forbiddenHandler(res);
     }
     // delete notification

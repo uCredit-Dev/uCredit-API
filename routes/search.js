@@ -17,7 +17,7 @@ router.get("/api/search/all", async (req, res) => {
 router.get("/api/search/skip/:num", async (req, res) => {
   const toSkip = req.params.num;
   const mod = parseInt(req.query.mod);
-  if (!toSkip || !mod) {
+  if (isNaN(toSkip) || isNaN(mod)) {
     return missingHandler(res, { toSkip, mod });
   }
   try {

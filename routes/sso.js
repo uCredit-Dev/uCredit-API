@@ -145,7 +145,7 @@ router.get("/api/verifyLogin/:hash", async (req, res) => {
 router.delete("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
   try {
-    const user = await Sessions.remove({ hash }).exec();
+    const user = await Sessions.deleteOne({ hash }).exec();
     if (user.deletedCount != 1) {
       errorHandler(res, 404, { message: "No session found." });
     } else {
