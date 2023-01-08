@@ -5,19 +5,21 @@ import createApp from "../../app";
 import { SAMEPLE_SIS_COURSES } from "./testVars";
 
 const request = supertest(createApp());
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 
-let courses; 
+let courses;
 
 beforeAll(async () => {
-  mongoose.connect("mongodb://localhost:27017/search", { useNewUrlParser: true });
-  courses = await SISCV.insertMany(SAMEPLE_SIS_COURSES); 
+  mongoose.connect("mongodb://localhost:27017/search", {
+    useNewUrlParser: true,
+  });
+  courses = await SISCV.insertMany(SAMEPLE_SIS_COURSES);
 });
 
 afterAll(async () => {
-  await mongoose.connection.db.dropDatabase(); 
+  await mongoose.connection.db.dropDatabase();
   await mongoose.connection.close();
-})
+});
 
 describe("GET Search Routes", () => {
   it("GET /api/search/all: Should return list of all SIS courses", async () => {
@@ -41,7 +43,7 @@ describe("GET Search Routes", () => {
       number: "numbe",
       credits: "3",
     };
-    // query by title 
+    // query by title
     let res = await request.get(`/api/search?query=${query.title}`);
     courses = res.body.data.courses;
     expect(res.status).toBe(200);
@@ -49,7 +51,7 @@ describe("GET Search Routes", () => {
     courses.forEach((course) => {
       expect(course.title.toLowerCase()).toContain(query.title.toLowerCase());
     });
-    // query by number 
+    // query by number
     res = await request.get(`/api/search?query=${query.number}`);
     courses = res.body.data.courses;
     expect(res.status).toBe(200);
@@ -57,7 +59,7 @@ describe("GET Search Routes", () => {
     courses.forEach((course) => {
       expect(course.number.toLowerCase()).toContain(query.number.toLowerCase());
     });
-    // query by credits 
+    // query by credits
     res = await request.get("/api/search?credits=" + query.credits);
     expect(res.status).toBe(200);
     courses = res.body.data.courses;
@@ -65,7 +67,7 @@ describe("GET Search Routes", () => {
     courses.forEach((course) => {
       course.versions.forEach((version) => {
         expect(version.credits).toBe(parseInt(query.credits));
-      })
+      });
     });
   });
 

@@ -4,7 +4,7 @@ import supertest from "supertest";
 import createApp from "../../app";
 
 const request = supertest(createApp());
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 
 const sampleEval = {
   n: "Test Course",
@@ -12,7 +12,9 @@ const sampleEval = {
 };
 
 beforeAll((done) => {
-  mongoose.connect("mongodb://localhost:27017/evaluation", { useNewUrlParser: true }); 
+  mongoose.connect("mongodb://localhost:27017/evaluation", {
+    useNewUrlParser: true,
+  });
   done();
 });
 
