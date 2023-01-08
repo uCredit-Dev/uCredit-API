@@ -1,9 +1,15 @@
-import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
+import {
+  returnData,
+  errorHandler,
+  forbiddenHandler,
+  missingHandler,
+} from "./helperMethods.js";
 import Plans from "../model/Plan.js";
 import Threads from "../model/Thread.js";
 import Comments from "../model/Comment.js";
 import { auth } from "../util/token.js";
 import express from "express";
+import Users from "../model/User.js";
 
 const router = express.Router();
 
@@ -11,26 +17,30 @@ const router = express.Router();
   Returns all threads of a plan with comments populated
   Comments of a thread are sorted by timestamp in ascending order
 */
-router.get("/api/thread/getByPlan/:plan_id", auth, (req, res) => {
+router.get("/api/thread/getByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
-  // verify that plan belongs to request user
-  Plans.findById(plan_id).then((plan) => {
-    if (plan.user_id !== req.user._id) return forbiddenHandler(res);
-  });
-  Threads.find({ plan_id })
-    .then(async (threads) => {
-      for (let i = 0; i < threads.length; i++) {
-        threads[i] = {
-          ...threads[i]._doc,
-          comments: await Comments.find({ thread_id: threads[i]._id })
-            .populate("commenter_id", "name")
-            .sort({ date: 1 })
-            .exec(),
-        };
-      }
-      returnData(threads, res);
-    })
-    .catch((err) => errorHandler(res, 500, err));
+  try {
+    // verify that plan belongs to request user
+    const plan = await Plans.findById(plan_id).exec();
+    if (!plan) return errorHandler(res, 404, { message: "Plan not found." }); 
+    const user = await Users.findById(req.user._id);
+    if (!user) return forbiddenHandler(res);
+    // get all threads in plan
+    const threads = await Threads.find({ plan_id }).exec();
+    for (let i = 0; i < threads.length; i++) {
+      const comments = await Comments.find({ thread_id: threads[i]._id })
+        .populate("commenter_id", "name")
+        .sort({ date: 1 })
+        .exec();
+      threads[i] = {
+        ...threads[i]._doc,
+        comments,
+      };
+    }
+    returnData(threads, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 /*
@@ -39,124 +49,146 @@ router.get("/api/thread/getByPlan/:plan_id", auth, (req, res) => {
 router.post("/api/thread/new", auth, async (req, res) => {
   const thread = req.body.thread;
   const comment = req.body.comment;
+  if (!thread || !comment || Object.keys(thread).length == 0 || Object.keys(comment).length == 0) {
+    return missingHandler(res, { thread, comment });
+  }
   // verify that commenter is request user
   if (req.user._id !== comment.commenter_id) {
     return forbiddenHandler(res);
   }
-  Threads.create(thread)
-    .then((t) => {
-      comment.thread_id = t._id;
-      console.log(t);
-      Comments.create(comment)
-        .then((c) => returnData({ ...t._doc, comments: [c] }, res))
-        .catch((err) => {
-          console.log(err);
-          errorHandler(res, 400, err);
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      errorHandler(res, 400, err);
-    });
+  try {
+    const newThread = await Threads.create(thread);
+    comment.thread_id = newThread._id;
+    const newComment = await Comments.create(comment);
+    returnData({ ...newThread._doc, comments: [newComment] }, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 /*
   Add a reply to a thread
 */
 router.post("/api/thread/reply", auth, async (req, res) => {
-  const comment = req.body.comment;
+  const body = req.body.comment;
+  if (!body || Object.keys(body).length == 0) {
+    return missingHandler(res, { comment: body });
+  }
   // verify that commenter is request user
-  if (req.user._id !== comment.commenter_id) {
+  if (req.user._id !== body.commenter_id) {
     return forbiddenHandler(res);
   }
-  Comments.create(comment)
-    .then((c) => returnData(c, res))
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    const comment = await Comments.create(body);
+    returnData(comment, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 /*
   Resolve a thread
 */
-router.patch("/api/thread/resolve", auth, (req, res) => {
+router.patch("/api/thread/resolve", auth, async (req, res) => {
   const thread_id = req.body.thread_id;
-  Threads.findById(thread_id)
-    .then((thread) => {
-      // verify plan (and thrad) belongs to req user
-      Plans.findById(thread.plan_id).then((plan) => {
-        if (plan.user_id !== req.user._id) {
-          return forbiddenHandler(res);
-        }
-      });
-      // update resolved
-      thread.resolved = true;
-      thread.save();
-      returnData(thread, res);
-    })
-    .catch((err) => errorHandler(res, 500, err));
+  if (!thread_id) {
+    return missingHandler(res, { thread_id });
+  }
+  try {
+    // check that thread exists
+    const thread = await Threads.findById(thread_id).exec();
+    if (!thread) {
+      return errorHandler(res, 404, { message: "Thread not found." }); 
+    }
+    // only plan owner can resolve?
+    const plan = await Plans.findById(thread.plan_id).exec();
+    if (plan.user_id !== req.user._id) {
+      return forbiddenHandler(res);
+    }
+    // update resolved
+    thread.resolved = true;
+    await thread.save();
+    returnData(thread, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 /*
   Edit a comment
 */
-router.patch("/api/comment", auth, (req, res) => {
+router.patch("/api/comment", auth, async (req, res) => {
   const comment_id = req.body.comment_id;
   const message = req.body.message;
-  Comments.findById(comment_id)
-    .then((comment) => {
-      // verify that commenter is request user
-      if (req.user._id !== comment.commenter_id) {
-        return forbiddenHandler(res);
-      }
-      // update message
-      comment.message = message;
-      comment.save();
-      returnData(comment, res);
-    })
-    .catch((err) => errorHandler(res, 500, err));
+  if (!comment_id || !message) {
+    return missingHandler(res, { comment_id, message });
+  }
+  try {
+    const comment = await Comments.findById(comment_id).exec();
+    // verify that commenter is request user
+    if (!comment) {
+      return errorHandler(res, 404, { message: "Comment not found." }); 
+    } else if (req.user._id !== comment.commenter_id) {
+      return forbiddenHandler(res);
+    }
+    // update message
+    comment.message = message;
+    await comment.save();
+    returnData(comment, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 /*
   Delete a comment
 */
-router.delete("/api/comment", auth, (req, res) => {
+router.delete("/api/comment", auth, async (req, res) => {
   const comment_id = req.body.comment_id;
-  if (!comment_id) errorHandler(res, 400, { message: "Missing comment_id." });
-  else {
-    Comments.findById(comment_id).then((comment) => {
-      // verify that commenter is request user
-      if (req.user._id !== comment.commenter_id) {
-        return forbiddenHandler(res);
-      }
-    });
-    Comments.findByIdAndDelete(comment_id)
-      .then((c) => returnData(c, res))
-      .catch((err) => errorHandler(res, 500, err));
+  if (!comment_id) {
+    return missingHandler(res, { comment_id });
+  }
+  try {
+    const toDelete = await Comments.findById(comment_id).exec();
+    // verify that commenter is request user
+    if (!toDelete) {
+      return errorHandler(res, 404, { message: "Comment not found." }); 
+    } else if (req.user._id !== toDelete.commenter_id) {
+      return forbiddenHandler(res);
+    }
+    const deleted = await Comments.findByIdAndDelete(comment_id).exec();
+    returnData(deleted, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
   }
 });
 
 /*
   Delete a thread and its comments
 */
-router.delete("/api/thread", auth, (req, res) => {
+router.delete("/api/thread", auth, async (req, res) => {
   const thread_id = req.body.thread_id;
   if (!thread_id) {
-    errorHandler(res, 400, { message: "Missing thread_id." });
+    return missingHandler(res, { thread_id });
   }
-  // verify plan (and thrad) belongs to req user
-  Threads.findById(thread_id).then((thread) => {
-    Plans.findById(thread.plan_id)
-      .then((plan) => {
-        if (plan.user_id !== req.user._id) {
-          return forbiddenHandler(res);
-        }
-      })
-      .catch((err) => errorHandler(res, 500, err));
-  });
-  // delete thread and its comments
-  Threads.findByIdAndDelete(thread_id)
-    .then((c) => returnData(c, res))
-    .catch((err) => errorHandler(res, 500, err));
-  Comments.deleteMany({ thread_id }).exec();
+  try {
+    // verify that thread exists
+    const thread = await Threads.findById(thread_id).exec();
+    if (!thread) {
+      return errorHandler(res, 404, { message: "Thread not found." }); 
+    }
+    // verify plan (and thread) belongs to req user
+    const plan = await Plans.findById(thread.plan_id).exec();
+    if (plan.user_id !== req.user._id) {
+      return forbiddenHandler(res);
+    }
+    // delete thread and its comments
+    const deleted = await Threads.findByIdAndDelete(thread_id).exec();
+    await Comments.deleteMany({ thread_id }).exec();
+    returnData(deleted, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 export default router;

@@ -4,26 +4,26 @@
     Then run this script with the model you want to update.
 */
 
-import db from "./db";
+import * as db from "./db.js";
 import plans from "../model/Plan.js";
 import users from "../model/User.js";
 import courses from "../model/Course.js";
-import SISCV from "../model/SISCourseV";
+import SISCV from "../model/SISCourseV.js";
 import years from "../model/Year.js";
 
 //addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
-// setLevelInCourses();
-setVersionInCourses();
+setLevelInCourses();
+// setVersionInCourses();
 
 async function addFieldsToCollection(model) {
   await db.connect();
   model
     .find()
     .then((collection) => {
-      collection.forEach((doc) => {
-        doc.save();
+      collection.forEach(async (doc) => {
+        await doc.save();
       });
       console.log(
         "Done! Check DB to confirm the field has been added to all documents."
@@ -80,7 +80,7 @@ async function setLevelInCourses() {
         }
       }
       console.log(course.title + ": " + course.level);
-      course.save();
+      await course.save();
     }
     console.log("matched: %d", res.length);
     console.log("updated from SISCourseV: %d", updated);
@@ -104,7 +104,7 @@ async function setVersionInCourses() {
         version.charAt(0).toUpperCase() + version.slice(1) + " " + year.year;
       course.version = version;
       console.log(course.title + ": " + course.version);
-      course.save();
+      await course.save();
     }
     console.log("matched: %d", res.length);
     console.log("updated: %d", updated);

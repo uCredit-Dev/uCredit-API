@@ -24,7 +24,7 @@ dotenv.config();
 
 const app = express();
 
-export function createApp() {
+export default function createApp() {
   const corsOptions = {
     origin: [
       "http://localhost:3000",
@@ -39,7 +39,7 @@ export function createApp() {
     credentials: true,
   };
 
-  //error report
+  // error report
   Bugsnag.start({
     apiKey: process.env.BUGSNAG_API_KEY,
     plugins: [BugsnagPluginExpress],

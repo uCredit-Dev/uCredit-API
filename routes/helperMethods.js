@@ -11,6 +11,7 @@ function returnData(data, res) {
 //set status code of the response and send error info to the user in json
 function errorHandler(res, status, err) {
   if (res.headersSent) return;
+  // console.log(` >> ${err.message}`); 
   res.status(status).json({
     errors: [
       {
@@ -26,6 +27,15 @@ function forbiddenHandler(res) {
   res.status(403).json({
     status: 403,
     message: "You are not authorized to access this resource.",
+  });
+}
+
+function missingHandler(res, required) {
+  if (res.headersSent) return;
+  res.status(400).json({
+    status: 400,
+    message: "Request is missing required fields.",
+    required,
   });
 }
 
@@ -59,10 +69,28 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
   const n = await Notifications.create(notification);
   return n;
 }
+
+const REVIEW_STATUS = {
+  PENDING: "PENDING", 
+  UNDERREVIEW: "UNDERREVIEW", 
+  APPROVED: "APPROVED", 
+  REJECTED: "REJECTED"
+}; 
+
+const NOTIF_TYPE = {
+  PLAN: "PLAN", 
+  PLANREVIEW: "PLANREVIEW", 
+  USER: "USER", 
+  DISTRIBUTION: "DISTRIBUTION"
+}
+
 export {
   returnData,
   errorHandler,
   forbiddenHandler,
+  missingHandler,
   distributionCreditUpdate,
   postNotification,
+  REVIEW_STATUS, 
+  NOTIF_TYPE
 };

@@ -53,7 +53,7 @@ async function extractProperty(courses) {
         //update terms offered
         //console.log("-----found dup in db: ", courseFromDB.title);
         courseFromDB.terms.unshift(course.Term);
-        courseFromDB.save();
+        await courseFromDB.save();
         dupCount++;
       }
     } else {

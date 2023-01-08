@@ -25,11 +25,12 @@
     "nodemon": "^2.0.20",
     "passport": "^0.6.0",
     "passport-saml": "^2.2.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "prettier": "^2.8.1"
   },
   "scripts": {
     "start": "nodemon",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "repository": {
     "type": "git",

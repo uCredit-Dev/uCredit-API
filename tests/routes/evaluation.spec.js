@@ -4,33 +4,32 @@ import supertest from "supertest";
 import createApp from "../../app";
 
 const request = supertest(createApp());
+mongoose.set('strictQuery', true);
+
 const sampleEval = {
   n: "Test Course",
   num: "AS.420.690",
 };
 
-beforeEach(() => {
-  mongoose.connect("mongodb://localhost:27017/evaluations", {
-    useNewUrlParser: true,
-  });
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/evaluation", { useNewUrlParser: true }); 
+  done();
 });
 
-afterEach((done) => {
-  mongoose.connection.db.collection("evaluations").drop(() => {
-    mongoose.connection.close(() => done());
-  });
+afterAll(async () => {
+  await mongoose.connection.close();
 });
 
 describe("Evaluation Routes", () => {
   it("Should return evaluation with the given _id", async () => {
     const num = sampleEval.num;
     await evaluation.create(sampleEval);
-    let req = await request.get(`/api/evals/${num}`);
-    expect(req.status).toBe(200);
-    expect(req.body.data.num).toBe(num);
+    let res = await request.get(`/api/evals/${num}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.num).toBe(num);
   });
   it("Should return 404 for non existent evaluation", async () => {
-    let req = await request.get(`/api/evals/AS.874.234`);
-    expect(req.status).toBe(404);
+    let res = await request.get(`/api/evals/AS.874.234`);
+    expect(res.status).toBe(404);
   });
 });

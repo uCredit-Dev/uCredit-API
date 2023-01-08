@@ -63,7 +63,7 @@ async function deleteDupVersionsFromCourse() {
           });
           course.versions = versions;
           // save document
-          course.save();
+          await course.save();
           count++;
           console.log(course.title + " updated!\n");
         }
