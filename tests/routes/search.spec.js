@@ -37,33 +37,35 @@ describe("GET Search Routes", () => {
 
   it("GET /api/search/: Should return list of SIS courses matching query", async () => {
     const query = {
-      title: "titl",
-      number: "numb",
+      title: "tit",
+      number: "numbe",
       credits: "3",
     };
     // query by title 
     let res = await request.get(`/api/search?query=${query.title}`);
-    courses = res.body.data;
+    courses = res.body.data.courses;
     expect(res.status).toBe(200);
     expect(courses.length).toBe(3);
     courses.forEach((course) => {
-      expect(course.name.toLowerCase()).toContain(query.title.toLowerCase());
+      expect(course.title.toLowerCase()).toContain(query.title.toLowerCase());
     });
     // query by number 
     res = await request.get(`/api/search?query=${query.number}`);
-    courses = res.body.data;
+    courses = res.body.data.courses;
     expect(res.status).toBe(200);
     expect(courses.length).toBe(3);
     courses.forEach((course) => {
-      expect(course.name.toLowerCase()).toContain(query.number.toLowerCase());
+      expect(course.number.toLowerCase()).toContain(query.number.toLowerCase());
     });
     // query by credits 
     res = await request.get("/api/search?credits=" + query.credits);
-    courses = res.body.data;
     expect(res.status).toBe(200);
+    courses = res.body.data.courses;
     expect(courses.length).toBe(1);
     courses.forEach((course) => {
-      expect(course.credits).toBe(query.credits);
+      course.versions.forEach((version) => {
+        expect(version.credits).toBe(parseInt(query.credits));
+      })
     });
   });
 
