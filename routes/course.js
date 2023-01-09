@@ -182,13 +182,13 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
   }
   try {
     // verify that course belongs to user
-    const course = await Courses.findById(c_id); 
+    const course = await Courses.findById(c_id).exec(); 
     if (!course) {
       return errorHandler(res, 404, "course not found"); 
     } else if (course.user_id !== req.user._id) {
       return forbiddenHandler(res);
     } else {
-      const sisCourses = await SISCV.find({ number: course.number, title: course.title }); 
+      const sisCourses = await SISCV.find({ number: course.number, title: course.title }).exec(); 
       // check if course is held at new term!
       if (!checkDestValid(sisCourses, course, newTerm)) {
         return errorHandler(res, 400, { message: "no course this semester" }); 
@@ -199,14 +199,14 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
           oldYear_id,
           { $pull: { courses: c_id } },
           { new: true, runValidators: true }
-        ); 
+        ).exec(); 
       // add course to new year
       const year = await Years
         .findByIdAndUpdate(
           newYear_id,
           { $push: { courses: c_id } },
           { new: true, runValidators: true }
-        ); 
+        ).exec(); 
       const updated = await Courses
         .findByIdAndUpdate(
           c_id,
@@ -218,7 +218,7 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
               newTerm + " " + (newTerm === "Fall" ? year.year : year.year + 1),
           },
           { new: true, runValidators: true }
-        ); 
+        ).exec(); 
       returnData(updated, res);
     }
   } catch (err) {

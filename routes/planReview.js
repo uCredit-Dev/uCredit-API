@@ -140,7 +140,9 @@ router.get("/api/planReview/getReviewers", auth, async (req, res) => {
     const plan = await Plans.findById(plan_id).exec();
     if (!plan) {
       return errorHandler(res, 404, { message: "Plan not found." }); 
-    } else if (req.user._id !== plan.user_id) {
+    } 
+    const user = await Users.findById(req.user._id).exec();
+    if (!user) {
       return forbiddenHandler(res);
     }
     // get plan reviews for given plan
