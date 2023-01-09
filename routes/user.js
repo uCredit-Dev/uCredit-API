@@ -2,7 +2,7 @@ import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
 import Users from "../model/User.js";
 import Plans from "../model/Plan.js";
 import { createToken, auth } from "../util/token.js";
-import Years from "../model/Plan.js";
+import Years from "../model/Year.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Reviews from "../model/PlanReview.js";
@@ -64,9 +64,10 @@ router.get("/api/backdoor/verification/:id", async (req, res) => {
   }
 });
 
-router.delete("/api/user/:id", auth, async (req, res) => {
+router.delete("/api/user/:id", async (req, res) => {
   const id = req.params.id;
-  if (req.user._id !== id) {
+  // not auth secured, but use route only for fake user ids  
+  if (id !== "TEST_DEV" && id !== "REVIEWER_DEV") {
     return forbiddenHandler(res);
   }
   try {
