@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
-import distributions from "../model/Distribution";
-import { requirementCreditUpdate } from "../routes/distributionMethods"; 
-
+const mongoose = require("mongoose");
+const distributions = require("../model/Distribution");
+const { requirementCreditUpdate } = require("../routes/distributionMethods.ts");
 const TEST_USER_1 = "User1";
 const TEST_MAJOR_1 = "Computer Science";
 const TEST_MAJOR_2 = "Math";
@@ -42,11 +41,11 @@ const SAMPLES = [
 
 beforeAll((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/helperMethods", {
+    .connect("mongodb://localhost:27017/dist", {
       useNewUrlParser: true,
     })
     .then(async () => {
-      await distributions.create(SAMPLES[0]).exec();
+      await distributions.create(SAMPLES[0]).exec(); // Not sure about this exec() 
       await distributions.create(SAMPLES[1]).exec();
       done();
     });
@@ -145,7 +144,7 @@ describe("requirementCreditUpdate should update distribution credits", () => {
   });
 
   it("should throw error for invalid add or not", async () => {
-    const distributionList = await distributions.find({}).exec();
+    const distributionList = await distributions.find({});
     try {
       await requirementCreditUpdate(distributionList[0], COURSE_2, null);
       fail("should throw error");

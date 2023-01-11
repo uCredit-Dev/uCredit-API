@@ -1,6 +1,14 @@
 // All Major Requirements can be found at the links below
 // https://e-catalogue.jhu.edu/arts-sciences/full-time-residential-programs/degree-programs/
 // https://e-catalogue.jhu.edu/engineering/full-time-residential-programs/degree-programs/
+// // https://engineering.jhu.edu/case/academic-advising/
+// const bsCivEng = {
+//   _id: "B.S. Civil Engineering",
+//   department: "EN Civil Engineering",
+//   total_degree_credit: 120,
+//   wi_credit: 6,
+//   distributions: [],
+// };
 
 // https://www.cs.jhu.edu/undergraduate-studies/academics/ugrad-advising-manual/
 const bsCS_Old = {
@@ -239,7 +247,7 @@ const no_degree = {
 function getMajorFromCommonName(name) {
   let out = null;
   allMajors.forEach((major) => {
-    if (major.degree_name === name) {
+    if (major._id === name) {
       out = major;
     }
   });
