@@ -134,7 +134,6 @@ async function fuzzySearch(query, searchTerm, page) {
       }
     }
   });
-  console.log(courses);
   // sort by descending priority 
   courses = courses.sort((c1, c2) => c2.priority - c1.priority); 
   // skip and limit according to page 
