@@ -17,32 +17,26 @@ const router = express.Router();
 router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
   const d_id = req.params.distribution_id;
   try {
-    const distribution = await Distributions.findById(d_id).exec();
+    const distribution = await Distributions
+      .findById(d_id)
+      .populate("fineReq_ids")
+      .exec();      
     // verify that distribution belongs to user
-    if (req.user._id !== distribution.user_id) {
-      forbiddenHandler(res);
-    } else {
-      returnData(distribution, res);
-    }
+    returnData(distribution, res);
   } catch (err) {
     errorHandler(res, 400, err);
   }
 });
 
 //get all distributions in a plan
-router.get("/api/distributionsByPlan/:plan_id", auth, async (req, res) => {
-  const plan_id = req.params.plan_id;
+router.get("/api/distributionsByPlan/", auth, async (req, res) => {
+  const plan_id = req.query.plan_id; 
+  const major_id = req.query.major_id; 
   try {
-    const plan = await Plans
-      .findById(plan_id)
-      .populate({ path: "distribution_ids" })
-      .exec();
-    // verify that plan belongs to user
-    if (req.user._id !== plan.user_id) {
-      forbiddenHandler(res);
-    } else {
-      returnData(plan.distribution_ids, res);
-    }
+    const distributions = await Distributions
+      .find({ plan_id, major_id })
+      .populate("fineReq_ids"); 
+    returnData(distributions, res);
   } catch (err) {
     errorHandler(res, 400, err);
   }
@@ -50,24 +44,16 @@ router.get("/api/distributionsByPlan/:plan_id", auth, async (req, res) => {
 
 //create distribution and update its plan
 router.post("/api/distributions", auth, async (req, res) => {
-  const distribution = req.body;
-  if (!distribution || Object.keys(distribution).length == 0) {
-    return missingHandler(res, { distribution });
+  const body = req.body;
+  if (!body || Object.keys(body).length == 0) {
+    return missingHandler(res, { distribution: body });
   }
-  if (distribution.user_id !== req.user._id) {
+  if (body.user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
   try {
-    const retrievedDistribution = await Distributions.create(distribution);
-    await Plans
-      .findByIdAndUpdate(
-        //update plan
-        retrievedDistribution.plan_id,
-        { $push: { distribution_ids: retrievedDistribution._id } },
-        { new: true, runValidators: true }
-      )
-      .exec();
-    returnData(retrievedDistribution, res);
+    const distribution = await Distributions.create(body);
+    returnData(distribution, res);
   } catch (err) {
     errorHandler(res, 400, err);
   }
@@ -130,14 +116,6 @@ router.delete("/api/distributions/:d_id", auth, async (req, res) => {
       return forbiddenHandler(res);
     }
     await Distributions.findByIdAndDelete(d_id).exec();
-    //update plan
-    await Plans
-      .findByIdAndUpdate(
-        distribution.plan_id,
-        { $pull: { distribution_ids: distribution._id } },
-        { new: true, runValidators: true }
-      )
-      .exec();
     //delete courses that only belong to the distribution
     await Courses
       .deleteMany({

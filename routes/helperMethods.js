@@ -62,10 +62,11 @@ async function postNotification(message, user_id, quick_link_id, link_type) {
   if (!message || !user_id) {
     return 400;
   }
-  let notification = { message, user_id };
+  let notification; 
   if (quick_link_id && link_type) {
-    notification.quick_link_id = quick_link_id;
-    notification.link_type = link_type;
+    notification = { message, user_id, quick_link_id, link_type };
+  } else {
+    notification = { message, user_id };
   }
   const n = await Notifications.create(notification);
   return n;

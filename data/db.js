@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-//set up db connection link
 //if debug, connect to local docker container
 //else, connect to dev or prod db URI in .env file
 const debug = process.env.DEBUG === "True";

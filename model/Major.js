@@ -15,7 +15,8 @@ const Schema = mongoose.Schema;
       [W] = WI
 */
 const majorSchema = new Schema({
-  degree_name: { type: String, required: true }, //e.g. B.S. Computer Science
+  _id: { type: String, required: true }, //e.g. B.S. Computer Science
+  abbrev: { type: String },
   department: { type: String, required: true },
   total_degree_credit: { type: Number, required: true },
   wi_credit: { type: Number, required: true },
@@ -25,19 +26,17 @@ const majorSchema = new Schema({
       name: { type: String, required: true },
       required_credits: { type: Number, required: true },
       min_credits_per_course: { type: Number, required: true },
-      pathing: { type: Boolean, default: false },
+      pathing: { type: Number },
       description: { type: String, required: true },
-      criteria: { type: String, required: true },
+      criteria: { type: String, default: '' },
       user_select: { type: Boolean, default: false }, //if true, user can put any course into this distribution
-      double_count: { type: Boolean, default: false }, //courses being classified to this distribution might also be double counted for another distribution
-      exception: { type: String }, //course that match the exception expression cannot be added toward this distirbution
+      double_count: [{ type: String }], // whitelisted distributions that can double count; if undefined, all whitelisted
       fine_requirements: [
         {
           description: { type: String, required: true },
           required_credits: { type: Number, required: true },
-          criteria: { type: String, required: true },
-          exception: { type: String },
-          exclusive: { type: Boolean, default: false },
+          criteria: { type: String, default: '' },
+          double_count: [{ type: String }],
         },
       ],
     },

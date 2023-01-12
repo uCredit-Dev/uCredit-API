@@ -10,14 +10,21 @@ const Schema = mongoose.Schema;
 */
 const distributionSchema = new Schema({
   name: { type: String, required: true },
-  required: { type: Number, required: true },
+  required_credits: { type: Number, required: true },
+  description: { type: String, required: true },
+  criteria: { type: String, default: '' },
+  min_credits_per_course: { type: Number, required: true },
+  user_id: { type: String, required: true },
+  plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
+  major_id: { type: String, required: true },
+  fineReq_ids: [{ type: Schema.Types.ObjectId, ref: "FineRequirement" }],
   planned: { type: Number, default: 0 },
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
-  courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-  user_id: { type: String, required: true },
-  plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
   expireAt: { type: Date, expires: 60 * 60 * 24 },
+  user_select: { type: Boolean, default: false },
+  double_count: [{ type: String }],
+  pathing: { type: Number },
 });
 
 distributionSchema.statics.findByName = function (name, user_id) {

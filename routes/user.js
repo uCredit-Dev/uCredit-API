@@ -65,18 +65,18 @@ router.get("/api/backdoor/verification/:id", async (req, res) => {
 });
 
 router.delete("/api/user/:id", auth, async (req, res) => {
-  const id = req.params.id;
-  if (req.user._id !== id) {
+  const user_id = req.params.id;
+  if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
   try {
-    const user = await Users.findByIdAndDelete(id).exec();
+    const user = await Users.findByIdAndDelete(user_id).exec();
     if (user) {
-      await Courses.deleteMany({ user_id: id }).exec();
-      await Distributions.deleteMany({ user_id: id }).exec();
-      await Years.deleteMany({ user_id: id }).exec();
-      await Plans.deleteMany({ user_id: id }).exec();
-      await Reviews.deleteMany({ reviewee_id: id }).exec();
+      await Courses.deleteMany({ user_id }).exec();
+      await Distributions.deleteMany({ user_id }).exec();
+      await Years.deleteMany({ user_id }).exec();
+      await Plans.deleteMany({ user_id }).exec();
+      await Reviews.deleteMany({ reviewee_id: user_id }).exec();
       res.status(204).json({});
     } else {
       errorHandler(res, 404, "User not found.");

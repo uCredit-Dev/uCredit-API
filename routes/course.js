@@ -9,12 +9,14 @@ import {
 } from "./helperMethods.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
-import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
 import SISCV from "../model/SISCourseV.js"; 
 import { auth } from "../util/token.js";
 import express from "express";
-
+import {
+  addCourseToDistributions, 
+  removeCourseFromDistributions,
+} from "./distributionMethods.js";
 const router = express.Router();
 
 //return all SIS course versions of the user's plan
@@ -97,40 +99,39 @@ router.get("/api/coursesByTerm/:plan_id", auth, async (req, res) => {
 //distribution field is also updated
 router.post("/api/courses", auth, async (req, res) => {
   const course = req.body;
-  if (!course || Object.keys(course).length == 0) {
-    return missingHandler(res, { course });
+  if (!body || Object.keys(body).length == 0) {
+    return missingHandler(res, { course: body });
   }
-  if (course.user_id !== req.user._id) {
+  if (body.user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
   try {
-    // check that course distributions belong to plan
-    const plan = await Plans.findById(course.plan_id).exec();
-    course.distribution_ids.forEach((id) => {
-      if (!plan.distribution_ids.includes(id))
-        errorHandler(res, 400, {
-          message: "Invalid combination of plan_id and distribution_ids.",
-        });
-    });
     // create course and update distributiosn
-    const retrievedCourse = await Courses.create(course);
-    for (let id of retrievedCourse.distribution_ids) {
-      const distribution = await Distributions
-        .findByIdAndUpdate(
-          id,
-          { $push: { courses: retrievedCourse._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      await distributionCreditUpdate(distribution, retrievedCourse, true);
+    const course = await Courses.create(body);
+    // find year obj and insert course id to array
+    const year = await Years
+      .findByIdAndUpdate(
+        course.year_id, 
+        { $push: { courses: course._id } },
+        { new: true, runValidators: true }
+      ); 
+    course.year_id = year._id; 
+    await course.save(); 
+    // update plan's distribution objs
+    const distObjs = await Distributions.find({ plan_id: course.plan_id }); 
+    await addCourseToDistributions(retrievedCourse, distObjs);
+  
+    // get updated course to return (because modified in helper method)
+    const updated = await Courses.findById(retrievedCourse._id);
+    // get all distributions associated by course 
+    const distributions = [];
+    for (let dist_id of updated.distribution_ids) {
+      const dist = await Distributions
+        .findById(dist_id)
+        .populate({ path: "fineReq_ids" }); 
+      updatedDists.push(dist);
     }
-    // update year with new course
-    await Years
-      .findByIdAndUpdate(retrievedCourse.year_id, {
-        $push: { courses: retrievedCourse._id },
-      })
-      .exec();
-    returnData(retrievedCourse, res);
+    returnData({ course: updated, distributions }, res);
   } catch (err) {
     errorHandler(res, 400, err);
   }
@@ -240,6 +241,8 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
     }
     // delete course and update distributions
     await Courses.findByIdAndDelete(c_id).exec();
+    const distributions = await removeCourseFromDistributions(course);
+    // remove from year 
     await Years
       .findByIdAndUpdate(
         course.year_id,
@@ -247,17 +250,9 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
         { runValidators: true }
       )
       .exec();
-    for (let id of course.distribution_ids) {
-      const distribution = await Distributions
-        .findByIdAndUpdate(
-          id,
-          { $pull: { courses: c_id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      await distributionCreditUpdate(distribution, course, false);
-    }
-    returnData(course, res);
+    
+    // return deleted course with modified distributions
+    returnData({ course, distributions }, res);
   } catch (err) {
     errorHandler(res, 500, err);
   }

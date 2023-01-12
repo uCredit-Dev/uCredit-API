@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { forbiddenHandler } from "../routes/helperMethods.js";
 import dotenv from "dotenv";
+import Users from "../model/User.js";
 
 dotenv.config();
 
@@ -48,7 +49,8 @@ const auth = async (req, res, next) => {
     const valid = await verifyToken(token);
     if (valid) {
       req.user = decodeToken(token);
-      if (!req.body.user_id || req.body.user_id === req.user._id) {
+      const user = await Users.findById(req.user._id);
+      if (user && (!req.body.user_id || req.body.user_id === req.user._id)) {
         return next();
       }
     }
