@@ -2,7 +2,7 @@ import express from "express";
 import ExperimentDao from "../data/ExperimentDao.js";
 import ApiError from "../model/ApiError.js";
 import Majors from "../model/Major.js";
-import { returnData } from "./helperMethods.js";
+import { returnData, errorHandler } from "./helperMethods.js";
 
 const router = express.Router();
 const experiments = new ExperimentDao();
