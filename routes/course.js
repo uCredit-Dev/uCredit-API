@@ -5,31 +5,39 @@ import {
   distributionCreditUpdate,
   forbiddenHandler,
   missingHandler,
+  checkDestValid
 } from "./helperMethods.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
-import Users from "../model/User.js";
+import SISCV from "../model/SISCourseV.js"; 
 import { auth } from "../util/token.js";
 import express from "express";
 
 const router = express.Router();
 
-//return all courses of the user's plan
+//return all SIS course versions of the user's plan
 router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
+  // verify that plan belongs to request user 
   try {
-    // verify that plan belongs to request user
-    const user = await Users.findById(req.user._id).exec();
-    if (!user) {
+    const plan = await Plans.findById(plan_id).exec();
+    if (req.user._id !== plan.user_id) {
       return forbiddenHandler(res);
     }
-    // return courses associated with plan
-    const retrievedCourses = await Courses.findByPlanId(plan_id).exec();
-    returnData(retrievedCourses, res);
+    // return courses associated with plan 
+    const data = [];
+    const retrievedCourses = await Courses.findByPlanId(plan_id); 
+    for (let course of retrievedCourses) {
+      // for every 'user course', get SIS version of it 
+      const sisCourse = await SISCV.findOne({ number: course.number, title: course.title }); 
+      // could be undefined if placeholder course 
+      if (sisCourse) data.push(sisCourse);
+    }
+    returnData(data, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err.message); 
   }
 });
 
@@ -174,40 +182,45 @@ router.patch("/api/courses/dragged", auth, async (req, res) => {
   }
   try {
     // verify that course belongs to user
-    const course = await Courses.findById(c_id).exec();
-    if (req.user._id !== course.user_id) {
+    const course = await Courses.findById(c_id).exec(); 
+    if (!course) {
+      return errorHandler(res, 404, "course not found"); 
+    } else if (course.user_id !== req.user._id) {
       return forbiddenHandler(res);
+    } else {
+      const sisCourses = await SISCV.find({ number: course.number, title: course.title }).exec(); 
+      // check if course is held at new term!
+      if (!checkDestValid(sisCourses, course, newTerm)) {
+        return errorHandler(res, 400, { message: "no course this semester" }); 
+      }
+      // remove course from old year 
+      await Years
+        .findByIdAndUpdate(
+          oldYear_id,
+          { $pull: { courses: c_id } },
+          { new: true, runValidators: true }
+        ).exec(); 
+      // add course to new year
+      const year = await Years
+        .findByIdAndUpdate(
+          newYear_id,
+          { $push: { courses: c_id } },
+          { new: true, runValidators: true }
+        ).exec(); 
+      const updated = await Courses
+        .findByIdAndUpdate(
+          c_id,
+          {
+            year: year.name,
+            year_id: year._id,
+            term: newTerm.toLowerCase(),
+            version:
+              newTerm + " " + (newTerm === "Fall" ? year.year : year.year + 1),
+          },
+          { new: true, runValidators: true }
+        ).exec(); 
+      returnData(updated, res);
     }
-    // remove course from old year
-    await Years
-      .findByIdAndUpdate(
-        oldYear_id,
-        { $pull: { courses: c_id } },
-        { new: true, runValidators: true }
-      )
-      .exec();
-    // add course to new year
-    const y = await Years
-      .findByIdAndUpdate(
-        newYear_id,
-        { $push: { courses: c_id } },
-        { new: true, runValidators: true }
-      )
-      .exec();
-    // update course document with new year
-    const c = await Courses
-      .findByIdAndUpdate(
-        c_id,
-        {
-          year: y.name,
-          year_id: y._id,
-          term: newTerm.toLowerCase(),
-          version: newTerm + " " + (newTerm === "Fall" ? y.year : y.year + 1),
-        },
-        { new: true, runValidators: true }
-      )
-      .exec();
-    returnData(c, res);
   } catch (err) {
     errorHandler(res, 500, err);
   }

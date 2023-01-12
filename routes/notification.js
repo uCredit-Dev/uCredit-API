@@ -13,7 +13,9 @@ const router = express.Router();
 /* Get a user's notification */
 router.get("/api/notifications/:user_id", auth, async (req, res) => {
   const user_id = req.params.user_id;
-  if (req.user._id !== user_id) {
+  if (!user_id) {
+    return errorHandler(res, 400, { message: "Must provide user_id." });
+  } else if (req.user._id !== user_id) {
     return forbiddenHandler(res);
   }
   try {

@@ -5,7 +5,7 @@ import ExperimentDao from "../../data/ExperimentDao";
 import User from "../../model/User";
 
 const request = supertest(createApp());
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 
 const experiments = new ExperimentDao();
 const endpoint = "/api/experiments";
@@ -60,7 +60,7 @@ describe("Test experiments endpoints", () => {
     });
 
     afterEach(async () => {
-      await mongoose.connection.db.dropDatabase(); 
+      await mongoose.connection.db.dropDatabase();
     });
 
     afterAll(async () => {

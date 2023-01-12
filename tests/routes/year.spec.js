@@ -6,25 +6,31 @@ import Users from "../../model/User";
 import Courses from "../../model/Course";
 import Distributions from "../../model/Distribution";
 import Years from "../../model/Year";
-import { TEST_USER_1, TEST_PLAN_1, TEST_PLAN_2, TEST_TOKEN_1, TEST_TOKEN_2 } from "./testVars"; 
+import {
+  TEST_USER_1,
+  TEST_PLAN_1,
+  TEST_PLAN_2,
+  TEST_TOKEN_1,
+  TEST_TOKEN_2,
+} from "./testVars";
 
 const request = supertest(createApp());
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 
-let plan; 
+let plan;
 
 beforeAll((done) => {
-  mongoose.connect("mongodb://localhost:27017/year", { useNewUrlParser: true }); 
+  mongoose.connect("mongodb://localhost:27017/year", { useNewUrlParser: true });
   done();
 });
 
 beforeEach(async () => {
-  await Users.create(TEST_USER_1); 
+  await Users.create(TEST_USER_1);
   const resp1 = await request
     .post("/api/plans")
     .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
     .send(TEST_PLAN_1);
-  plan = resp1.body.data; 
+  plan = resp1.body.data;
   const resp2 = await request
     .post("/api/plans")
     .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
@@ -40,7 +46,7 @@ beforeEach(async () => {
       term: "fall",
       credits: 0,
       title: i,
-      level: "Lower Level Undergraduate"
+      level: "Lower Level Undergraduate",
     });
     await Years.findByIdAndUpdate(plan.years[0]._id, {
       $push: { courses: courseResp._id },
@@ -65,7 +71,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await mongoose.connection.db.dropDatabase(); 
+  await mongoose.connection.db.dropDatabase();
 });
 
 afterAll(async () => {

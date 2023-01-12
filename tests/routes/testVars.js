@@ -9,14 +9,14 @@ const TEST_USER_1 = {
   _id: "user1",
   name: "User One",
   affiliation: "STUDENT",
-  email: "user1@email.com"
-}
+  email: "user1@email.com",
+};
 const TEST_USER_2 = {
   _id: "user2",
   name: "User Two",
   affiliation: "STUDENT",
-  email: "user2@email.com"
-}
+  email: "user2@email.com",
+};
 const TEST_TOKEN_1 = createToken(TEST_USER_1);
 const TEST_TOKEN_2 = createToken(TEST_USER_2);
 const TEST_CS = "B.S. Computer Science (NEW - 2021 & after)";
@@ -29,19 +29,19 @@ const SENIOR = "AE UG SENIOR";
 const TEST_PLAN_1 = {
   name: TEST_PLAN_NAME_1,
   user_id: TEST_USER_1._id,
-  majors: [ TEST_CS, TEST_AMS ],
+  majors: [TEST_CS, TEST_AMS],
   expireAt: TEST_DATE,
   year: "Junior",
-}
+};
 const TEST_PLAN_2 = {
   name: TEST_PLAN_NAME_2,
   user_id: TEST_USER_2._id,
-  majors: [ TEST_AMS ],
+  majors: [TEST_AMS],
   expireAt: TEST_DATE,
   year: "Freshman",
-}
+};
 
-/* lacks plan_id and distribution_ids */ 
+/* lacks plan_id and distribution_ids */
 const SAMEPLE_COURSES = [
   {
     user_id: TEST_USER_1._id,
@@ -50,7 +50,7 @@ const SAMEPLE_COURSES = [
     term: "fall",
     credits: 3,
     year: "Junior",
-    level: "Lower Level Undergraduate"
+    level: "Lower Level Undergraduate",
   },
   {
     user_id: TEST_USER_1._id,
@@ -60,7 +60,7 @@ const SAMEPLE_COURSES = [
     wi: true,
     credits: 3,
     year: "Junior",
-    level: "Lower Level Undergraduate"
+    level: "Lower Level Undergraduate",
   },
   {
     user_id: TEST_USER_2._id,
@@ -69,7 +69,7 @@ const SAMEPLE_COURSES = [
     term: "summer",
     credits: 3,
     year: "Junior",
-    level: "Lower Level Undergraduate"
+    level: "Lower Level Undergraduate",
   },
   {
     user_id: TEST_USER_2._id,
@@ -78,7 +78,7 @@ const SAMEPLE_COURSES = [
     term: "fall",
     credits: 4,
     year: "Junior",
-    level: "Lower Level Undergraduate"
+    level: "Lower Level Undergraduate",
   },
   {
     user_id: TEST_USER_1._id,
@@ -87,7 +87,7 @@ const SAMEPLE_COURSES = [
     term: "spring",
     credits: 4,
     year: "Junior",
-    level: "Upper Level Undergraduate"
+    level: "Upper Level Undergraduate",
   },
 ];
 
@@ -98,20 +98,20 @@ const SAMEPLE_SIS_COURSES = [
     terms: ["fall", "spring"],
     versions: [
       {
-        areas: "HS", 
-        term: "fall", 
-        school: "EN", 
-        credits: 3, 
-        wi: false
-      }, 
+        areas: "HS",
+        term: "fall",
+        school: "EN",
+        credits: 3,
+        wi: false,
+      },
       {
-        areas: "HS", 
-        term: "spring", 
-        school: "EN", 
-        credits: 3, 
-        wi: false
-      }
-    ]
+        areas: "HS",
+        term: "spring",
+        school: "EN",
+        credits: 3,
+        wi: false,
+      },
+    ],
   },
   {
     title: "Title2",
@@ -119,13 +119,13 @@ const SAMEPLE_SIS_COURSES = [
     terms: ["fall"],
     versions: [
       {
-        areas: "Q", 
-        term: "fall", 
-        school: "AS", 
-        credits: 4, 
-        wi: false
-      }, 
-    ]
+        areas: "Q",
+        term: "fall",
+        school: "AS",
+        credits: 4,
+        wi: false,
+      },
+    ],
   },
   {
     title: "Title3",
@@ -133,34 +133,34 @@ const SAMEPLE_SIS_COURSES = [
     terms: ["spring"],
     versions: [
       {
-        areas: "NS", 
-        term: "spring", 
-        school: "AS", 
-        credits: 1, 
-        wi: true
-      }, 
-    ]
+        areas: "NS",
+        term: "spring",
+        school: "AS",
+        credits: 1,
+        wi: true,
+      },
+    ],
   },
 ];
 
 export {
-  TEST_PLAN_NAME_1, 
-  TEST_PLAN_NAME_2, 
-  TEST_USER_1, 
-  TEST_USER_2, 
+  TEST_PLAN_NAME_1,
+  TEST_PLAN_NAME_2,
+  TEST_USER_1,
+  TEST_USER_2,
   TEST_AMS,
-  TEST_CS, 
-  TEST_DATE, 
-  TEST_TOKEN_1, 
-  TEST_TOKEN_2, 
-  TEST_PLAN_1, 
+  TEST_CS,
+  TEST_DATE,
+  TEST_TOKEN_1,
+  TEST_TOKEN_2,
+  TEST_PLAN_1,
   TEST_PLAN_2,
-  FRESHMAN, 
-  SOPHOMORE, 
-  JUNIOR, 
-  SENIOR, 
-  INVALID_ID, 
-  VALID_ID, 
+  FRESHMAN,
+  SOPHOMORE,
+  JUNIOR,
+  SENIOR,
+  INVALID_ID,
+  VALID_ID,
   SAMEPLE_COURSES,
-  SAMEPLE_SIS_COURSES
-}
+  SAMEPLE_SIS_COURSES,
+};

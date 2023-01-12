@@ -6,22 +6,32 @@ import Users from "../../model/User";
 import Courses from "../../model/Course";
 import Distributions from "../../model/Distribution";
 import Years from "../../model/Year";
-import { FRESHMAN, TEST_PLAN_1, TEST_PLAN_2, TEST_USER_1, TEST_USER_2, TEST_TOKEN_1, TEST_TOKEN_2 } from "./testVars";
+import {
+  FRESHMAN,
+  TEST_PLAN_1,
+  TEST_PLAN_2,
+  TEST_USER_1,
+  TEST_USER_2,
+  TEST_TOKEN_1,
+  TEST_TOKEN_2,
+} from "./testVars";
 
 const request = supertest(createApp());
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 
-let distributions; 
-let plans; 
+let distributions;
+let plans;
 
 beforeAll((done) => {
-  mongoose.connect("mongodb://localhost:27017/distribution", { useNewUrlParser: true }); 
+  mongoose.connect("mongodb://localhost:27017/distribution", {
+    useNewUrlParser: true,
+  });
   done();
 });
 
 beforeEach(async () => {
-  await Users.create( TEST_USER_1 );
-  await Users.create( TEST_USER_2 );
+  await Users.create(TEST_USER_1);
+  await Users.create(TEST_USER_2);
   const res1 = await request
     .post("/api/plans")
     .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
@@ -41,7 +51,7 @@ beforeEach(async () => {
       term: "fall",
       credits: 0,
       title: i,
-      level: "Lower Level Undergraduate"
+      level: "Lower Level Undergraduate",
     });
     await Years.findByIdAndUpdate(plan.years[0]._id, {
       $push: { courses: courseResp._id },
@@ -69,7 +79,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await mongoose.connection.db.dropDatabase(); 
+  await mongoose.connection.db.dropDatabase();
 });
 
 afterAll(async () => {
@@ -164,7 +174,7 @@ describe("POST /api/distributions", () => {
     expect(JSON.stringify(resp.body.data.plan_id)).toBe(
       JSON.stringify(plan_id)
     );
-    const updatedPlan = await Plans.findById(plan_id );
+    const updatedPlan = await Plans.findById(plan_id);
     expect(updatedPlan).toBeTruthy();
     expect(JSON.stringify(updatedPlan.distribution_ids[3])).toBe(
       JSON.stringify(resp.body.data._id)
@@ -212,18 +222,18 @@ describe("PATCH /api/distributions/updateRequiredCredit", () => {
     plans = await Plans.find({});
     const plan_id = plans[0]._id;
     const dist_id = plans[0].distribution_ids[0];
-    const resp = await request.patch(
-      "/api/distributions/updateRequiredCredits" +
-        "?id=" +
-        dist_id +
-        "&required=1"
-    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    const resp = await request
+      .patch(
+        "/api/distributions/updateRequiredCredits" +
+          "?id=" +
+          dist_id +
+          "&required=1"
+      )
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
-    expect(JSON.stringify(resp.body.data._id)).toBe(
-      JSON.stringify(dist_id)
-    );
+    expect(JSON.stringify(resp.body.data._id)).toBe(JSON.stringify(dist_id));
     expect(resp.body.data.required).toBe(1);
-    const updatedPlan = await Plans.findById(plan_id); 
+    const updatedPlan = await Plans.findById(plan_id);
     expect(updatedPlan).toBeTruthy();
     expect(JSON.stringify(updatedPlan.distribution_ids[0])).toBe(
       JSON.stringify(dist_id)
@@ -235,27 +245,29 @@ describe("PATCH /api/distributions/updateRequiredCredit", () => {
   });
 
   it("should throw status 400 on empty query", async () => {
-    const response = await request.patch(
-      "/api/distributions/updateRequiredCredits"
-    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    const response = await request
+      .patch("/api/distributions/updateRequiredCredits")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
   });
 
   it("should throw status 400 on null id", async () => {
-    const response = await request.patch(
-      "/api/distributions/updateRequiredCredits?id=%00&required=1"
-    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    const response = await request
+      .patch("/api/distributions/updateRequiredCredits?id=%00&required=1")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
   });
 
   it("should throw status 400 on null required", async () => {
     plans = await Plans.find({});
     const dist_id = plans[0].distribution_ids[0];
-    const response = await request.patch(
-      "/api/distributions/updateRequiredCredits?id=" +
-      dist_id +
-        "&required=%00"
-    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    const response = await request
+      .patch(
+        "/api/distributions/updateRequiredCredits?id=" +
+          dist_id +
+          "&required=%00"
+      )
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
   });
 
@@ -263,12 +275,14 @@ describe("PATCH /api/distributions/updateRequiredCredit", () => {
     plans = await Plans.find({});
     const plan_id = plans[0]._id;
     const dist_id = plans[0].distribution_ids[0];
-    const resp = await request.patch(
-      "/api/distributions/updateRequiredCredits" +
-        "?id=" +
-        dist_id +
-        "&required=1"
-    ).set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    const resp = await request
+      .patch(
+        "/api/distributions/updateRequiredCredits" +
+          "?id=" +
+          dist_id +
+          "&required=1"
+      )
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
     expect(resp.status).toBe(403);
   });
 });
@@ -278,13 +292,11 @@ describe("PATCH /api/distributions/updateName", () => {
     plans = await Plans.find({});
     const plan_id = plans[0]._id;
     const dist_id = plans[0].distribution_ids[0];
-    const resp = await request.patch(
-      "/api/distributions/updateName" + "?id=" + dist_id + "&name=new"
-    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    const resp = await request
+      .patch("/api/distributions/updateName" + "?id=" + dist_id + "&name=new")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
-    expect(JSON.stringify(resp.body.data._id)).toBe(
-      JSON.stringify(dist_id)
-    );
+    expect(JSON.stringify(resp.body.data._id)).toBe(JSON.stringify(dist_id));
     expect(resp.body.data.name).toBe("new");
     const updatedPlans = await Plans.find({ _id: plan_id });
     expect(updatedPlans).toBeTruthy();
@@ -292,7 +304,7 @@ describe("PATCH /api/distributions/updateName", () => {
       JSON.stringify(dist_id)
     );
 
-    const updatedDistribution = await Distributions.findById(dist_id); 
+    const updatedDistribution = await Distributions.findById(dist_id);
     expect(updatedDistribution.name).toBe("new");
   });
 
@@ -304,9 +316,9 @@ describe("PATCH /api/distributions/updateName", () => {
   });
 
   it("should throw status 400 on null id", async () => {
-    const response = await request.patch(
-      "/api/distributions/updateName?id=%00&name=new"
-    ).set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    const response = await request
+      .patch("/api/distributions/updateName?id=%00&name=new")
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(response.status).toBe(400);
   });
 
@@ -314,9 +326,9 @@ describe("PATCH /api/distributions/updateName", () => {
     plans = await Plans.find({});
     const plan_id = plans[0]._id;
     const dist_id = plans[0].distribution_ids[0];
-    const resp = await request.patch(
-      "/api/distributions/updateName" + "?id=" + dist_id + "&name=new"
-    ).set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    const resp = await request
+      .patch("/api/distributions/updateName" + "?id=" + dist_id + "&name=new")
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
     expect(resp.status).toBe(403);
   });
 });
@@ -330,9 +342,7 @@ describe("DELETE /api/distributions/:d_id", () => {
       .delete("/api/distributions/" + dist_id)
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(resp.status).toBe(200);
-    expect(JSON.stringify(resp.body.data._id)).toBe(
-      JSON.stringify(dist_id)
-    );
+    expect(JSON.stringify(resp.body.data._id)).toBe(JSON.stringify(dist_id));
     const updatedPlan = await Plans.findById(plan_id);
     expect(updatedPlan).toBeTruthy();
     updatedPlan.distribution_ids.forEach((id) => {
@@ -356,7 +366,6 @@ describe("DELETE /api/distributions/:d_id", () => {
       .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
     expect(resp.status).toBe(403);
   });
-
 });
 
 const data = { test: true };

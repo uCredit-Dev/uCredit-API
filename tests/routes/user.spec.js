@@ -1,17 +1,25 @@
 import mongoose from "mongoose";
 import supertest from "supertest";
 import Users from "../../model/User";
-import Plans from "../../model/Plan"; 
+import Plans from "../../model/Plan";
 import { decodeToken } from "../../util/token";
 import createApp from "../../app";
-import { FRESHMAN, SOPHOMORE, JUNIOR, SENIOR, TEST_USER_1, TEST_TOKEN_1, TEST_TOKEN_2, TEST_PLAN_1 } from "./testVars"; 
+import {
+  FRESHMAN,
+  SOPHOMORE,
+  JUNIOR,
+  SENIOR,
+  TEST_USER_1,
+  TEST_TOKEN_1,
+  TEST_TOKEN_2,
+  TEST_PLAN_1,
+} from "./testVars";
 
 const request = supertest(createApp());
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 
 beforeAll(async () => {
-  mongoose
-    .connect("mongodb://localhost:27017/user", { useNewUrlParser: true }); 
+  mongoose.connect("mongodb://localhost:27017/user", { useNewUrlParser: true });
   const samples = [];
   for (let i = 1; i <= 98; i++) {
     const userObj = { _id: `User${i}`, name: `User${i}` };
@@ -134,33 +142,37 @@ describe("User Routes: GET /api/user", () => {
 
 describe("User Routes: GET /api/backdoor/verification/:id", () => {
   it("Should create new user", async () => {
-    let res = await request.get(`/api/backdoor/verification/${TEST_USER_1._id}`);
+    let res = await request.get(
+      `/api/backdoor/verification/${TEST_USER_1._id}`
+    );
     expect(res.status).toBe(200);
-    const data = res.body.data; 
-    expect(data.user._id).toBe(TEST_USER_1._id); 
-    expect(data.user.school).toBe("jooby hooby"); 
+    const data = res.body.data;
+    expect(data.user._id).toBe(TEST_USER_1._id);
+    expect(data.user.school).toBe("jooby hooby");
     expect(data.token).toBeTruthy();
     const decoded = decodeToken(data.token);
-    expect(decoded._id).toBe(data.user._id); 
-    expect(decoded.name).toBe(data.user.name); 
-    expect(decoded.affiliation).toBe(data.user.affiliation); 
-    // db check 
-    const user = await Users.findById(TEST_USER_1._id); 
+    expect(decoded._id).toBe(data.user._id);
+    expect(decoded.name).toBe(data.user.name);
+    expect(decoded.affiliation).toBe(data.user.affiliation);
+    // db check
+    const user = await Users.findById(TEST_USER_1._id);
     expect(user).toBeTruthy();
   });
 
   it("Should not create new user if already exists", async () => {
-    // calling route a second time 
-    let res = await request.get(`/api/backdoor/verification/${TEST_USER_1._id}`);
+    // calling route a second time
+    let res = await request.get(
+      `/api/backdoor/verification/${TEST_USER_1._id}`
+    );
     expect(res.status).toBe(200);
-    const data = res.body.data; 
-    expect(data.user._id).toBe(TEST_USER_1._id); 
+    const data = res.body.data;
+    expect(data.user._id).toBe(TEST_USER_1._id);
     expect(data.token).toBeTruthy();
     const decoded = decodeToken(data.token);
-    expect(decoded._id).toBe(TEST_USER_1._id); 
-    // db check 
-    const users = await Users.find({ name: TEST_USER_1._id }); 
-    expect(users.length).toBe(1); 
+    expect(decoded._id).toBe(TEST_USER_1._id);
+    // db check
+    const users = await Users.find({ name: TEST_USER_1._id });
+    expect(users.length).toBe(1);
   });
 });
 
@@ -168,17 +180,17 @@ describe("User Routes: DELETE /api/user/:id", () => {
   it("Should delete user", async () => {
     let res = await request
       .delete(`/api/user/${TEST_USER_1._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(204);
-    // db check 
-    const user = await Users.findById(TEST_USER_1._id); 
+    // db check
+    const user = await Users.findById(TEST_USER_1._id);
     expect(user).toBeNull();
   });
 
   it("Should throw 404 if user not found", async () => {
     let res = await request
       .delete(`/api/user/${TEST_USER_1._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(404);
   });
 
@@ -186,23 +198,22 @@ describe("User Routes: DELETE /api/user/:id", () => {
     await Users.create(TEST_USER_1);
     let res = await request
       .delete(`/api/user/${TEST_USER_1._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`); 
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(403);
   });
 
   it("Should delete user's plans", async () => {
-    await Plans.create(TEST_PLAN_1); 
-    // check that plan successfully created 
-    let plans = await Plans.find({ user_id: TEST_USER_1._id }); 
+    await Plans.create(TEST_PLAN_1);
+    // check that plan successfully created
+    let plans = await Plans.find({ user_id: TEST_USER_1._id });
     expect(plans.length).toBe(1);
     let res = await request
       .delete(`/api/user/${TEST_USER_1._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`); 
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(204);
-    // check that plan deleted with user 
-    plans = await Plans.find({ user_id: TEST_USER_1._id }); 
+    // check that plan deleted with user
+    plans = await Plans.find({ user_id: TEST_USER_1._id });
     expect(plans.length).toBe(0);
   });
-
-})
+});
 const data = { test: true };

@@ -3,17 +3,19 @@ import supertest from "supertest";
 import createApp from "../../app";
 
 const request = supertest(createApp());
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 
 const TEST_NAME = "test";
 
 beforeAll((done) => {
-  mongoose.connect("mongodb://localhost:27017/sisData", { useNewUrlParser: true }); 
+  mongoose.connect("mongodb://localhost:27017/sisData", {
+    useNewUrlParser: true,
+  });
   done();
 });
 
 afterAll(async () => {
-  await mongoose.connection.db.dropDatabase(); 
+  await mongoose.connection.db.dropDatabase();
   await mongoose.connection.close();
 });
 
