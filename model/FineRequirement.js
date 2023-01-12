@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const fineSchema = new Schema({
@@ -21,4 +21,4 @@ const fineSchema = new Schema({
 
 const FineRequirement = mongoose.model("FineRequirement", fineSchema);
 
-module.exports = FineRequirement;
+export default FineRequirement; 

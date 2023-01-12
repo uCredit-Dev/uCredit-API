@@ -1,8 +1,8 @@
 // helper methods for updating distributions 
-const Courses = require("../model/Course.js");
-const Distributions = require("../model/Distribution.js");
-const Majors = require("../model/Major.js");
-const FineRequirements = require("../model/FineRequirement.js");
+import Courses from "../model/Course.js";
+import Distributions from "../model/Distribution.js";
+import Majors from "../model/Major.js";
+import FineRequirements from "../model/FineRequirement.js";
 
 // Adds new distributions to plan if new major is added
 async function addPlanDistributions(plan) {
@@ -411,7 +411,7 @@ const getNextEntry = (expr, index) => {
   return [out, index];
 };
 
-module.exports = {
+export {
   addCourseToDistributions,
   removeCourseFromDistributions,
   checkCriteriaSatisfied,
@@ -421,4 +421,4 @@ module.exports = {
   fineCreditUpdate, 
   addPlanDistributions,
   addCourses,
-};
+}; 

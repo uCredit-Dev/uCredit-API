@@ -22,11 +22,7 @@ router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
       .populate("findReq_ids")
       .exec();      
     // verify that distribution belongs to user
-    if (req.user._id !== distribution.user_id) {
-      forbiddenHandler(res);
-    } else {
-      returnData(distribution, res);
-    }
+    returnData(distribution, res);
   } catch (err) {
     errorHandler(res, 400, err);
   }
@@ -37,7 +33,7 @@ router.get("/api/distributionsByPlan/", auth, async (req, res) => {
   const plan_id = req.query.plan_id; 
   const major_id = req.query.major_id; 
   try {
-    const distributions = Distributions
+    const distributions = await Distributions
       .find({ plan_id, major_id })
       .populate("fineReq_ids"); 
     returnData(distributions, res);

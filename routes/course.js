@@ -16,18 +16,12 @@ import {
   addCourseToDistributions, 
   removeCourseFromDistributions,
 } from "./distributionMethods.js";
-import express from "express";
 const router = express.Router();
 
 //return all courses of the user's plan
 router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   try {
-    // verify that plan belongs to request user
-    const user = await Users.findById(req.user._id).exec();
-    if (!user) {
-      return forbiddenHandler(res);
-    }
     // return courses associated with plan
     const retrievedCourses = await Courses.findByPlanId(plan_id).exec();
     returnData(retrievedCourses, res);

@@ -1,5 +1,4 @@
 import Majors from "../model/Major.js";
-const { allMajors } = require("../data/majors");
 import { returnData, errorHandler, missingHandler } from "./helperMethods.js";
 import express from "express";
 

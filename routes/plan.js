@@ -5,7 +5,7 @@ import {
   forbiddenHandler,
   missingHandler,
 } from "./helperMethods.js";
-import { addPlanDistributions, addCourse } from "./distributionMethods.js";
+import { addPlanDistributions, addCourses } from "./distributionMethods.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import FineRequirements from "../model/FineRequirement.js";
@@ -36,10 +36,6 @@ const getAPI = (window) => {
 router.get("/api/plans/:plan_id", auth, async (req, res) => {
   const p_id = req.params.plan_id;
   try {
-    const user = await Users.findById(req.user._id).exec();
-    if (!user) { // if valid user 
-      return forbiddenHandler(res);
-    }
     const plan = await Plans
       .findById(p_id)
       .populate({
@@ -156,7 +152,7 @@ router.post("/api/plans", auth, async (req, res) => {
       .populate("fineReq_ids")
       .exec();
     const resp = {
-      ...plan,
+      ...plan._doc,
       years,
       distributions,
       reviewers: [],
