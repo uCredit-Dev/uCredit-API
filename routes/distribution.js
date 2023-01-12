@@ -19,7 +19,7 @@ router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
   try {
     const distribution = await Distributions
       .findById(d_id)
-      .populate("findReq_ids")
+      .populate("fineReq_ids")
       .exec();      
     // verify that distribution belongs to user
     returnData(distribution, res);
