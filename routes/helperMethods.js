@@ -238,7 +238,7 @@ async function sendCourseVersion(query, version, res) {
   }
 }
 
-const PERPAGE = 10; 
+export const PERPAGE = 10; 
 const MIN_LEN = 3; 
 
 const REVIEW_STATUS = {

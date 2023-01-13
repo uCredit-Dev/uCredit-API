@@ -3,6 +3,8 @@ import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Majors from "../model/Major.js";
 import FineRequirements from "../model/FineRequirement.js";
+import SISCourseV from "../model/SISCourseV.js";
+import { PERPAGE } from "./helperMethods.js";
 
 // Adds new distributions to plan if new major is added
 async function addPlanDistributions(plan) {
@@ -411,6 +413,80 @@ const getNextEntry = (expr, index) => {
   return [out, index];
 };
 
+
+// returns a string expression of whether a course satisfies a criteria
+const criteriaSearch = async (criteria, page) => {
+  let index = 0;
+  let courses = [];
+  const splitArr = splitRequirements(criteria);
+  while (index < splitArr.length) {
+    // TODO: handle NOT 
+    if (splitArr[index] === "(" || splitArr[index] === ")" || splitArr[index] === "OR" || 
+        splitArr[index] === "AND" || splitArr[index] === "NOT") {
+      index++; 
+    } else {
+      let matches = await tagSearch(splitArr, index);
+      matches.forEach((match) => {
+        for (let course of courses) {
+          if (course.number === match.number) {
+            return;
+          }
+        }
+        courses.push(match);
+      });
+      index += 2;
+    }
+  }
+  let result = {};
+  // set pagination 
+  const total = courses.length; 
+  result.pagination = {
+    page: page, 
+    limit: PERPAGE, 
+    last: total <= 100 ? Math.ceil(total / PERPAGE) : 10, 
+    total: total
+  }; 
+  // set (up to) 10 courses 
+  result.courses = courses.slice(page * PERPAGE, (page + 1) * PERPAGE); 
+  return result;
+};
+
+// handles different tags (C, T, D, Y, A, N, W, L) in criteria string
+const tagSearch = async (splitArr, index) => {
+  let matches = [];
+  const curr = splitArr[index]; 
+  switch (splitArr[index + 1]) {
+    case "C": // Course Number
+      matches = await SISCourseV.find({ number: curr }).exec(); 
+      break;
+    case "T": // Tag
+      matches = await SISCourseV.find({ "versions.tag": curr }).limit(50).exec(); 
+      break;
+    case "D": // Department
+      matches = await SISCourseV.find({ "versions.department": curr }).limit(50).exec(); 
+      break;
+    case "Y": // Year
+      //TODO: implement for year.
+      updatedConcat = "false";
+      break;
+    case "A": // Area
+      matches = await SISCourseV.find({ "versions.areas": curr }).limit(50).exec(); 
+      break;
+    case "N": // Name
+      matches = await SISCourseV.find({ title: curr }).exec(); 
+      break;
+    case "W": //Written intensive
+      matches = await SISCourseV.find({ "versions.wi": true }).limit(50).exec(); 
+      break;
+    case "L": // Level
+      matches = await SISCourseV.find({ "versions.level": curr }).limit(50).exec(); 
+      break;
+    default: 
+      matches = [];
+  }
+  return matches;
+};
+
 export {
   addCourseToDistributions,
   removeCourseFromDistributions,
@@ -421,4 +497,5 @@ export {
   fineCreditUpdate, 
   addPlanDistributions,
   addCourses,
+  criteriaSearch,
 }; 
