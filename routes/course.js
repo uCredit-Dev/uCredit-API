@@ -2,6 +2,7 @@
 import {
   returnData,
   errorHandler,
+  distributionCreditUpdate,
   forbiddenHandler,
   missingHandler,
   checkDestValid
@@ -9,7 +10,6 @@ import {
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Years from "../model/Year.js";
-import Plans from "../model/Plan.js";
 import SISCV from "../model/SISCourseV.js"; 
 import { auth } from "../util/token.js";
 import express from "express";
@@ -98,7 +98,7 @@ router.get("/api/coursesByTerm/:plan_id", auth, async (req, res) => {
 //add course, need to provide course info as json object in request body
 //distribution field is also updated
 router.post("/api/courses", auth, async (req, res) => {
-  const body = req.body;
+  const course = req.body;
   if (!body || Object.keys(body).length == 0) {
     return missingHandler(res, { course: body });
   }
@@ -119,17 +119,17 @@ router.post("/api/courses", auth, async (req, res) => {
     await course.save(); 
     // update plan's distribution objs
     const distObjs = await Distributions.find({ plan_id: course.plan_id }); 
-    await addCourseToDistributions(course, distObjs);
+    await addCourseToDistributions(retrievedCourse, distObjs);
   
     // get updated course to return (because modified in helper method)
-    const updated = await Courses.findById(course._id);
+    const updated = await Courses.findById(retrievedCourse._id);
     // get all distributions associated by course 
     const distributions = [];
     for (let dist_id of updated.distribution_ids) {
       const dist = await Distributions
         .findById(dist_id)
         .populate({ path: "fineReq_ids" }); 
-        distributions.push(dist);
+      updatedDists.push(dist);
     }
     returnData({ course: updated, distributions }, res);
   } catch (err) {
