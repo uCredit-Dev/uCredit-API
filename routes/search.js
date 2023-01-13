@@ -37,6 +37,26 @@ router.get("/api/search/skip/:num", async (req, res) => {
   }
 });
 
+router.get("/api/searchNumber/:number", async (req, res) => {
+  let number = req.params.number;
+  try {
+    let courses = await SISCV.find({ number }).exec();
+    if (courses.length == 0) {
+      if (number.includes('EN.600'))
+        number = number.replace('EN.600', 'EN.601');
+      else if (number.includes('EN.550'))
+        number = number.replace('EN.550', 'EN.553');
+      courses = await SISCV.find({ number }).exec();
+      if (courses.length == 0) {
+        return errorHandler(res, 404, { message: "Course not found" }); 
+      }
+    } 
+    returnData(courses[0], res);
+  } catch (err) {
+    errorHandler(res, 400, err);
+  }
+});
+
 //return all versions of the course based on the filters
 router.get("/api/search", async (req, res) => {
   // page is defined or 0
