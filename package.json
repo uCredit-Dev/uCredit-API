@@ -4,6 +4,8 @@
   "description": "Backend api for UCredit.",
   "main": "index.js",
   "dependencies": {
+    "@bugsnag/js": "^7.18.0",
+    "@bugsnag/plugin-express": "^7.18.0",
     "axios": "^1.2.1",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.1",
