@@ -12,7 +12,6 @@ import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
-import Users from "../model/User.js";
 import express from "express";
 
 const router = express.Router();

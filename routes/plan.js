@@ -148,7 +148,6 @@ router.post("/api/plans", auth, async (req, res) => {
     await plan.save();
     const distributions = await Distributions      // get all distributions 
       .find({ plan_id: plan._id })
-      .populate("fineReq_ids")
       .exec();
     const resp = {
       ...plan._doc,
@@ -255,7 +254,6 @@ router.patch("/api/plans/update", auth, async (req, res) => {
     // return plan with reviews and distributions
     const distributions = await Distributions
       .find({ plan_id })
-      .populate("fineReq_ids")
       .exec();
     const reviewers = await Reviews
       .find({ plan_id })

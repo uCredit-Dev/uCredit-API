@@ -123,14 +123,7 @@ router.post("/api/courses", auth, async (req, res) => {
   
     // get updated course to return (because modified in helper method)
     const updated = await Courses.findById(course._id);
-    // get all distributions associated by course 
-    const distributions = [];
-    for (let dist_id of updated.distribution_ids) {
-      const dist = await Distributions
-        .findById(dist_id)
-        .populate({ path: "fineReq_ids" }); 
-        distributions.push(dist);
-    }
+    const distributions = await Distributions.find({ plan_id: updated.plan_id }); 
     returnData({ course: updated, distributions }, res);
   } catch (err) {
     errorHandler(res, 400, err);
@@ -241,7 +234,7 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
     }
     // delete course and update distributions
     await Courses.findByIdAndDelete(c_id).exec();
-    const distributions = await removeCourseFromDistributions(course);
+    await removeCourseFromDistributions(course);
     // remove from year 
     await Years
       .findByIdAndUpdate(
@@ -250,7 +243,7 @@ router.delete("/api/courses/:course_id", auth, async (req, res) => {
         { runValidators: true }
       )
       .exec();
-    
+    const distributions = await Distributions.find({ plan_id: updated.plan_id }); 
     // return deleted course with modified distributions
     returnData({ course, distributions }, res);
   } catch (err) {
