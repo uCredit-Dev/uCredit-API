@@ -3,8 +3,6 @@ import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Majors from "../model/Major.js";
 import FineRequirements from "../model/FineRequirement.js";
-import SISCourseV from "../model/SISCourseV.js";
-import { PERPAGE } from "./helperMethods.js";
 
 // Adds new distributions to plan if new major is added
 async function addPlanDistributions(plan) {
@@ -21,6 +19,29 @@ async function addPlanDistributions(plan) {
     await addCourses(plan._id, major_id);
   }
   await plan.save(); 
+}
+
+async function removePlanDistributions(plan) {
+  // remove dists and fineReqs for deleted major, if any
+  let distributions = await Distributions.find({ plan_id: plan._id }).exec();
+  for (let dist of distributions) {
+    if (!plan.major_ids.includes(dist.major_id)) {
+      // maintain courses array fields
+      await Courses.updateMany(
+        { plan_id: plan._id },
+        { $pull: { distribution_ids: dist._id } }
+      ).exec();
+      for (let fine_id of dist.fineReq_ids) {
+        await Courses.updateMany(
+          { plan_id: plan._id },
+          { $pull: { fineReq_ids: fine_id } }
+        ).exec();
+      }
+      // delete documents
+      await Distributions.findByIdAndDelete(dist._id).exec();
+      await FineRequirements.deleteMany({ distribution_id: dist._id }).exec();
+    }
+  }
 }
 
 // add a major distributions to user's plan 
@@ -160,11 +181,11 @@ const updateDistribution = async (distribution_id, course_id) => {
 // updates distribution.satisfied 
 async function updateSatisfied(distribution) {
   if (distribution.planned >= distribution.required_credits) {
+    distribution.planned = distribution.required_credits; 
     if (distribution.pathing) {
       await processPathing(distribution);
     } else {
       distribution.satisfied = await checkAllFines(distribution);
-      await distribution.save();
     }
   }
 }
@@ -413,79 +434,205 @@ const getNextEntry = (expr, index) => {
   return [out, index];
 };
 
+async function updateDistributions1(plan_id, major_id) {
+  // update courses 
+  await Courses.updateMany({ plan_id }, { distribution_ids: [], fineReq_ids: [] }); 
+  await Distributions.updateMany({ plan_id }, { planned: 0, satisfied: false }); 
+  await FineRequirements.updateMany({ plan_id }, { planned: 0, satisfied: false }); 
+  // get all distributions 
+  const distributions = await Distributions.find({ plan_id, major_id }); 
+  const courses = await Courses.find({ plan_id }); 
 
-// returns a string expression of whether a course satisfies a criteria
-const criteriaSearch = async (criteria, page) => {
-  let index = 0;
-  let courses = [];
-  const splitArr = splitRequirements(criteria);
-  while (index < splitArr.length) {
-    // TODO: handle NOT 
-    if (splitArr[index] === "(" || splitArr[index] === ")" || splitArr[index] === "OR" || 
-        splitArr[index] === "AND" || splitArr[index] === "NOT") {
-      index++; 
-    } else {
-      let matches = await tagSearch(splitArr, index);
-      matches.forEach((match) => {
-        for (let course of courses) {
-          if (course.number === match.number) {
-            return;
-          }
-        }
-        courses.push(match);
-      });
-      index += 2;
+  // for each dist 
+  for (let course of courses) {
+    let allowed = ["All"];
+    for (let dist of distributions) {
+      if (dist.satisfied) continue; 
+      if (!checkCriteriaSatisfied(dist.criteria, course)) continue; 
+      if (allowed.includes("All") || allowed.includes(dist.name)) {
+        // update course 
+        course.distribution_ids.push(dist._id); 
+        course.save(); 
+        // udpated double count info 
+        allowed = dist.double_count; 
+        // update fine 
+        dist.planned += course.credits; 
+        dist.satisfied = dist.planned >= dist.required_credits; 
+        if (dist.satisfied) dist.planned = dist.required_credits; 
+        await dist.save();   
+        await addCoursesToFines(courses, dist);
+      }
     }
   }
-  let result = {};
-  // set pagination 
-  const total = courses.length; 
-  result.pagination = {
-    page: page, 
-    limit: PERPAGE, 
-    last: total <= 100 ? Math.ceil(total / PERPAGE) : 10, 
-    total: total
-  }; 
-  // set (up to) 10 courses 
-  result.courses = courses.slice(page * PERPAGE, (page + 1) * PERPAGE); 
-  return result;
-};
+}
 
-// handles different tags (C, T, D, Y, A, N, W, L) in criteria string
-const tagSearch = async (splitArr, index) => {
-  let matches = [];
-  const curr = splitArr[index]; 
-  switch (splitArr[index + 1]) {
-    case "C": // Course Number
-      matches = await SISCourseV.find({ number: curr }).exec(); 
-      break;
-    case "T": // Tag
-      matches = await SISCourseV.find({ "versions.tag": curr }).limit(50).exec(); 
-      break;
-    case "D": // Department
-      matches = await SISCourseV.find({ "versions.department": curr }).limit(50).exec(); 
-      break;
-    case "Y": // Year
-      //TODO: implement for year.
-      updatedConcat = "false";
-      break;
-    case "A": // Area
-      matches = await SISCourseV.find({ "versions.areas": curr }).limit(50).exec(); 
-      break;
-    case "N": // Name
-      matches = await SISCourseV.find({ title: curr }).exec(); 
-      break;
-    case "W": //Written intensive
-      matches = await SISCourseV.find({ "versions.wi": true }).limit(50).exec(); 
-      break;
-    case "L": // Level
-      matches = await SISCourseV.find({ "versions.level": curr }).limit(50).exec(); 
-      break;
-    default: 
-      matches = [];
+async function updateDistributions2(plan_id, major_id) {
+  // update courses 
+  await Courses.updateMany({ plan_id }, { distribution_ids: [], fineReq_ids: [] }); 
+  await Distributions.updateMany({ plan_id }, { planned: 0, satisfied: false }); 
+  await FineRequirements.updateMany({ plan_id }, { planned: 0, satisfied: false }); 
+  // get all distributions 
+  const distributions = await Distributions.find({ plan_id, major_id }); 
+
+  // for each dist 
+  for (let dist of distributions) {
+    // iterate and search for Course matches 
+    const courses = await getMatchingCourses(dist.criteria, plan_id);
+    for (let course of courses) {
+      if (dist.satisfied) break; 
+      let added = await addCourseToDistribution(course, dist);
+      if (added) dist.planned += course.credits; 
+      await addCoursesToFines(courses, dist);
+      await updateSatisfied(dist);
+    }
+    await dist.save(); 
   }
-  return matches;
-};
+}
+
+function constructQuery(splitArr, i) {
+  let query = { "$or": [] };
+  let subarr = query["$or"];
+  let index = i; 
+  let mode = splitArr.indexOf("AND") < 0 ? "$or" 
+    : splitArr.indexOf("OR") < 0 ? "$and" 
+    : splitArr.indexOf("AND") < splitArr.indexOf("OR") ? "$and" 
+    : "$or"; 
+  while (index < splitArr.length) {
+    if (!query[mode]) query[mode] = [];
+    switch (splitArr[index]) {
+      case "(": 
+        subarr = constructQuery(splitArr, index + 1); 
+        query = { ...query, ...subarr[0] }; 
+        index = subarr[1];
+        break; 
+      case ")": 
+        return [ query, index ]; 
+      case "OR": 
+        if (query["$and"] && query["$and"].length > 0) {
+          query["$or"].push({ "$and": query["$and"] });
+        } 
+        mode = "$or"; 
+        break; 
+      case "AND": 
+        if (query["$or"] && query["$or"].length > 0) {
+          query["$and"] = [];
+          query["$and"].push({ "$or": query["$or"] });
+        } 
+        mode = "$and"; 
+        break; 
+      case "C": // Course Number
+        let number = splitArr[index - 1];
+        query[mode].push({ number }); 
+        break;
+      case "T": // Tag
+        let tags = splitArr[index - 1];
+        query[mode].push({ tags }); 
+        break;
+      case "D": // Department
+        let department = splitArr[index - 1];
+        query[mode].push({ department }); 
+        break;
+      case "Y": // Year
+        //TODO: implement for year.
+        break;
+      case "A": // Area
+        let areas = {
+          $not: new RegExp("None"), 
+          $in: new RegExp(splitArr[index - 1]),
+        };
+        query[mode].push({ areas }); 
+        break;
+      case "N": // Name
+        let title = splitArr[index - 1];
+        query[mode].push({ title }); 
+        break;
+      case "W": //Written intensive
+        let wi = true;
+        query[mode].push({ wi }); 
+        break;
+      case "L": // Level
+        let level = splitArr[index - 1];
+        query[mode].push({ level }); 
+        break; 
+    }
+    index++; 
+  }
+  if (query["$and"] && query["$and"].length == 0) {
+    delete query["$and"]; 
+  }
+  if (query["$or"] && query["$or"].length == 0) {
+    delete query["$or"]; 
+  }
+  return [query, index];
+}
+
+async function getMatchingCourses(criteria, plan_id) {
+  if (criteria === null || criteria.length === 0 || criteria === "N/A") {
+    const courses = await Courses.find({ plan_id }, { title: 1, credits: 1, distribution_ids: 1, fineReq_ids: 1 }); 
+    return courses; 
+  }
+  const splitArr = splitRequirements(criteria);
+  let [query, _] = constructQuery(splitArr, 0);
+  query = { ...query, plan_id }; 
+  const courses = await Courses.find(query); 
+  return courses; 
+}
+
+async function addCourseToDistribution(course, dist) {
+  // check if already in distribution 
+  // if so, check that double count allowed 
+  const doublecount = await isDistAllowed(course.distribution_ids, dist.name); 
+  if (!doublecount) return false; 
+  course.distribution_ids.push(dist.id); 
+  await course.save();
+  return true; 
+}
+
+async function addCoursesToFines(courses, dist) {
+  // add to fine requirements
+  const fines = await FineRequirements.find({ distribution_id: dist._id }); 
+  for (let course of courses) {
+    let allowed = ["All"];
+    for (let fine of fines) {
+      if (fine.satisfied) continue; 
+      if (!checkCriteriaSatisfied(fine.criteria, course)) continue; 
+      if (allowed.includes("All") || allowed.includes(fine.description)) {
+        // update course 
+        course.fineReq_ids.push(fine._id); 
+        course.save(); 
+        // udpated double count info 
+        allowed = fine.double_count; 
+        // update fine 
+        fine.planned += course.credits; 
+        fine.satisfied = fine.planned >= fine.required_credits; 
+        if (fine.satisfied) fine.planned = fine.required_credits; 
+        await fine.save();   
+      }
+    }
+  }
+}
+
+async function isDistAllowed(dist_ids, curr) {
+  if (!dist_ids) return true; 
+  for (let dist_id of dist_ids) {
+    const pre = await Distributions.findById(dist_id); 
+    if (!pre.double_count.includes("All") && !pre.double_count.includes(curr)) {
+      return false; 
+    }
+  }
+  return true; 
+}
+
+async function isFineAllowed(fine_ids, curr) {
+  if (!fine_ids) return true; 
+  for (let fine_id of fine_ids) {
+    const pre = await FineRequirements.findById(fine_id); 
+    if (!pre.double_count.includes("All") && !pre.double_count.includes(curr)) {
+      return false; 
+    }
+  }
+  return true; 
+}
 
 export {
   addCourseToDistributions,
@@ -497,5 +644,8 @@ export {
   fineCreditUpdate, 
   addPlanDistributions,
   addCourses,
-  criteriaSearch,
+  removePlanDistributions,
+  updateDistributions1,
+  updateDistributions2, 
+  splitRequirements
 }; 

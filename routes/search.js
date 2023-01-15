@@ -10,7 +10,7 @@ import {
   sendCourseVersion 
 } from "./helperMethods.js";
 import SISCV from "../model/SISCourseV.js";
-import { criteriaSearch } from "./distributionMethods.js";
+import { criteriaSearch } from "./helperMethods.js";
 
 const router = express.Router();
 

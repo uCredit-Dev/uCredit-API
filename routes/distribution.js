@@ -8,8 +8,8 @@ import {
 import { auth } from "../util/token.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
-import Plans from "../model/Plan.js";
 import express from "express";
+import { updateDistributions1, updateDistributions2 } from "./distributionMethods.js";
 
 const router = express.Router();
 
@@ -32,7 +32,11 @@ router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
 router.get("/api/distributionsByPlan/", auth, async (req, res) => {
   const plan_id = req.query.plan_id; 
   const major_id = req.query.major_id; 
+  const reload = req.query.reload; 
   try {
+    if (reload === "true") {
+      await updateDistributions1(plan_id, major_id);
+    }
     const distributions = await Distributions
       .find({ plan_id, major_id })
       .populate("fineReq_ids"); 

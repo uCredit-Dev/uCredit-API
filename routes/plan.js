@@ -5,10 +5,9 @@ import {
   forbiddenHandler,
   missingHandler,
 } from "./helperMethods.js";
-import { addPlanDistributions, addCourses } from "./distributionMethods.js";
+import { addPlanDistributions, addCourses, removePlanDistributions } from "./distributionMethods.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
-import FineRequirements from "../model/FineRequirement.js";
 import Users from "../model/User.js";
 import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
@@ -229,11 +228,11 @@ router.patch("/api/plans/update", auth, async (req, res) => {
   const majors = req.body.majors;
   const name = req.body.name;
   if (!majors && !name) {
-    return missingHandler(res, { majors, name });
+    return missingHandler(res, { plan_id, majors, name });
   }
   let updateBody = {};
   if (majors) {
-    updateBody.majors = majors;
+    updateBody.major_ids = majors;
   }
   if (name) {
     updateBody.name = name;
@@ -246,32 +245,15 @@ router.patch("/api/plans/update", auth, async (req, res) => {
     }
     // update plan
     plan = await Plans
-      .findByIdAndUpdate(id, updateBody, { new: true, runValidators: true })
+      .findByIdAndUpdate(plan_id, updateBody, { new: true, runValidators: true })
       .exec();
-    await addPlanDistributions(plan);
-
-    // remove dists and fineReqs for deleted major, if any
-    let distributions = await Distributions.find({ plan_id: plan._id }).exec();
-    for (let dist of distributions) {
-      if (!plan._doc.major_ids.includes(dist.major_id)) {
-        // maintain courses array fields
-        await Courses.updateMany(
-          { plan_id },
-          { $pull: { distribution_ids: dist._id } }
-        ).exec();
-        for (let fine_id of dist.fineReq_ids) {
-          await Courses.updateMany(
-            { plan_id },
-            { $pull: { fineReq_ids: fine_id } }
-          ).exec();
-        }
-        // delete documents
-        await Distributions.findByIdAndDelete(dist._id).exec();
-        await FineRequirements.deleteMany({ distribution_id: dist._id }).exec();
-      }
+    if (majors) {
+      await addPlanDistributions(plan);
+      await removePlanDistributions(plan);
     }
+
     // return plan with reviews and distributions
-    distributions = await Distributions
+    const distributions = await Distributions
       .find({ plan_id })
       .populate("fineReq_ids")
       .exec();
