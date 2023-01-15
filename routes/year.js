@@ -6,7 +6,7 @@ import {
   forbiddenHandler,
   missingHandler,
 } from "./helperMethods.js";
-import { distCreditUpdate } from "./distributionMethods.js";
+import { removeCourseFromDist } from "./distributionMethods.js";
 import { auth } from "../util/token.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
@@ -143,13 +143,9 @@ router.delete("/api/years/:year_id", auth, async (req, res) => {
       const course = await Courses.findByIdAndDelete(c_id).exec();
       course.distribution_ids.forEach(async (id) => {
         const distribution = await Distributions
-          .findByIdAndUpdate(
-            id,
-            { $pull: { courses: c_id } },
-            { new: true, runValidators: true }
-          )
+          .findById(id)
           .exec();
-        await distCreditUpdate(distribution, course, false);
+        await removeCourseFromDist(course, distributions);
       });
     });
     let plan = await Plans.findById(year.plan_id).exec();

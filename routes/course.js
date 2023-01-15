@@ -2,7 +2,6 @@
 import {
   returnData,
   errorHandler,
-  distributionCreditUpdate,
   forbiddenHandler,
   missingHandler,
   checkDestValid
@@ -15,8 +14,8 @@ import Plans from "../model/Plan.js";
 import { auth } from "../util/token.js";
 import express from "express";
 import {
-  addCourseToDistributions, 
   removeCourseFromDistributions,
+  addCourseToDists
 } from "./distributionMethods.js";
 const router = express.Router();
 
@@ -119,8 +118,8 @@ router.post("/api/courses", auth, async (req, res) => {
     course.year_id = year._id; 
     await course.save(); 
     // update plan's distribution objs
-    const distObjs = await Distributions.find({ plan_id: course.plan_id }); 
-    await addCourseToDistributions(course, distObjs);
+    const dists = await Distributions.find({ plan_id: course.plan_id }); 
+    await addCourseToDists(course, dists);
   
     // get updated course to return (because modified in helper method)
     const updated = await Courses.findById(course._id);

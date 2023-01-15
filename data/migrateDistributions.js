@@ -4,8 +4,8 @@ const {
 } = require("./addFieldsToCollection.js");
 const {
   addPlanDistributions,
-  addCourses,
-} = require("./distributionMethods.ts");
+  initDistributions,
+} = require("./distributionMethods.js");
 const db = require("./db");
 const Courses = require("../model/Course.js");
 const Distributions = require("../model/Distribution.js");
@@ -61,13 +61,12 @@ async function addDistributions() {
 
 // add courses to distributions of all plans 
 async function addAllCourses() {
-  await Plans.find({}).then((plans) => {
-    for (let plan of plans) {
-      for (let m_id of plan.major_ids) {
-        addCourses(plan._id, m_id); 
-      }
+  const plans = await Plans.find({}); 
+  for (let plan of plans) {
+    for (let m_id of plan.major_ids) {
+      initDistributions(plan._id, m_id); 
     }
-  });
+  }
 }
 
 module.exports = {

@@ -9,7 +9,7 @@ import { auth } from "../util/token.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import express from "express";
-import { updateDistributions1, updateDistributions2 } from "./distributionMethods.js";
+import { initDistributions } from "./distributionMethods.js";
 
 const router = express.Router();
 
@@ -35,11 +35,10 @@ router.get("/api/distributionsByPlan/", auth, async (req, res) => {
   const reload = req.query.reload; 
   try {
     if (reload === "true") {
-      await updateDistributions1(plan_id, major_id);
+      await initDistributions(plan_id, major_id);
     }
     const distributions = await Distributions
-      .find({ plan_id, major_id })
-      .populate("fineReq_ids"); 
+      .find({ plan_id, major_id }).exec();
     returnData(distributions, res);
   } catch (err) {
     errorHandler(res, 400, err);

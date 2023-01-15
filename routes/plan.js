@@ -5,7 +5,7 @@ import {
   forbiddenHandler,
   missingHandler,
 } from "./helperMethods.js";
-import { addPlanDistributions, addCourses, removePlanDistributions } from "./distributionMethods.js";
+import { addPlanDistributions, removePlanDistributions } from "./distributionMethods.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Users from "../model/User.js";
