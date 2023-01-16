@@ -5,6 +5,7 @@ import { createToken, auth } from "../util/token.js";
 import Years from "../model/Plan.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
+import FineRequirements from "../model/FineRequirement.js";
 import Reviews from "../model/PlanReview.js";
 import express from "express";
 import dotenv from "dotenv";
@@ -74,6 +75,7 @@ router.delete("/api/user/:id", auth, async (req, res) => {
     if (user) {
       await Courses.deleteMany({ user_id }).exec();
       await Distributions.deleteMany({ user_id }).exec();
+      await FineRequirements.deleteMany({ user_id }).exec();
       await Years.deleteMany({ user_id }).exec();
       await Plans.deleteMany({ user_id }).exec();
       await Reviews.deleteMany({ reviewee_id: user_id }).exec();

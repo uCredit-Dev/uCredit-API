@@ -5,10 +5,9 @@ import {
   forbiddenHandler,
   missingHandler,
 } from "./helperMethods.js";
-import { removeCourseFromDist } from "./distributionMethods.js";
+import { removeCourseFromDistributions } from "./distributionMethods.js";
 import { auth } from "../util/token.js";
 import Courses from "../model/Course.js";
-import Distributions from "../model/Distribution.js";
 import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
 import express from "express";
@@ -140,10 +139,7 @@ router.delete("/api/years/:year_id", auth, async (req, res) => {
     year.courses.forEach(async (c_id) => {
       const course = await Courses.findByIdAndDelete(c_id).exec();
       course.distribution_ids.forEach(async (id) => {
-        const distribution = await Distributions
-          .findById(id)
-          .exec();
-        await removeCourseFromDist(course, distributions);
+        await removeCourseFromDistributions(course);
       });
     });
     let plan = await Plans.findById(year.plan_id).exec();

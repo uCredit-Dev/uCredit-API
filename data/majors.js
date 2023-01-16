@@ -124,7 +124,7 @@ const bsECE = {
         'Students must take a total of 12 credits of advanced laboratory, design intensive, or senior design project courses. A minimum of six (6) credits must come from ECE. The remaining 6 credits of advanced lab can come from any department, as long as the class is listed as an option in this section of the degree audit and degree checksheet.',
       criteria:
         'EN Computer Science[D]^OR^EN Electrical & Computer Engineering[D]',
-      double_count: ['Humanity & Social Sciences', 'Writing Intensive'],
+      double_count: ['Humanity & Social Sciences', 'Writing Intensive', 'Other Engineering'],
       fine_requirements: [
         {
           description: 'Advanced Laboratory Courses in ECE',

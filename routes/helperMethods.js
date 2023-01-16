@@ -1,8 +1,7 @@
 //some helper methods for routing
 import Notifications from "../model/Notification.js";
-import SISCourseV from "../model/SISCourseV.js";
 import SISCV from "../model/SISCourseV.js"; 
-import { checkCriteriaSatisfied, getCriteriaBoolExpr, splitRequirements } from "./distributionMethods.js";
+import { getCriteriaBoolExpr, splitRequirements } from "./distributionMethods.js";
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {

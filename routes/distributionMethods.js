@@ -4,7 +4,6 @@ import Distributions from "../model/Distribution.js";
 import Majors from "../model/Major.js";
 import Plans from "../model/Plan.js";
 import FineRequirements from "../model/FineRequirement.js";
-import SISCourseV from "../model/SISCourseV.js";
 
 // Adds new distributions to plan if new major is added
 async function addPlanDistributions(plan) {
@@ -18,9 +17,9 @@ async function addPlanDistributions(plan) {
     // else add distribution objs based on Major 
     await initDistributions(plan._id, major_id);
   }
-  await plan.save(); 
 }
 
+// call to delete any dists and fines not associated with any major 
 async function removePlanDistributions(plan) {
   // remove dists and fineReqs for deleted major, if any
   let distributions = await Distributions.find({ plan_id: plan._id }).exec();
@@ -38,13 +37,13 @@ async function removePlanDistributions(plan) {
         ).exec();
       }
       // delete documents
-      await Distributions.findByIdAndDelete(dist._id).exec();
       await FineRequirements.deleteMany({ distribution_id: dist._id }).exec();
+      await Distributions.findByIdAndDelete(dist._id).exec();
     }
   }
 }
 
-// add a major distributions to user's plan 
+// add a major's distributions to user's plan 
 async function addMajorDistributions(plan, major) {
   for (let majorDist of major.distributions) {
     // create new distribution documents
@@ -80,34 +79,31 @@ async function addMajorDistributions(plan, major) {
   }
 }
 
-// removes a course from all of its distributions and fine requirements
-// sets satisfied and returns updated distributions
+// update removed course's distributions and fine requirements
 async function removeCourseFromDistributions(course) {  
   // update fines 
   for (let fine_id of course.fineReq_ids) {
-    await removeCourseFromFine(course, fine_id); 
+    await updateFineCredits(fine_id); 
   }
   // update dists 
   for (let dist_id of course.distribution_ids) {
-    await removeCourseFromDist(course, dist_id); 
+    await updateDistCredits(dist_id); 
   }
 }
 
+// initializes dists and fines for plan and major specified
 async function initDistributions(plan_id, major_id) {
   // delete existing 
-  await Distributions.deleteMany({ plan_id, major_id }); 
-  await FineRequirements.deleteMany({ plan_id, major_id }); 
+  await initCleanup(plan_id, major_id);
   // create new 
   const major = await Majors.findById(major_id); 
   const plan = await Plans.findById(plan_id); 
   await addMajorDistributions(plan, major);
-  // update courses to start blank  
-  await Courses.updateMany({ plan_id }, { distribution_ids: [], fineReq_ids: [] }); 
   // get all distributions 
   const distributions = await Distributions.find({ plan_id, major_id }); 
   const courses = await Courses.find({ plan_id }); 
 
-  // for each course 
+  // add each course to all dists 
   for (let course of courses) {
     await addCourseToDists(course, distributions); 
   }
@@ -115,17 +111,20 @@ async function initDistributions(plan_id, major_id) {
   await Promise.all(promises);
 }
 
+// add a single course to multiple finereqs 
 async function addCourseToFines(course, fines) {
   // add to fine requirements
   let allowed = ["All"];
   const promises = fines.map((fine) => {
     if (!checkCriteriaSatisfied(fine.criteria, course)) return Promise.resolve(); 
     if (allowed.includes("All") || allowed.includes(fine.description)) {
+      // if satisfied don't update fine 
       if (fine.satisfied) {
+        // but still update course 
         course.fineReq_ids.push(fine._id);
         return Promise.resolve(); 
       }
-      // udpated double count info 
+      // udpate double count info 
       allowed = fine.double_count; 
       addCourseToFine(course, fine);
       return fine.save();
@@ -134,6 +133,7 @@ async function addCourseToFines(course, fines) {
   await Promise.all(promises);
 }
 
+// add a single course to distributions 
 async function addCourseToDists(course, distributions) {
   let allowed = ["All"];
   for (let dist of distributions) {
@@ -154,7 +154,24 @@ async function addCourseToDists(course, distributions) {
   await course.save();
 }
 
-// helper function to add single course to distribution 
+// cleanup before initializing distributions 
+const initCleanup = async (plan_id, major_id) => {
+  // remove dist ids from courses  
+  let toDelete = await Distributions.find({ plan_id, major_id }); 
+  for (let dist of toDelete) {
+    await Courses.updateMany({ plan_id }, { $pull: { distribution_ids: dist._id }}); 
+  }
+  // remove fine ids from courses  
+  toDelete = await FineRequirements.find({ plan_id, major_id }); 
+  for (let fine of toDelete) {
+    await Courses.updateMany({ plan_id }, { $pull: { fineReq_ids: fine._id }}); 
+  }
+  // delete documents   
+  await Distributions.deleteMany({ plan_id, major_id }); 
+  await FineRequirements.deleteMany({ plan_id, major_id }); 
+}
+
+// add single course to distribution 
 // pre: course is known to satisfy dist 
 const addCourseToDist = async (course, dist) => {
   course.distribution_ids.push(dist.id); 
@@ -163,25 +180,6 @@ const addCourseToDist = async (course, dist) => {
   // update dist 
   dist.planned += course.credits; 
   updateSatisfied(dist, fines);
-}
-
-// helper function to add single course to distribution 
-// pre: course is known to satisfy dist 
-const removeCourseFromDist = async (course, dist_id) => {
-  const dist = await Distributions.findById(dist_id).exec();
-  const fines = await FineRequirements.find({ distribution_id: dist_id }); 
-  // if satisfied recalculate total 
-  if (dist.satisfied) {
-    const courses = await Courses.find({ distribution_ids: dist_id }); 
-    let sum = 0; 
-    courses.forEach((course) => sum += course.credits ); 
-    dist.planned = sum; 
-  } else {
-    dist.planned -= course.credits; 
-  }
-  // update satisfied
-  updateSatisfied(dist, fines); 
-  await dist.save(); 
 }
 
 // helper function to add single course to fine req 
@@ -195,27 +193,35 @@ const addCourseToFine = (course, fine) => {
   if (fine.satisfied) fine.planned = fine.required_credits; 
 }
 
+// update planned and satisfied after a course deletion 
+// pre: course is known to satisfy dist 
+const updateDistCredits = async (dist_id) => {
+  const dist = await Distributions.findById(dist_id).exec();
+  const fines = await FineRequirements.find({ distribution_id: dist_id }); 
+  // if satisfied recalculate total 
+  const courses = await Courses.find({ distribution_ids: dist_id }); 
+  let sum = 0; 
+  courses.forEach((course) => sum += course.credits ); 
+  dist.planned = sum; 
+  // update satisfied
+  updateSatisfied(dist, fines); 
+  await dist.save(); 
+}
+
 // helper function to remove single course from distribution 
 // pre: course is known to satisfy dist 
-const removeCourseFromFine = async (course, f_id) => {
+const updateFineCredits = async (f_id) => {
   const fine = await FineRequirements.findById(f_id).exec();
   // if satisfied recalculate total 
-  if (fine.satisfied) {
-    const courses = await Courses.find({ fineReq_ids: f_id }); 
-    let sum = 0; 
-    courses.forEach((course) => sum += course.credits ); 
-    fine.planned = sum; 
-  } else {
-    fine.planned -= course.credits; 
-  }
+  const courses = await Courses.find({ fineReq_ids: f_id }); 
+  let sum = 0; 
+  courses.forEach((course) => sum += course.credits ); 
+  fine.planned = sum; 
   // update satisfied
   fine.satisfied = fine.planned >= fine.required_credits; 
   if (fine.satisfied) fine.planned = fine.required_credits; 
   await fine.save(); 
 }
-// ################################# // 
-// ####### HELPER FUNCTIONS ######## // 
-// ################################# // 
 
 // updates distribution.satisfied 
 const updateSatisfied = (distribution, fines) => {
@@ -230,7 +236,6 @@ const updateSatisfied = (distribution, fines) => {
     distribution.satisfied = false; 
   }
 }
-
 
 // updates a distribution's satisfied, if pathing condition is met
 const processPathing = (distribution, fines) => {
@@ -344,7 +349,7 @@ const handleLCase = (splitArr, index, course) => {
   } else if (splitArr[index].includes("Lower")) {
     updatedConcat = course.level.includes("Upper"); 
   } else  {
-    updatedConcat = course.number && (course.number[7] === splitArr[index][0]); 
+    updatedConcat = (course.number !== undefined && course.number[7] === splitArr[index][0]); 
   } 
   return updatedConcat.toString();
 };
@@ -400,11 +405,9 @@ const getNextEntry = (expr, index) => {
 export {
   initDistributions,
   removeCourseFromDistributions,
-  checkCriteriaSatisfied,
   addPlanDistributions,
   removePlanDistributions,
-  splitRequirements, 
-  removeCourseFromDist, 
   addCourseToDists,
+  splitRequirements, 
   getCriteriaBoolExpr
 }; 

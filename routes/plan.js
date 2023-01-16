@@ -188,7 +188,7 @@ const getStartYear = (year) => {
 
 // delete a plan and its years, distributions and courses
 // return deleted courses
-router.delete("/api/plans/:plan_id", async (req, res) => {
+router.delete("/api/plans/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   try {
     // check plan belongs to user
