@@ -1,7 +1,8 @@
 //some helper methods for routing
 import Notifications from "../model/Notification.js";
+import SISCourseV from "../model/SISCourseV.js";
 import SISCV from "../model/SISCourseV.js"; 
-import { splitRequirements } from "./distributionMethods.js"; 
+import { checkCriteriaSatisfied, getCriteriaBoolExpr, splitRequirements } from "./distributionMethods.js";
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
@@ -39,24 +40,6 @@ function missingHandler(res, required) {
     message: "Request is missing required fields.",
     required,
   });
-}
-
-async function distributionCreditUpdate(distribution, course, add) {
-  if (!distribution) return;
-  if (add) {
-    distribution.planned += course.credits;
-    if (course.taken) {
-      distribution.current += course.credits;
-    }
-  } else {
-    distribution.planned -= course.credits;
-    if (course.taken) {
-      distribution.current -= course.credits;
-    }
-  }
-  distribution.satisfied =
-    distribution.planned >= distribution.required ? true : false;
-  await distribution.save();
 }
 
 async function postNotification(message, user_id, quick_link_id, link_type) {
@@ -156,14 +139,13 @@ const criteriaSearch = async (criteria, page) => {
       index++; 
     } else {
       let matches = await tagSearch(splitArr, index);
+      // remove duplicates
       matches.forEach((match) => {
         for (let course of courses) {
-          if (course.number === match.number) {
-            return;
-          }
+          if (match.number === course.number) return; 
         }
         courses.push(match);
-      });
+      })
       index += 2;
     }
   }
@@ -188,18 +170,18 @@ const tagSearch = async (splitArr, index) => {
   switch (splitArr[index + 1]) {
     case "C": // Course Number
       matches = await SISCV.find({ number: curr }).exec(); 
-      break;
+      return matches; 
     case "T": // Tag
       matches = await SISCV.find({ "versions.tags": curr }).limit(50).exec(); 
       break;
     case "D": // Department
-      matches = await SISCV.find({ "versions.department": curr }).limit(50).exec(); 
+      matches = await SISCV.find({ "versions.department": curr }).limit(200).exec(); 
       break;
     case "Y": // Year
       //TODO: implement for year.
       break;
     case "A": // Area
-      matches = await SISCV.find({ "versions.areas": curr }).limit(50).exec(); 
+      matches = await SISCV.find({ "versions.areas": curr }).limit(200).exec(); 
       break;
     case "N": // Name
       matches = await SISCV.find({ title: curr }).exec(); 
@@ -208,11 +190,15 @@ const tagSearch = async (splitArr, index) => {
       matches = await SISCV.find({ "versions.wi": true }).limit(50).exec(); 
       break;
     case "L": // Level
-      matches = await SISCV.find({ "versions.level": curr }).limit(50).exec(); 
+      matches = await SISCV.find({ "versions.level": new RegExp(curr, "i") }).limit(200).exec(); 
       break;
     default: 
       matches = [];
   }
+  matches = matches.filter((match) => {
+    const boolExpr = getCriteriaBoolExpr(splitArr, match.versions[0]);
+    return boolExpr.length !== 0 ? eval(boolExpr) : false; 
+  })
   return matches;
 };
 
@@ -334,7 +320,6 @@ export {
   errorHandler,
   forbiddenHandler,
   missingHandler,
-  distributionCreditUpdate,
   postNotification,
   REVIEW_STATUS, 
   NOTIF_TYPE,

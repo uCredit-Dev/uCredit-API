@@ -146,13 +146,9 @@ router.post("/api/plans", auth, async (req, res) => {
       plan.year_ids.push(newYear._id);
     }
     await plan.save();
-    const distributions = await Distributions      // get all distributions 
-      .find({ plan_id: plan._id })
-      .exec();
     const resp = {
       ...plan._doc,
       years,
-      distributions,
       reviewers: [],
     };
     delete resp.year_ids;
@@ -252,14 +248,11 @@ router.patch("/api/plans/update", auth, async (req, res) => {
     }
 
     // return plan with reviews and distributions
-    const distributions = await Distributions
-      .find({ plan_id })
-      .exec();
     const reviewers = await Reviews
       .find({ plan_id })
       .populate("reviewer_id")
       .exec();
-    plan = { ...plan, distributions, reviewers };
+    plan = { ...plan, reviewers };
     returnData(plan, res);
   } catch (err) {
     errorHandler(res, 500, err);
