@@ -14,7 +14,7 @@ import years from "../model/Year.js";
 //addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
-setLevelInCourses();
+// setLevelInCourses();
 // setVersionInCourses();
 
 async function addFieldsToCollection(model) {
@@ -38,10 +38,13 @@ async function addFieldsToCollection(model) {
 */
 async function updateFieldsInCollection(model, matchCriteria, modification) {
   await db.connect();
-  model.updateMany(matchCriteria, modification).then((res) => {
+  const res = await model.updateMany( matchCriteria, modification, { strict: false }).exec(); 
+  if (!res.acknowledged) {
+    console.log("err updating field with ", { matchCriteria, modification }); 
+  } else {
     console.log(res.matchedCount, "documents matched.");
     console.log(res.modifiedCount, "documents modified.");
-  });
+  }
 }
 
 /* 
@@ -109,4 +112,8 @@ async function setVersionInCourses() {
     console.log("matched: %d", res.length);
     console.log("updated: %d", updated);
   });
+}
+
+export {
+  updateFieldsInCollection, 
 }

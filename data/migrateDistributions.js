@@ -1,52 +1,104 @@
-const {
-  addFieldsToCollection,
-  updateFieldsInCollection,
-} = require("./addFieldsToCollection.js");
-const {
+import { updateFieldsInCollection } from "./addFieldsToCollection.js"; 
+import {
   addPlanDistributions,
   initDistributions,
-} = require("./distributionMethods.js");
-const db = require("./db");
-const Courses = require("../model/Course.js");
-const Distributions = require("../model/Distribution.js");
-const FineRequirements = require("../model/FineRequirement.js");
-const Majors = require("../model/Major.js");
-const Plans = require("../model/Plan.js");
-const Years = require("../model/Year.js");
+} from "../routes/distributionMethods.js";
+import * as db from "./db.js";
+import Courses from "../model/Course.js";
+import SISCV from "../model/SISCourseV.js";
+import Plans from "../model/Plan.js";
+import Years from "../model/Year.js";
+import mongoose from "mongoose";
+
+mongoose.set('strictQuery', false);
+// updateModels();
+// setDepartmentInCourses();
+// setTagInCourses();
 
 // NOTE: FineRequirements and Distributions (and Majors) are collections with 0 documents
 // They should not need any updating. 
 
 // UPDATE fields on models
 async function updateModels() {
-  // rename fields
-  await updateFieldsInCollection(
-    Plans,
-    {},
-    { $rename: { majors: "major_ids" } }
-  );
-  await updateFieldsInCollection(Courses, {}, { $rename: { area: "areas" } });
-  // update plan_id type from ObjectId[] to ObjectId
-  Years.find({}).forEach(function (year) {
-    // await ?
-    year.plan_id = year.plan_id[0];
-    Years.save(year);
-  });
-  // delete fields
-  await updateFieldsInCollection(
-    Plans,
-    {},
-    { $unset: { distribution_ids: "" } }
-  );
-  // ADD new fields to models
-  await addFieldsToCollection(Courses); // areas and fineReq_ids
-  await addFieldsToCollection(Plans); // major_ids
+  try {
+    // update course schema 
+    await updateFieldsInCollection(Courses, { area: { $exists: true } }, { $rename: { "area": "areas" } });
+    await updateFieldsInCollection(Courses, {}, { "distribution_ids": [] });
+    await updateFieldsInCollection(Courses, {}, { "fineReq_ids": [] });
+    // // update plan schema  
+    await updateFieldsInCollection(Plans, {}, { $rename: { "majors": "major_ids" } });
+    await updateFieldsInCollection(Plans, {}, { $unset: { "distribution_ids": "" } });
+    // // update year schema  
+    await db.connect();
+    const years = await Years.find({}).exec();
+    console.log(years.length, ' year documents matched.');  
+    let count = 0; 
+    for (let year of years) {
+      console.log(year.plan_id, Array.isArray(year.plan_id));
+      if (year.plan_id && Array.isArray(year.plan_id) ) {
+        console.log(year.plan_id[0]); 
+        year.plan_id = year.plan_id[0];
+        await year.save();
+        count++; 
+      }
+    }
+    console.log(count, ' year documents modified.');  
+  } catch (err) {
+    console.log(err);
+  }
 }
 
-// delete all documents in distributions collection
-async function dropDistributions() {
-  mongoose.connection.db.collection("Distributions").drop(() => {
-    mongoose.connection.close(() => done());
+async function setDepartmentInCourses() {
+  await db.connect();
+  let updated = 0;
+  // find courses without a level field
+  Courses.find({ department: { $exists: false } }).then(async (res) => {
+    console.log(res.length);
+    for (let course of res) {
+      let courseFromDB = await SISCV.findOne({
+        number: course.number,
+        title: course.title,
+      }).exec();
+      if (courseFromDB) {
+        // update based on SIS course if available
+        updated++;
+        course.department = courseFromDB.versions[0].department;
+      } else {
+        // update based on course number
+        course.department = "Unspecified"; 
+      }
+      await course.save();
+    }
+    console.log("matched: %d", res.length);
+    console.log("updated from SISCourseV: %d", updated);
+    console.log("updated unspecified: %d", res.length - updated);
+  }).catch((err) => {
+    console.log(err);
+  });
+}
+
+async function setTagInCourses() {
+  await db.connect();
+  let updated = 0;
+  // find courses without a level field
+  Courses.find({  }).then(async (res) => {
+    console.log(res.length);
+    for (let course of res) {
+      let courseFromDB = await SISCV.findOne({
+        number: course.number,
+        title: course.title,
+      }).exec();
+      if (courseFromDB) {
+        // update based on SIS course if available
+        updated++;
+        course.tags = courseFromDB.versions[0].tags;
+      } 
+      await course.save();
+    }
+    console.log("matched: %d", res.length);
+    console.log("updated from SISCourseV: %d", updated);
+  }).catch((err) => {
+    console.log(err);
   });
 }
 
@@ -69,9 +121,8 @@ async function addAllCourses() {
   }
 }
 
-module.exports = {
+export {
   updateModels, 
-  dropDistributions, 
   addDistributions, 
   addAllCourses
 };
