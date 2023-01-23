@@ -30,6 +30,7 @@ export default function createApp() {
       "https://ucredit.me",
       "http://127.0.0.1",
       "https://ucredit-frontend-typescript-local.vercel.app",
+      "https://ucredit-distributions-demo.vercel.app"
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: true,
