@@ -98,6 +98,8 @@ async function initDistributions(plan_id, major_id) {
   // create new 
   const major = await Majors.findById(major_id); 
   const plan = await Plans.findById(plan_id); 
+  if (!major || !plan) return; 
+
   await addMajorDistributions(plan, major);
   // get all distributions 
   const distributions = await Distributions.find({ plan_id, major_id }); 

@@ -14,6 +14,7 @@ mongoose.set('strictQuery', false);
 // updateModels();
 // setDepartmentInCourses();
 // setTagInCourses();
+// addDistributions();
 
 // NOTE: FineRequirements and Distributions (and Majors) are collections with 0 documents
 // They should not need any updating. 
@@ -104,10 +105,12 @@ async function setTagInCourses() {
 
 // create new distribution documents
 async function addDistributions() {
-  await Plans.find({}).then((plans) => {
+  await db.connect();
+  await Plans.find({}).then(async (plans) => {
     for (let plan of plans) {
-      addPlanDistributions(plan);
+      await addPlanDistributions(plan);
     }
+    console.log(plans.length);
   });
 }
 
