@@ -9,6 +9,7 @@ import {
   sendCourseVersion 
 } from "./helperMethods.js";
 import SISCV from "../model/SISCourseV.js";
+import { criteriaSearch } from "./helperMethods.js";
 
 const router = express.Router();
 
@@ -34,6 +35,26 @@ router.get("/api/search/skip/:num", async (req, res) => {
     returnData(courses, res);
   } catch (err) {
     errorHandler(res, 500, err);
+  }
+});
+
+router.get("/api/searchNumber/:number", async (req, res) => {
+  let number = req.params.number;
+  try {
+    let courses = await SISCV.find({ number }).exec();
+    if (courses.length == 0) {
+      if (number.includes('EN.600'))
+        number = number.replace('EN.600', 'EN.601');
+      else if (number.includes('EN.550'))
+        number = number.replace('EN.550', 'EN.553');
+      courses = await SISCV.find({ number }).exec();
+      if (courses.length == 0) {
+        return errorHandler(res, 404, { message: "Course not found" }); 
+      }
+    } 
+    returnData(courses[0], res);
+  } catch (err) {
+    errorHandler(res, 400, err);
   }
 });
 
@@ -79,30 +100,27 @@ router.get("/api/search", async (req, res) => {
 
 //return all versions of the course based on the filters
 router.get("/api/cartSearch", async (req, res) => {
-  // define queryTerm 
-  let queryTerm =
-    req.query.term === "All" || !req.query.term ? "" : req.query.term;
-  if (queryTerm.length > 0) queryTerm += " ";
-  queryTerm +=
-    req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
-    // construct query for simple search 
-  const query = constructQuery({
-    userQuery: req.query.query,
-    school: req.query.school,
-    department: req.query.department,
-    term: queryTerm,
-    areas: req.query.areas,
-    wi: req.query.wi,
-    credits: req.query.credits,
-    tags: req.query.tags,
-    level: req.query.level,
-  });
-  try {
-    let courses = await SISCV.find(query); 
-    returnData(courses, res);
-  } catch (err) {
-    errorHandler(res, 500, err.message); 
-  }
+    // page is defined or 0
+    const PERPAGE = 10; 
+    const page = parseInt(req.query.page) || 0;
+    const expr = req.query.expr; 
+    let result = {}; 
+    try {
+      if (expr.length === 0) {
+        result.courses = await SISCV.find({}).skip(page * PERPAGE).limit(PERPAGE).exec(); 
+        result.pagination = {
+          page: page, 
+          limit: PERPAGE, 
+          last: 10,
+          total: 100
+        }; 
+      } else {
+        result = await criteriaSearch(expr, page);
+      }
+      returnData(result, res);
+    } catch (err) {
+      errorHandler(res, 500, err); 
+    }  
 });
 
 //return the term version of a specific course

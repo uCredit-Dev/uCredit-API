@@ -23,8 +23,6 @@ router.get("/api/thread/getByPlan/:plan_id", auth, async (req, res) => {
     // verify that plan belongs to request user
     const plan = await Plans.findById(plan_id).exec();
     if (!plan) return errorHandler(res, 404, { message: "Plan not found." }); 
-    const user = await Users.findById(req.user._id);
-    if (!user) return forbiddenHandler(res);
     // get all threads in plan
     const threads = await Threads.find({ plan_id }).exec();
     for (let i = 0; i < threads.length; i++) {

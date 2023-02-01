@@ -1,6 +1,7 @@
 //some helper methods for routing
 import Notifications from "../model/Notification.js";
 import SISCV from "../model/SISCourseV.js"; 
+import { splitRequirements, getCriteriaBoolExpr } from "./distributionMethods.js";
 
 //add data field to the response object. If data is null, return 404 error
 function returnData(data, res) {
@@ -141,6 +142,81 @@ async function fuzzySearch(query, searchTerm, page) {
   return result; 
 }
 
+// returns a string expression of whether a course satisfies a criteria
+const criteriaSearch = async (criteria, page) => {
+  let index = 0;
+  let courses = [];
+  const splitArr = splitRequirements(criteria);
+  while (index < splitArr.length) {
+    // TODO: handle NOT 
+    if (splitArr[index] === "(" || splitArr[index] === ")" || splitArr[index] === "OR" || 
+        splitArr[index] === "AND" || splitArr[index] === "NOT") {
+      index++; 
+    } else {
+      let matches = await tagSearch(splitArr, index);
+      // remove duplicates
+      matches.forEach((match) => {
+        for (let course of courses) {
+          if (match.number === course.number) return; 
+        }
+        courses.push(match);
+      })
+      index += 2;
+    }
+  }
+  let result = {};
+  // set pagination 
+  const total = courses.length; 
+  result.pagination = {
+    page: page, 
+    limit: PERPAGE, 
+    last: total <= 100 ? Math.ceil(total / PERPAGE) : 10, 
+    total: total
+  }; 
+  // set (up to) 10 courses 
+  result.courses = courses.slice(page * PERPAGE, (page + 1) * PERPAGE); 
+  return result;
+};
+
+// handles different tags (C, T, D, Y, A, N, W, L) in criteria string
+const tagSearch = async (splitArr, index) => {
+  let matches = [];
+  const curr = splitArr[index]; 
+  switch (splitArr[index + 1]) {
+    case "C": // Course Number
+      matches = await SISCV.find({ number: curr }).exec(); 
+      return matches; 
+    case "T": // Tag
+      matches = await SISCV.find({ "versions.tags": curr }).limit(50).exec(); 
+      break;
+    case "D": // Department
+      matches = await SISCV.find({ "versions.department": curr }).limit(200).exec(); 
+      break;
+    case "Y": // Year
+      //TODO: implement for year.
+      break;
+    case "A": // Area
+      matches = await SISCV.find({ "versions.areas": curr }).limit(200).exec(); 
+      break;
+    case "N": // Name
+      matches = await SISCV.find({ title: curr }).exec(); 
+      break;
+    case "W": //Written intensive
+      matches = await SISCV.find({ "versions.wi": true }).limit(50).exec(); 
+      break;
+    case "L": // Level
+      matches = await SISCV.find({ "versions.level": new RegExp(curr, "i") }).limit(200).exec(); 
+      break;
+    default: 
+      matches = [];
+  }
+  matches = matches.filter((match) => {
+    const boolExpr = getCriteriaBoolExpr(splitArr, match.versions[0]);
+    return boolExpr.length !== 0 ? eval(boolExpr) : false; 
+  })
+  return matches;
+};
+
 // return true if userCourse is offered in newTerm 
 const checkDestValid = (sisCourses, userCourse, newTerm) => {
   if (sisCourses.length == 0) return true; 
@@ -267,5 +343,6 @@ export {
   fuzzySearch,
   checkDestValid,
   constructQuery, 
-  sendCourseVersion
+  sendCourseVersion, 
+  criteriaSearch
 };
