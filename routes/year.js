@@ -116,7 +116,7 @@ router.patch("/api/years/updateYear", auth, async (req, res) => {
   }
   try {
     // check that year belongs to user
-    const retrievedYear = await Years.findById(year_id).exec();
+    const retrievedYear = await Years.findById(year_id).populate("courses").exec();
     if (req.user._id !== retrievedYear.user_id) {
       return forbiddenHandler(res);
     }
