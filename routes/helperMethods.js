@@ -65,6 +65,7 @@ function ngram(query) {
   for (let i = 0; i <= queryLen - MIN_LEN; i++) {
     ngrams.add(query.slice(i, i + MIN_LEN)); 
   }
+  console.log(ngrams)
   // make array from set 
   return Array.from(ngrams);
 }
@@ -88,36 +89,30 @@ async function simpleSearch(query, page) {
 // search for all courses matching substring of searchTerm  
 async function fuzzySearch(query, searchTerm, page) {
   const result = {};
-  const ngrams = ngram(searchTerm);
-  const regNgrams = ngrams.map((gram) => {
-    gram = gram.replace('.', '\\.'); 
-    return new RegExp(gram, "i");
-  });
   // query for title / number matching any of the RegExps
-  query['$or'] = [
-    { title: { $in: regNgrams } },
-    { number: { $in: regNgrams } },
-  ]; 
+  delete query['$or'];
+  const search = {
+    '$search': {
+      "text": {
+        "query": searchTerm, 
+        "path": ["title", "number"], 
+        "fuzzy": {}
+      }
+    }
+  }; 
+  const match = { '$match': query }; 
+  const limit = { '$limit': 100 }; 
+  // query for courses
+  let courses = await SISCV.aggregate([search, match, limit]).exec();
   // return pagination information; limit to 100 
-  const total = await SISCV.countDocuments(query).exec(); 
+  const total = courses.length; 
   result.pagination = {
     page: page, 
     limit: PERPAGE, 
     last: total <= 100 ? Math.ceil(total / PERPAGE) : 10, 
     total: total <= 100 ? total : 100, 
   }
-  // query for courses
-  let courses = await SISCV.find(query); 
-  // calculate priority; summate the matching substring lengths 
-  courses.forEach((course, i) => {
-    for (let gram of ngrams) {
-      if (course.title.toLowerCase().includes(gram) || course.number.toLowerCase().includes(gram)) {
-        courses[i].priority = courses[i].priority + gram.length || gram.length; 
-      }
-    }
-  });
   // sort by descending priority 
-  courses = courses.sort((c1, c2) => c2.priority - c1.priority); 
   // skip and limit according to page 
   result.courses = courses.slice(page * PERPAGE, (page + 1) * PERPAGE); 
   return result; 
