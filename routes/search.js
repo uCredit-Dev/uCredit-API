@@ -44,10 +44,15 @@ router.get("/api/searchNumber/:number", async (req, res) => {
   try {
     let courses = await SISCV.find({ number }).exec();
     if (courses.length == 0) {
-      if (number.includes('EN.600'))
+      if (number.includes('EN.600')) {
         number = number.replace('EN.600', 'EN.601');
-      else if (number.includes('EN.550'))
+      } else if (number.includes('EN.550')) {
         number = number.replace('EN.550', 'EN.553');
+      } else if (number.includes('EN.601')) {
+        number = number.replace('EN.601', 'EN.600');
+      } else if (number.includes('EN.553')) {
+        number = number.replace('EN.553', 'EN.550');
+      }
       courses = await SISCV.find({ number }).exec();
       if (courses.length == 0) {
         return errorHandler(res, 404, { message: "Course not found" }); 

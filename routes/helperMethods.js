@@ -62,10 +62,8 @@ function ngram(query) {
   const ngrams = new Set();
   ngrams.add(query);
   // add substrings from largest to smallest 
-  for (let substrLen = queryLen; substrLen >= MIN_LEN; substrLen--) {
-    for (let i = 0; i <= queryLen - substrLen; i++) {
-      ngrams.add(query.slice(i, i + substrLen)); 
-    }
+  for (let i = 0; i <= queryLen - MIN_LEN; i++) {
+    ngrams.add(query.slice(i, i + MIN_LEN)); 
   }
   // make array from set 
   return Array.from(ngrams);

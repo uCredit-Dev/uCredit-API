@@ -25,9 +25,6 @@ router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   // verify that plan belongs to request user 
   try {
     const plan = await Plans.findById(plan_id).exec();
-    if (req.user._id !== plan.user_id) {
-      return forbiddenHandler(res);
-    }
     // return courses associated with plan 
     const data = [];
     const retrievedCourses = await Courses.findByPlanId(plan_id); 
