@@ -89,17 +89,17 @@ async function simpleSearch(query, page) {
 // search for all courses matching substring of searchTerm  
 async function fuzzySearch(query, searchTerm, page) {
   const result = {};
-  // query for title / number matching any of the RegExps
   delete query['$or'];
+  // search pipeline using indexed fields 
   const search = {
     '$search': {
       "text": {
         "query": searchTerm, 
         "path": ["title", "number"], 
-        "fuzzy": {}
       }
     }
   }; 
+  // match other filters and limit 
   const match = { '$match': query }; 
   const limit = { '$limit': 100 }; 
   // query for courses
@@ -112,7 +112,6 @@ async function fuzzySearch(query, searchTerm, page) {
     last: total <= 100 ? Math.ceil(total / PERPAGE) : 10, 
     total: total <= 100 ? total : 100, 
   }
-  // sort by descending priority 
   // skip and limit according to page 
   result.courses = courses.slice(page * PERPAGE, (page + 1) * PERPAGE); 
   return result; 
