@@ -114,16 +114,6 @@ router.post("/api/courses", auth, async (req, res) => {
     });
     // create course and update distributiosn
     const retrievedCourse = await Courses.create(course);
-    for (let id of retrievedCourse.distribution_ids) {
-      const distribution = await Distributions
-        .findByIdAndUpdate(
-          id,
-          { $push: { courses: retrievedCourse._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      await distributionCreditUpdate(distribution, retrievedCourse, true);
-    }
     // update year with new course
     await Years
       .findByIdAndUpdate(retrievedCourse.year_id, {
