@@ -112,6 +112,14 @@ router.post("/api/courses", auth, async (req, res) => {
           message: "Invalid combination of plan_id and distribution_ids.",
         });
     });
+    const retrievedCourses = await Courses.findByPlanId(course.plan_id); 
+    for (let existingCourse of retrievedCourses) {
+      if(existingCourse.number === course.number && existingCourse.version=== course.version && existingCourse.title ===course.title){
+        return errorHandler(res, 400, { 
+          message: "Cannot take same course multiple times in the same semester",
+        });
+      }
+    }
     // create course and update distributiosn
     const retrievedCourse = await Courses.create(course);
     for (let id of retrievedCourse.distribution_ids) {
