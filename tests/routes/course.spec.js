@@ -465,6 +465,22 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
     expect(res.status).toBe(400);
   });
 
+  it("Should return status 400 for trying to add identical course twice", async () => {
+    courses = await Courses.find({});
+    let course = courses[0];
+    const res = await request
+      .post(`/api/courses/`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send(course);
+    expect(res.status).toBe(200);
+    const res2 = await request
+      .post(`/api/courses/`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send(course);
+    expect(res2.status).toBe(400);
+
+  });
+
   it("Should return status 400 for undefined id", async () => {
     courses = await Courses.find({});
     let course = courses[0];
