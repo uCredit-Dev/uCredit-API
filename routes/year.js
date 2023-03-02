@@ -11,7 +11,6 @@ import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
-import Users from "../model/User.js";
 import express from "express";
 
 const router = express.Router();
@@ -21,10 +20,6 @@ router.get("/api/years/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   try {
     const plan = await Plans.findById(plan_id).populate("year_ids").exec();
-    const user = await Users.findById(req.user._id).exec();
-    if (!user) { // if valid user 
-      return forbiddenHandler(res);
-    }
     plan.populate("year_ids.courses", () => {
       returnData(plan.year_ids, res);
     });

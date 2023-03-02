@@ -11,6 +11,7 @@ import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
 import Plans from "../model/Plan.js";
 import Years from "../model/Year.js";
+import Users from "../model/User.js";
 import SISCV from "../model/SISCourseV.js"; 
 import { auth } from "../util/token.js";
 import express from "express";
@@ -22,8 +23,8 @@ router.get("/api/coursesByPlan/:plan_id", auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   // verify that plan belongs to request user 
   try {
-    const plan = await Plans.findById(plan_id).exec();
-    if (req.user._id !== plan.user_id) {
+    const user = await Users.findById(req.user._id).exec();
+    if (!user) {
       return forbiddenHandler(res);
     }
     // return courses associated with plan 
@@ -114,16 +115,6 @@ router.post("/api/courses", auth, async (req, res) => {
     });
     // create course and update distributiosn
     const retrievedCourse = await Courses.create(course);
-    for (let id of retrievedCourse.distribution_ids) {
-      const distribution = await Distributions
-        .findByIdAndUpdate(
-          id,
-          { $push: { courses: retrievedCourse._id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      await distributionCreditUpdate(distribution, retrievedCourse, true);
-    }
     // update year with new course
     await Years
       .findByIdAndUpdate(retrievedCourse.year_id, {
