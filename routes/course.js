@@ -113,8 +113,10 @@ router.post("/api/courses", auth, async (req, res) => {
         });
     });
     const retrievedCourses = await Courses.findByPlanId(course.plan_id); 
-    for (let existingCourse of retrievedCourses) {
-      if(existingCourse.number === course.number && existingCourse.version=== course.version && existingCourse.title ===course.title){
+    console.log(course);
+    for (const existingCourse of retrievedCourses) {
+      console.log(existingCourse);
+      if(existingCourse.number === course.number && existingCourse.term === course.term && existingCourse.year === course.year && existingCourse.title === course.title){
         return errorHandler(res, 400, { 
           message: "Cannot take same course multiple times in the same semester",
         });
