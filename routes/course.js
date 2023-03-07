@@ -109,10 +109,18 @@ router.post("/api/courses", auth, async (req, res) => {
     const plan = await Plans.findById(course.plan_id).exec();
     course.distribution_ids.forEach((id) => {
       if (!plan.distribution_ids.includes(id))
-        errorHandler(res, 400, {
+        errorHandler(res, 500, {
           message: "Invalid combination of plan_id and distribution_ids.",
         });
     });
+    const retrievedCourses = await Courses.findByPlanId(course.plan_id); 
+    for (const existingCourse of retrievedCourses) {
+      if(existingCourse.number === course.number && existingCourse.term === course.term && existingCourse.year === course.year && existingCourse.title === course.title){
+        return errorHandler(res, 400, { 
+          message: "Cannot take same course multiple times in the same semester",
+        });
+      }
+    }
     // create course and update distributiosn
     const retrievedCourse = await Courses.create(course);
     // update year with new course
@@ -123,7 +131,7 @@ router.post("/api/courses", auth, async (req, res) => {
       .exec();
     returnData(retrievedCourse, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 
