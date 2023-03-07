@@ -108,7 +108,7 @@ router.post("/api/courses", auth, async (req, res) => {
     const plan = await Plans.findById(course.plan_id).exec();
     course.distribution_ids.forEach((id) => {
       if (!plan.distribution_ids.includes(id))
-        errorHandler(res, 400, {
+        errorHandler(res, 500, {
           message: "Invalid combination of plan_id and distribution_ids.",
         });
     });
@@ -140,7 +140,7 @@ router.post("/api/courses", auth, async (req, res) => {
       .exec();
     returnData(retrievedCourse, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 

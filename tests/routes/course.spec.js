@@ -261,22 +261,22 @@ describe("Course Routes: POST /api/courses", () => {
     expect(res.status).toBe(403);
   });
 
-  it("Should return status 400 for undefined body", async () => {
+  it("Should return status 500 for undefined body", async () => {
     const res = await request
       .post(`/api/courses/`)
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(500);
   });
 
-  it("Should return status 400 for empty body", async () => {
+  it("Should return status 500 for empty body", async () => {
     const res = await request
       .post(`/api/courses/`)
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send({});
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(500);
   });
 
-  it("Should return status 400 for incomplete body", async () => {
+  it("Should return status 500 for incomplete body", async () => {
     // course body missing plan_id
     const course = SAMEPLE_COURSES[0];
     delete course.plan_id;
@@ -285,10 +285,10 @@ describe("Course Routes: POST /api/courses", () => {
       .post(`/api/courses/`)
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send(course);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(500);
   });
 
-  it("Should return status 400 for mismatch between plan_id and distribution_ids", async () => {
+  it("Should return status 500 for mismatch between plan_id and distribution_ids", async () => {
     // set request course body
     const course = SAMEPLE_COURSES[0];
     course.distribution_ids = [VALID_ID]; // random objectid
@@ -297,7 +297,7 @@ describe("Course Routes: POST /api/courses", () => {
       .post(`/api/courses/`)
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
       .send(course);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(500);
   });
 });
 
