@@ -1,6 +1,6 @@
-const Experiment = require("../model/Experiment");
-const User = require("../model/User");
-const ApiError = require("../model/ApiError");
+import Experiment from "../model/Experiment.js";
+import User from "../model/User.js";
+import ApiError from "../model/ApiError.js";
 
 class ExperimentDao {
   //When an experiment is created, it's likes and dislikes are initially 0
@@ -292,4 +292,4 @@ class ExperimentDao {
   }
 }
 
-module.exports = ExperimentDao;
+export default ExperimentDao;

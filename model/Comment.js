@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 /*  
@@ -16,6 +16,4 @@ const commentSchema = new Schema({
   date: { type: Date, required: true },
 });
 
-const Comment = mongoose.model("Comment", commentSchema);
-
-module.exports = Comment;
+export default mongoose.model("Comment", commentSchema);

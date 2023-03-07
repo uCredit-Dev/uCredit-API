@@ -1,26 +1,37 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../../app");
-const request = supertest(createApp());
-jest.setTimeout(30000);
+import mongoose from "mongoose";
+import supertest from "supertest";
+import SISCV from "../../model/SISCourseV";
+import createApp from "../../app";
+import { SAMEPLE_SIS_COURSES } from "./testVars";
 
-beforeAll(() => {
+const request = supertest(createApp());
+mongoose.set("strictQuery", true);
+
+let courses;
+
+beforeAll(async () => {
   mongoose.connect("mongodb://localhost:27017/search", {
     useNewUrlParser: true,
   });
+  courses = await SISCV.insertMany(SAMEPLE_SIS_COURSES);
+});
+
+afterAll(async () => {
+  await mongoose.connection.db.dropDatabase();
+  await mongoose.connection.close();
 });
 
 describe("GET Search Routes", () => {
   it("GET /api/search/all: Should return list of all SIS courses", async () => {
     const res = await request.get("/api/search/all");
     expect(res.status).toBe(200);
-    expect(res.body.data.length).toBeGreaterThan(0);
+    expect(res.body.data.length).toBe(courses.length);
     expect(res.body.data).toBeInstanceOf(Array);
   });
 
   it("GET /api/search/skip/:num: Should return list of SIS courses of size num", async () => {
-    const num = Math.floor(Math.random() * 100);
-    const res = await request.get("/api/search/skip/" + 0 + "?mod=" + num);
+    const num = Math.floor(Math.random() * 3);
+    const res = await request.get(`/api/search/skip/0?mod=${num}`);
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(num);
     expect(res.body.data).toBeInstanceOf(Array);
@@ -28,30 +39,43 @@ describe("GET Search Routes", () => {
 
   it("GET /api/search/: Should return list of SIS courses matching query", async () => {
     const query = {
-      query: "software",
+      title: "tit",
+      number: "numbe",
       credits: "3",
     };
-    const res = await request.get("/api/search?query=" + query.query);
-    const courses = res.body.data;
+    // query by title
+    let res = await request.get(`/api/search?query=${query.title}`);
+    courses = res.body.data.courses;
     expect(res.status).toBe(200);
-    expect(courses.length).toBeGreaterThan(0);
+    expect(courses.length).toBe(3);
     courses.forEach((course) => {
-      expect(course.name.toLowerCase()).toContain(query.query.toLowerCase());
+      expect(course.title.toLowerCase()).toContain(query.title.toLowerCase());
     });
-
+    // query by number
+    res = await request.get(`/api/search?query=${query.number}`);
+    courses = res.body.data.courses;
+    expect(res.status).toBe(200);
+    expect(courses.length).toBe(3);
+    courses.forEach((course) => {
+      expect(course.number.toLowerCase()).toContain(query.number.toLowerCase());
+    });
+    // query by credits
     res = await request.get("/api/search?credits=" + query.credits);
     expect(res.status).toBe(200);
-    expect(courses.length).toBeGreaterThan(0);
+    courses = res.body.data.courses;
+    expect(courses.length).toBe(1);
     courses.forEach((course) => {
-      expect(course.credits).toBe(query.credits);
+      course.versions.forEach((version) => {
+        expect(version.credits).toBe(parseInt(query.credits));
+      });
     });
   });
 
   it("GET /api/searchVersion: Should return a specific version of a course", async () => {
     const query = {
-      version: "Fall 2021",
-      title: "Honors Single Variable Calculus",
-      number: "AS.110.113",
+      version: "fall",
+      title: "Title1",
+      number: "Number1",
     };
     const res = await request.get(
       "/api/searchVersion?version=" +
@@ -64,6 +88,6 @@ describe("GET Search Routes", () => {
     expect(res.status).toBe(200);
     expect(res.body.data.title).toBe(query.title);
     expect(res.body.data.number).toBe(query.number);
-    expect(res.body.data.versions[0].term).toBe(query.version);
+    expect(res.body.data.version.term).toBe(query.version);
   });
 });

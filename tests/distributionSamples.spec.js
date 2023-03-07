@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
-const distributions = require("../model/User");
-const { addSampleDistributions } = require("../data/distributionsamples");
+import mongoose from "mongoose";
+import distributions from "../model/User";
+import { addSampleDistributions } from "../data/distributionsamples";
+
 const SAMPLES = [
   {
     useruser_id: "csStudent",

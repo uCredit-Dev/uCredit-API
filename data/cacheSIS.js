@@ -1,8 +1,8 @@
-const SISCourses = require("../model/SISCourse.js");
-const db = require("./db.js");
-const fs = require("fs");
-const util = require("util");
-const path = require("path");
+import SISCourses from "../model/SISCourse.js";
+import db from "./db.js";
+import fs from "fs";
+import util from "util";
+import path from "path";
 const readFile = util.promisify(fs.readFile);
 
 async function cacheCourse(fileName) {
@@ -44,7 +44,7 @@ async function extractProperty(courses) {
           school: course.SchoolName,
           department: course.Department,
           credits: Number.parseFloat(course.Credits),
-          wi: course.IsWritingIntensive === "Yes"
+          wi: course.IsWritingIntensive === "Yes",
         };
 
         console.log("$$$$$new course:", brief.title);
@@ -53,7 +53,7 @@ async function extractProperty(courses) {
         //update terms offered
         //console.log("-----found dup in db: ", courseFromDB.title);
         courseFromDB.terms.unshift(course.Term);
-        courseFromDB.save();
+        await courseFromDB.save();
         dupCount++;
       }
     } else {
@@ -86,4 +86,4 @@ function byPass(course) {
 const filename = "ftrFA2021.json";
 cacheCourse(filename);
 
-module.exports = { cacheCourse };
+export default { cacheCourse };

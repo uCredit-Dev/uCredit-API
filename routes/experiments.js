@@ -1,20 +1,22 @@
-const express = require("express");
-const ExperimentDao = require("../data/ExperimentDao");
-const ApiError = require("../model/ApiError");
-const majors = require("../model/Major.js");
-const { returnData } = require("./helperMethods.js");
+import express from "express";
+import ExperimentDao from "../data/ExperimentDao.js";
+import ApiError from "../model/ApiError.js";
+import Majors from "../model/Major.js";
+import { returnData, errorHandler } from "./helperMethods.js";
 
 const router = express.Router();
 const experiments = new ExperimentDao();
 
-// health check path that allows render to confirm server is up 
+// health check path that allows render to confirm server is up
 // restart app automatically if unresponsive or errors
-router.get("/", (req, res) => {
-  // simple fail proof db query 
-  majors
-    .findOne({})
-    .then((major) => returnData("Welcome to uCredit backend!", res))
-    .catch((err) => errorHandler(res, 500, err));
+router.get("/", async (req, res) => {
+  // simple fail proof db query
+  try {
+    await Majors.findOne({}).exec();
+    returnData("Welcome to uCredit backend!", res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 router.get("/api/experiments/allExperiments", async (req, res, next) => {
@@ -148,4 +150,4 @@ router.delete("/api/experiments/:experiment_name", async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 /*  
@@ -44,5 +44,4 @@ const majorSchema = new Schema({
   ],
 });
 
-const Major = mongoose.model("Major", majorSchema);
-module.exports = Major;
+export default mongoose.model("Major", majorSchema);

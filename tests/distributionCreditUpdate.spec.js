@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
-const distributions = require("../model/Distribution");
-const { distributionCreditUpdate } = require("../routes/helperMethods");
+import mongoose from "mongoose";
+import distributions from "../model/Distribution";
+import { distributionCreditUpdate } from "../routes/helperMethods";
+
 const TEST_USER_1 = "User1";
 const TEST_MAJOR_1 = "Computer Science";
 const TEST_MAJOR_2 = "Math";

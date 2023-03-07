@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
@@ -11,6 +11,4 @@ const userSchema = new Schema({
   plan_ids: [{ type: Schema.Types.ObjectId, ref: "Plan", default: [] }],
 });
 
-const User = mongoose.model("User", userSchema);
-
-module.exports = User;
+export default mongoose.model("User", userSchema);

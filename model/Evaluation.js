@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const evalSchema = new Schema({
@@ -14,6 +14,4 @@ const evalSchema = new Schema({
   rev: { type: Array },
 });
 
-const evaluation = mongoose.model("Evaluation", evalSchema);
-
-module.exports = evaluation;
+export default mongoose.model("Evaluation", evalSchema);

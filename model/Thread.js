@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 /*  
@@ -16,6 +16,4 @@ const threadSchema = new Schema({
   resolved: { type: Boolean, default: false },
 });
 
-const Thread = mongoose.model("Thread", threadSchema);
-
-module.exports = Thread;
+export default mongoose.model("Thread", threadSchema);

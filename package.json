@@ -4,31 +4,31 @@
   "description": "Backend api for UCredit.",
   "main": "index.js",
   "dependencies": {
-    "@bugsnag/js": "^7.18.0",
-    "@bugsnag/plugin-express": "^7.18.0",
-    "axios": "^0.21.1",
-    "bcrypt": "^5.0.1",
-    "body-parser": "^1.19.0",
-    "compress-json": "^1.0.4",
+    "axios": "^1.2.1",
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.1",
+    "compress-json": "^2.1.2",
     "cookie-parse": "^0.4.0",
     "cors": "^2.8.5",
-    "crypto-random-string": "^3.3.0",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "express-session": "^1.17.1",
-    "helmet": "^4.3.1",
-    "jest": "^27.5.1",
-    "mongoose": "^5.11.10",
+    "crypto-random-string": "^5.0.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "helmet": "^6.0.1",
+    "jest": "^29.3.1",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^6.8.1",
     "morgan": "^1.10.0",
-    "nodemailer": "^6.7.7",
-    "nodemon": "^2.0.6",
-    "passport": "^0.4.1",
+    "nodemailer": "^6.8.0",
+    "nodemon": "^2.0.20",
+    "passport": "^0.6.0",
     "passport-saml": "^2.2.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "prettier": "^2.8.1"
   },
   "scripts": {
     "start": "nodemon",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "repository": {
     "type": "git",
@@ -41,9 +41,10 @@
   },
   "homepage": "https://github.com/QinyuanWu/uCredit-API#readme",
   "devDependencies": {
-    "@shelf/jest-mongodb": "^2.2.0",
-    "@types/jest": "^27.4.0",
-    "jest": "^27.5.1",
-    "supertest": "^6.1.6"
-  }
+    "@shelf/jest-mongodb": "^4.1.4",
+    "@types/jest": "^29.2.4",
+    "jest": "^29.3.1",
+    "supertest": "^6.3.3"
+  },
+  "type": "module"
 }

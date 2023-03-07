@@ -1,7 +1,7 @@
-const db = require("./db");
-const plans = require("../model/Plan.js");
-const Users = require("../model/User.js");
-const siscoursev = require("../model/SISCourseV.js");
+import db from "./db";
+import plans from "../model/Plan.js";
+import Users from "../model/User.js";
+import siscoursev from "../model/SISCourseV.js";
 
 // deleteRemovedPlansFromUser();
 // deleteDupVersionsFromCourse();
@@ -30,43 +30,45 @@ async function deleteRemovedPlansFromUser() {
 
 /* 
     Function that removes duplicate terms and versions of a SISCourse with versions 
-*/ 
+*/
 async function deleteDupVersionsFromCourse() {
-    await db.connect();
-    console.log("db connected~\n");
-    // aggregate assigns correct terms field with no duplicate terms 
-    siscoursev.find({}).then(async (res) => {
+  await db.connect();
+  console.log("db connected~\n");
+  // aggregate assigns correct terms field with no duplicate terms
+  siscoursev
+    .find({})
+    .then(async (res) => {
       console.log("Fetched all courses!\n");
-      let count = 0; 
+      let count = 0;
       for (let course of res) {
-        // get terms array with no duplicates 
+        // get terms array with no duplicates
         const terms = [];
         course.terms.forEach((term) => {
           if (!terms.includes(term)) {
             terms.push(term);
           }
         });
-        // if there were duplicates, 
+        // if there were duplicates,
         if (course.terms.length != terms.length) {
-          // update with unique terms 
-          course.terms = terms; 
-          // update with unique versions 
-          const newTerms = []; 
+          // update with unique terms
+          course.terms = terms;
+          // update with unique versions
+          const newTerms = [];
           const versions = [];
           course.versions.forEach((v) => {
             if (!newTerms.includes(v.term)) {
               newTerms.push(v.term);
               versions.push(v);
             }
-          })
-          course.versions = versions; 
-          // save document 
-          course.save(); 
-          count++; 
-          console.log(course.title + " updated!\n"); 
+          });
+          course.versions = versions;
+          // save document
+          await course.save();
+          count++;
+          console.log(course.title + " updated!\n");
         }
       }
-      console.log(count + " courses successfully updated!\n")
+      console.log(count + " courses successfully updated!\n");
     })
     .catch((err) => console.log(err));
-  }
+}

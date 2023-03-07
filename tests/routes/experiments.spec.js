@@ -1,11 +1,13 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const createApp = require("../../app");
-const ExperimentDao = require("../../data/ExperimentDao");
-const User = require("../../model/User");
+import mongoose from "mongoose";
+import supertest from "supertest";
+import createApp from "../../app";
+import ExperimentDao from "../../data/ExperimentDao";
+import User from "../../model/User";
+
+const request = supertest(createApp());
+mongoose.set("strictQuery", true);
 
 const experiments = new ExperimentDao();
-const request = supertest(createApp());
 const endpoint = "/api/experiments";
 
 describe("Test experiments endpoints", () => {
@@ -22,7 +24,7 @@ describe("Test experiments endpoints", () => {
 
     const setupFunc = async (done) => {
       //This will be slow, usually beforeAll, but need to reset experiments because post routes would affect other tests
-      await mongoose.connect("mongodb://localhost:27017/experiments", {
+      mongoose.connect("mongodb://localhost:27017/experiments", {
         useNewUrlParser: true,
       });
       //Fake creation of 98 more users to use in post tests
@@ -50,7 +52,6 @@ describe("Test experiments endpoints", () => {
         blacklist: [WILL_JHED],
         active: [MARK_JHED],
       });
-
       done();
     };
 
@@ -58,17 +59,12 @@ describe("Test experiments endpoints", () => {
       setupFunc(done);
     });
 
-    afterEach((done) => {
-      mongoose.connection.db.dropDatabase(() => {
-        mongoose.connection.close(() => done());
-      });
-      done();
+    afterEach(async () => {
+      await mongoose.connection.db.dropDatabase();
     });
 
-    afterEach(async (done) => {
-      mongoose.connection.db.dropDatabase(() => {
-        mongoose.connection.close(() => done());
-      });
+    afterAll(async () => {
+      await mongoose.connection.close();
     });
 
     describe(`Test GET ${endpoint}/allExperiments`, () => {
@@ -172,11 +168,10 @@ describe("Test experiments endpoints", () => {
           const allExperiments = await request.get(
             `${endpoint}/allExperiments`
           );
-          console.log(allExperiments.body.data);
+          // console.log(allExperiments.body.data);
           const response = await request.get(
             `${endpoint}/percent/${EXPERIMENT_ONE}`
           );
-          console.log(response);
           expect(response.status).toBe(200);
           expect(response.body).toBe(2);
         });
@@ -192,7 +187,7 @@ describe("Test experiments endpoints", () => {
           const allExperiments = await request.get(
             `${endpoint}/allExperiments`
           );
-          console.log(allExperiments.body.data);
+          // console.log(allExperiments.body.data);
           const response = await request
             .post(`${endpoint}/${EXPERIMENT_ONE}`)
             .send({ percent_participating: 10 });

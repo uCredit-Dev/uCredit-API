@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 /*  
@@ -22,6 +22,4 @@ const courseSchema = new Schema({
   restrictions: { type: Array },
 });
 
-const SISCourse = mongoose.model("SISCourse", courseSchema);
-
-module.exports = SISCourse;
+export default mongoose.model("SISCourse", courseSchema);

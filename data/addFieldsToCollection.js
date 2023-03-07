@@ -4,26 +4,26 @@
     Then run this script with the model you want to update.
 */
 
-const db = require("./db");
-const plans = require("../model/Plan.js");
-const users = require("../model/User.js");
-const courses = require("../model/Course.js"); 
-const SISCV = require("../model/SISCourseV"); 
-const years = require("../model/Year.js");
+import * as db from "./db.js";
+import plans from "../model/Plan.js";
+import users from "../model/User.js";
+import courses from "../model/Course.js";
+import SISCV from "../model/SISCourseV.js";
+import years from "../model/Year.js";
 
 //addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
-// setLevelInCourses();
-setVersionInCourses();
+setLevelInCourses();
+// setVersionInCourses();
 
 async function addFieldsToCollection(model) {
   await db.connect();
   model
     .find()
     .then((collection) => {
-      collection.forEach((doc) => {
-        doc.save();
+      collection.forEach(async (doc) => {
+        await doc.save();
       });
       console.log(
         "Done! Check DB to confirm the field has been added to all documents."
@@ -47,11 +47,11 @@ async function updateFieldsInCollection(model, matchCriteria, modification) {
 /* 
   Script to add the 'level' field based on the matching SISCourseV document 
   To update courses prior to the schema change (added new level field)
-*/ 
+*/
 async function setLevelInCourses() {
   await db.connect();
-  let updated = 0; 
-  // find courses without a level field 
+  let updated = 0;
+  // find courses without a level field
   courses.find({ level: { $exists: false } }).then(async (res) => {
     console.log(res.length);
     for (let course of res) {
@@ -60,49 +60,53 @@ async function setLevelInCourses() {
         title: course.title,
       }).exec();
       if (courseFromDB) {
-        // update based on SIS course if available 
-        updated++; 
-        course.level = courseFromDB.versions[0].level; 
+        // update based on SIS course if available
+        updated++;
+        course.level = courseFromDB.versions[0].level;
       } else {
-        // update based on course number 
-        if (course.number && course.number.length > 7 && !isNaN(course.number[7])) {
-          if (course.number[7] <= '2') {
-            course.level = "Lower Level Undergraduate"
+        // update based on course number
+        if (
+          course.number &&
+          course.number.length > 7 &&
+          !isNaN(course.number[7])
+        ) {
+          if (course.number[7] <= "2") {
+            course.level = "Lower Level Undergraduate";
           } else {
-            course.level = "Upper Level Undergraduate"
-          } 
+            course.level = "Upper Level Undergraduate";
+          }
         } else {
-          course.level = "Lower Level Undergraduate"
+          course.level = "Lower Level Undergraduate";
         }
       }
       console.log(course.title + ": " + course.level);
-      course.save(); 
-    } 
-    console.log('matched: %d', res.length); 
-    console.log('updated from SISCourseV: %d', updated); 
-    console.log('updated from course number: %d', res.length - updated); 
-  }); 
+      await course.save();
+    }
+    console.log("matched: %d", res.length);
+    console.log("updated from SISCourseV: %d", updated);
+    console.log("updated from course number: %d", res.length - updated);
+  });
 }
-
 
 /* 
   Script to add the 'version' field based on term and year fields 
-*/ 
+*/
 async function setVersionInCourses() {
   await db.connect();
-  let updated = 0; 
+  let updated = 0;
   courses.find({ version: { $exists: false } }).then(async (res) => {
     console.log(res.length);
     for (let course of res) {
-      updated++; 
-      let version = course.term.toLowerCase(); 
+      updated++;
+      let version = course.term.toLowerCase();
       const year = await years.findById(course.year_id);
-      version = version.charAt(0).toUpperCase() + version.slice(1) + " " + year.year;
-      course.version = version; 
+      version =
+        version.charAt(0).toUpperCase() + version.slice(1) + " " + year.year;
+      course.version = version;
       console.log(course.title + ": " + course.version);
-      course.save(); 
+      await course.save();
     }
-    console.log('matched: %d', res.length); 
-    console.log('updated: %d', updated); 
-  }); 
+    console.log("matched: %d", res.length);
+    console.log("updated: %d", updated);
+  });
 }

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 /*  
@@ -27,6 +27,4 @@ const courseSchema = new Schema({
   ],
 });
 
-const SISCourseV = mongoose.model("SISCourseV", courseSchema);
-
-module.exports = SISCourseV;
+export default mongoose.model("SISCourseV", courseSchema);

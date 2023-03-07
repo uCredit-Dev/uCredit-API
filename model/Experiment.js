@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const ExperimentSchema = new Schema({
@@ -8,6 +8,4 @@ const ExperimentSchema = new Schema({
   active: { type: [String], required: true },
 });
 
-const Experiment = mongoose.model("Experiment", ExperimentSchema);
-
-module.exports = Experiment;
+export default mongoose.model("Experiment", ExperimentSchema);

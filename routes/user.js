@@ -1,17 +1,21 @@
-const { returnData, errorHandler } = require("./helperMethods.js");
-const users = require("../model/User.js");
-const plans = require("../model/Plan.js");
-const years = require("../model/Plan.js");
-const courses = require("../model/Course.js");
-const distributions = require("../model/Distribution.js");
-const planReviews = require("../model/PlanReview.js");
+import { returnData, errorHandler, forbiddenHandler } from "./helperMethods.js";
+import Users from "../model/User.js";
+import Plans from "../model/Plan.js";
+import { createToken, auth } from "../util/token.js";
+import Years from "../model/Year.js";
+import Courses from "../model/Course.js";
+import Distributions from "../model/Distribution.js";
+import Reviews from "../model/PlanReview.js";
+import express from "express";
+import dotenv from "dotenv";
 
-const express = require("express");
+dotenv.config();
+
 const router = express.Router();
 
 const DEBUG = process.env.DEBUG === "True";
 
-router.get("/api/user", (req, res) => {
+router.get("/api/user", async (req, res) => {
   const username = req.query.username || "";
   const affiliation = req.query.affiliation || "";
   const query = {
@@ -21,34 +25,29 @@ router.get("/api/user", (req, res) => {
     ],
     affiliation: { $regex: affiliation, $options: "i" },
   };
-  users
-    .find(query)
-    .then((users) => {
-      returnData(
-        users.map((user) => ({
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          affiliation: user.affiliation,
-          school: user.school,
-          grade: user.grade,
-          whitelisted_plan_ids: user.whitelisted_plan_ids,
-        })),
-        res
-      );
-    })
-    .catch((err) => errorHandler(res, 400, err));
+  try {
+    let users = await Users.find(query).exec();
+    users = users.map((user) => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      affiliation: user.affiliation,
+      school: user.school,
+      grade: user.grade,
+      whitelisted_plan_ids: user.whitelisted_plan_ids,
+    }));
+    returnData(users, res);
+  } catch (err) {
+    errorHandler(res, 400, err);
+  }
 });
 
-// TODO: Temporarily disabled for OOSE dev deployment
-// if (DEBUG) {
-router.get("/api/backdoor/verification/:id", (req, res) => {
+router.get("/api/backdoor/verification/:id", async (req, res) => {
   const id = req.params.id;
-  users.findById(id).then(async (user) => {
-    if (user) {
-      returnData(user, res);
-    } else {
-      user = {
+  try {
+    let user = await Users.findById(id).exec();
+    if (!user) {
+      const body = {
         _id: id,
         name: id,
         email: `ucredittest@gmail.com`,
@@ -56,26 +55,36 @@ router.get("/api/backdoor/verification/:id", (req, res) => {
         grade: "AE UG Freshman",
         school: "jooby hooby",
       };
-      user = await users.create(user);
-      returnData(user, res);
+      user = await Users.create(body);
     }
-  });
+    const token = createToken(user);
+    returnData({ user, token }, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 router.delete("/api/user/:id", async (req, res) => {
   const id = req.params.id;
-  const user = await users.findByIdAndDelete(id);
-  if (user) {
-    await courses.deleteMany({ user_id: id });
-    await distributions.deleteMany({ user_id: id });
-    await years.deleteMany({ user_id: id });
-    await plans.deleteMany({ user_id: id });
-    await planReviews.deleteMany({ reviewee_id: id });
-    res.status(204).json({});
-  } else {
-    errorHandler(res, 404, "User not found.");
+  // not auth secured, but use route only for fake user ids  
+  if (id !== "TEST_DEV" && id !== "REVIEWER_DEV") {
+    return forbiddenHandler(res);
+  }
+  try {
+    const user = await Users.findByIdAndDelete(id).exec();
+    if (user) {
+      await Courses.deleteMany({ user_id: id }).exec();
+      await Distributions.deleteMany({ user_id: id }).exec();
+      await Years.deleteMany({ user_id: id }).exec();
+      await Plans.deleteMany({ user_id: id }).exec();
+      await Reviews.deleteMany({ reviewee_id: id }).exec();
+      res.status(204).json({});
+    } else {
+      errorHandler(res, 404, "User not found.");
+    }
+  } catch (err) {
+    errorHandler(res, 500, err);
   }
 });
-// }
 
-module.exports = router;
+export default router;

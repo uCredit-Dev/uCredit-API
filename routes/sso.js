@@ -1,14 +1,16 @@
-require("dotenv").config();
-const express = require("express");
-const passport = require("passport");
-const saml = require("passport-saml");
-const session = require("express-session");
-const bodyParser = require("body-parser");
-const cryptoRandomString = require("crypto-random-string");
+import express from "express";
+import passport from "passport";
+import saml from "passport-saml";
+import session from "express-session";
+import bodyParser from "body-parser";
+import cryptoRandomString from "crypto-random-string";
+import { createToken } from "../util/token.js";
+import { returnData, errorHandler, missingHandler } from "./helperMethods.js";
+import Users from "../model/User.js";
+import Sessions from "../model/Session.js";
+import dotenv from "dotenv";
 
-const { returnData, errorHandler } = require("./helperMethods.js");
-const users = require("../model/User.js");
-const sessions = require("../model/Session.js");
+dotenv.config();
 
 const router = express.Router();
 
@@ -36,7 +38,7 @@ const samlStrategy = new saml.Strategy(
     issuer: SP_NAME,
     callbackUrl: `${BASE_URL}/api/login/callback`,
     decryptionPvk: PvK,
-    privateCert: PvK,
+    privateKey: PvK,
     // sameSite: "none",
   },
   (profile, done) => {
@@ -91,7 +93,7 @@ router.post(
   async (req, res) => {
     // the user data is in req.user
     const id = req.user[JHEDid];
-    let user = await users.findById(id).exec();
+    let user = await Users.findById(id).exec();
     //if user if not in db already, create and save one
     if (user === null) {
       user = {
@@ -102,18 +104,20 @@ router.post(
         grade: req.user[grade],
         school: req.user[school],
       };
-      users.create(user);
+      await Users.create(user);
     } else {
       user.grade = req.user[grade];
       user.school = req.user[school];
-      user.save();
+      await user.save();
     }
     const hash = cryptoRandomString({ length: 20, type: "url-safe" });
-    await sessions.findByIdAndUpdate(
-      id,
-      { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
-      { upsert: true, new: true }
-    );
+    await Sessions
+      .findByIdAndUpdate(
+        id,
+        { createdAt: Date.now() + 60 * 60 * 24 * 1000, hash },
+        { upsert: true, new: true }
+      )
+      .exec();
     try {
       res.redirect(`https://ucredit.me/login/${hash}`);
     } catch (err) {
@@ -123,26 +127,33 @@ router.post(
 );
 
 //retrieve user object from db
-router.get("/api/verifyLogin/:hash", (req, res) => {
+router.get("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
-  sessions.findOne({ hash }).then((user) => {
-    if (user === null) {
-      errorHandler(res, 401, "User not logged in.");
-    } else {
-      users
-        .findById(user._id)
-        .then((retrievedUser) => returnData(retrievedUser, res))
-        .catch((err) => errorHandler(res, 500, res));
+  try {
+    const user = await Sessions.findOne({ hash }).exec();
+    if (!user) {
+      return errorHandler(res, 401, "User not logged in.");
     }
-  });
+    const retrievedUser = await Users.findById(user._id);
+    const token = createToken(retrievedUser);
+    returnData({ retrievedUser, token }, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
-router.delete("/api/verifyLogin/:hash", (req, res) => {
+router.delete("/api/verifyLogin/:hash", async (req, res) => {
   const hash = req.params.hash;
-  sessions
-    .remove({ hash })
-    .then((user) => returnData(user, res))
-    .catch((err) => errorHandler(res, 500, err));
+  try {
+    const user = await Sessions.deleteOne({ hash }).exec();
+    if (user.deletedCount != 1) {
+      errorHandler(res, 404, { message: "No session found." });
+    } else {
+      returnData(user, res);
+    }
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 // route to metadata
@@ -152,4 +163,4 @@ router.get("/api/metadata", (req, res) => {
   res.send(samlStrategy.generateServiceProviderMetadata(PbK, PbK));
 });
 
-module.exports = router;
+export default router;
