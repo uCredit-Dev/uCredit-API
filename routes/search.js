@@ -49,7 +49,7 @@ router.get("/api/searchNumber/:number", async (req, res) => {
         number = number.replace('EN.550', 'EN.553');
       courses = await SISCV.find({ number }).exec();
       if (courses.length == 0) {
-        return errorHandler(res, 404, { message: "Course not found" }); 
+        return returnData(-1, res);
       }
     } 
     returnData(courses[0], res);
