@@ -5,5 +5,4 @@ export default {
   collectCoverage: true,
   coverageDirectory: "coverage",
   testEnvironment: "node",
-  transform: tsjPreset.transform,
 };
