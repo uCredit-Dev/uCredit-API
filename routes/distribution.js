@@ -21,10 +21,10 @@ router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
       .findById(d_id)
       .populate("fineReq_ids")
       .exec();      
-    // verify that distribution belongs to user
+    if (!distribution) return errorHandler(res, 404, { message: "Distribution not found."}); 
     returnData(distribution, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 
@@ -32,8 +32,13 @@ router.get("/api/distributions/:distribution_id", auth, async (req, res) => {
 router.get("/api/distributionsByPlan/", auth, async (req, res) => {
   const plan_id = req.query.plan_id; 
   const major_id = req.query.major_id; 
+  if (!plan_id || !major_id) return missingHandler(res, { plan_id, major_id }); 
   const reload = req.query.reload; 
   try {
+    const plan = Plans.findById(plan_id).exec();
+    if (!plan) return errorHandler(res, 404, { message: "Plan not found." }); 
+    const major = Majors.findById(major_id).exec();
+    if (!major) return errorHandler(res, 404, { message: "Major not found." }); 
     if (reload === "true") {
       await initDistributions(plan_id, major_id);
     }

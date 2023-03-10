@@ -1,131 +1,137 @@
-const mongoose = require("mongoose");
-const supertest = require("supertest");
-const plans = require("../../model/Plan");
-const createApp = require("../../app");
-const users = require("../../model/User");
-const courses = require("../../model/Course");
-const distributions = require("../../model/Distribution");
-const years = require("../../model/Year");
-const TEST_PLAN_NAME_1 = "testPlan1";
-const TEST_USER_1 = "User1";
-const TEST_MAJOR_1 = "Computer Science";
-const TEST_MAJOR_2 = "Math";
-const TEST_DATE = new Date(1519129864400);
-const TEST_YEAR_1 = "AE UG Freshman";
-const TEST_PLAN_NAME_2 = "testPlan2";
-const TEST_USER_2 = "User2";
-const TEST_YEAR_2 = "AE UG Sophomore";
-const postBody1 = {
-  name: TEST_PLAN_NAME_1,
-  user_id: TEST_USER_1,
-  majors: [TEST_MAJOR_1, TEST_MAJOR_2],
-  expireAt: TEST_DATE,
-  year: TEST_YEAR_1,
-};
-
-const postBody2 = {
-  name: TEST_PLAN_NAME_2,
-  user_id: TEST_USER_2,
-  majors: [TEST_MAJOR_1],
-  expireAt: TEST_DATE,
-  year: TEST_YEAR_2,
-};
-
-beforeEach((done) => {
-  mongoose
-    .connect("mongodb://localhost:27017/distributions", {
-      useNewUrlParser: true,
-    })
-    .then(async () => {
-      await users.create({ _id: TEST_USER_1 });
-      await users.create({ _id: TEST_USER_2 });
-      const resp1 = await request.post("/api/plans").send(postBody1);
-      const resp2 = await request.post("/api/plans").send(postBody2);
-      for (let i = 0; i < 5; i++) {
-        const plan = i < 3 ? resp1.body.data : resp2.body.data;
-        const courseResp = await courses.create({
-          name: `course${i}`,
-          plan_id: plan._id,
-          year_id: plan.years[0],
-          user_id: TEST_USER_1,
-          year: TEST_YEAR_1,
-          term: "fall",
-          credits: 0,
-          title: i,
-        });
-
-        await years.findByIdAndUpdate(plan.years[0], {
-          $push: { courses: courseResp._id },
-        });
-        const distributionResp = await distributions.create({
-          plan_id: plan._id,
-          course_id: courseResp._id,
-          user_id: TEST_USER_1,
-          name: i,
-          required: 3,
-          min_credits_per_course: 3, 
-          description: "testing cs minor",
-          criteria: "EN Computer Science[D]^OR^CSCI-OTHER[T]^OR^Gateway Computing[N]",
-          major_id: "62b407fbf4dae1c26277a420"
-        });
-        await distributions.findByIdAndUpdate(distributionResp._id, {
-          $push: { courses: courseResp._id },
-        });
-        await courses.findByIdAndUpdate(courseResp._id, {
-          $push: { distribution_ids: distributionResp._id },
-        });
-        await plans.findByIdAndUpdate(plan._id, {
-          $push: { distribution_ids: distributionResp._id },
-        });
-      }
-      done();
-    });
-});
-
-afterEach((done) => {
-  mongoose.connection.db.dropDatabase(() => {
-    mongoose.connection.close(() => done());
-  });
-});
+import mongoose from "mongoose";
+import createApp from "../../app";
+import supertest from "supertest";
+import Plans from "../../model/Plan";
+import Users from "../../model/User";
+import Courses from "../../model/Course";
+import Distributions from "../../model/Distribution";
+import { INVALID_ID, TEST_CS, TEST_PLAN_1, TEST_PLAN_2, TEST_TOKEN_1, TEST_TOKEN_2, VALID_ID } from "./testVars";
 
 const request = supertest(createApp());
+let user; 
+let plan; 
+let distributions; 
 
-describe("GET /api/distributions/:distribution_id", () => {
+beforeAll((done) => {
+  mongoose.connect("mongodb://localhost:27017/distributions", {
+    useNewUrlParser: true,
+  });
+  done();
+});
+
+beforeEach(async () => {
+  // make sample user
+  user = await Users.create(TEST_USER_1);
+  // make sample plan
+  plan = await Plans.create(TEST_PLAN_1);
+  // get distributions 
+  distributions = await Distributions.find({ plan_id: plan._id });
+});
+
+afterEach(async () => {
+  await mongoose.connection.db.dropDatabase();
+});
+
+afterAll(async () => {
+  await mongoose.connection.close();
+});
+
+describe("Distribution routes: GET /api/distributions/:distribution_id", () => {
   it("should return a distribution by distribution id", async () => {
-    const distributionList = await distributions.find({});
-    const distribution = distributionList[0];
-    const resp = await request.get("/api/distributions/" + distribution._id);
-    expect(resp.body.data).toBeTruthy();
-    expect(resp.status).toBe(200);
-    expect(JSON.stringify(resp.body.data._id)).toBe(
-      JSON.stringify(distribution._id)
+    const distribution = distributions[0]; 
+    const res = await request
+      .get("/api/distributions/" + distribution._id)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toBeTruthy();
+    expect(res.body.data._id.toString()).toBe(
+      distribution._id.toString()
     );
+    expect(res.body.data.user_id.toString()).toBe(user._id.toString()); 
+    expect(res.body.data.plan._id.toString()).toBe(plan._id.toString()); 
   });
 
-  it("should throw status 400 on null id", async () => {
-    const response = await request.get("/api/distributions/%00");
-    expect(response.status).toBe(400);
+  it("should throw status 500 on null id", async () => {
+    const res = await request
+      .get(`/api/distributions/${INVALID_ID}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(500);
+  });
+
+  it("should throw status 404 on no distribution", async () => {
+    const res = await request
+      .get(`/api/distributions/${VALID_ID}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(404);
+  });
+
+  it("should throw status 403 on missing or invalid jwt", async () => {
+    let res = await request
+      .get(`/api/distributions/${VALID_ID}`);
+    expect(response.status).toBe(403);
+    res = await request
+      .get(`/api/distributions/${VALID_ID}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    expect(response.status).toBe(403);
   });
 });
 
-describe("GET /api/distributionsByPlan/:plan_id", () => {
-  it("should return a distribution by plan id", async () => {
-    const planList = await plans.find({});
-    const plan_id = planList[0]._id;
-    const distributionList = await distributions.find({});
-    const distribution = distributionList[0];
-    const resp = await request.get("/api/distributionsByPlan/" + plan_id);
-    expect(resp.body.data).toBeTruthy();
-    expect(resp.status).toBe(200);
-    expect(resp.body.data.length).toBe(3);
-    expect(JSON.stringify(resp.body.data[0]._id)).toBe(
-      JSON.stringify(distribution._id)
-    );
+describe("Distribution routes: GET /api/distributionsByPlan/:plan_id", () => {
+  it("should return distributions by plan id", async () => {
+    const CS = await Majors.findById(plan.majors[0]); 
+    const AMS = await Majors.findById(plan.majors[1]); 
+    let res = await request
+      .get(`/api/distributionsByPlan/?plan_id=${plan._id}&major_id=${CS._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toBeTruthy();
+    expect(res.body.data.length).toBe(CS.distribution_ids.length);
+    res = await request
+      .get(`/api/distributionsByPlan/?plan_id=${plan._id}&major_id=${AMS._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toBeTruthy();
+    expect(res.body.data.length).toBe(AMS.distribution_ids.length);
   });
 
-  it("should throw status 400 on null id", async () => {
-    const response = await request.get("/api/distributions/%00");
-    expect(response.status).toBe(400);
+  it("should throw status 500 on null plan id", async () => {
+    const res = await request
+      .get(`/api/distributionsByPlan/?plan_id=${INVALID_ID}&major_id=${TEST_CS}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(500);
+  });
+
+  it("should throw status 500 on null major id", async () => {
+    const res = await request
+      .get(`/api/distributionsByPlan/?plan_id=${plan._id}&major_id=${INVALID_ID}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(500);
+  });
+
+
+  it("should throw status 404 on plan not found", async () => {
+    const res = await request
+    .get(`/api/distributionsByPlan/?plan_id=${VALID_ID}&major_id=${TEST_CS}`)
+    .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(404);
+  });
+
+  it("should throw status 404 on major not found", async () => {
+    const res = await request
+    .get(`/api/distributionsByPlan/?plan_id=${plan._id}&major_id=${VALID_ID}`)
+    .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(404);
+  });
+
+
+  it("should throw status 403 on missing or invalid jwt", async () => {
+    let res = await request
+      .get(`/api/distributionsByPlan/?plan_id=${plan._id}&major_id=${TEST_CS}`); 
+    expect(response.status).toBe(403);
+    res = await request
+      .get(`/api/distributionsByPlan/?plan_id=${plan._id}&major_id=${TEST_CS}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+    expect(response.status).toBe(403);
   });
 });
 
