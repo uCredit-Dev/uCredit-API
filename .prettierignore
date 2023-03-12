@@ -1,4 +1,5 @@
 coverage
+.github
 .vscode 
 assets 
 coverage 

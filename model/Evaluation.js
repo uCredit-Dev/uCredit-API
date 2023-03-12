@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const evalSchema = new Schema({
@@ -14,4 +14,4 @@ const evalSchema = new Schema({
   rev: { type: Array },
 });
 
-export default mongoose.model("Evaluation", evalSchema);
+export default mongoose.model('Evaluation', evalSchema);

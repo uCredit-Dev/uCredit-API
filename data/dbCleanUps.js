@@ -1,7 +1,7 @@
-import db from "./db";
-import plans from "../model/Plan.js";
-import Users from "../model/User.js";
-import siscoursev from "../model/SISCourseV.js";
+import db from './db';
+import plans from '../model/Plan.js';
+import Users from '../model/User.js';
+import siscoursev from '../model/SISCourseV.js';
 
 // deleteRemovedPlansFromUser();
 // deleteDupVersionsFromCourse();
@@ -17,15 +17,15 @@ async function deleteRemovedPlansFromUser() {
           if (plan === null) {
             const updatedUser = await Users.updateOne(
               { _id: u._id },
-              { $pull: { plan_ids: plan_id } }
+              { $pull: { plan_ids: plan_id } },
             ).exec();
-            console.log(u.name, "removed plan", plan_id);
+            console.log(u.name, 'removed plan', plan_id);
           }
         });
       });
     })
     .catch((err) => console.log(err));
-  console.log("clean up finished!");
+  console.log('clean up finished!');
 }
 
 /* 
@@ -33,12 +33,12 @@ async function deleteRemovedPlansFromUser() {
 */
 async function deleteDupVersionsFromCourse() {
   await db.connect();
-  console.log("db connected~\n");
+  console.log('db connected~\n');
   // aggregate assigns correct terms field with no duplicate terms
   siscoursev
     .find({})
     .then(async (res) => {
-      console.log("Fetched all courses!\n");
+      console.log('Fetched all courses!\n');
       let count = 0;
       for (let course of res) {
         // get terms array with no duplicates
@@ -65,10 +65,10 @@ async function deleteDupVersionsFromCourse() {
           // save document
           await course.save();
           count++;
-          console.log(course.title + " updated!\n");
+          console.log(course.title + ' updated!\n');
         }
       }
-      console.log(count + " courses successfully updated!\n");
+      console.log(count + ' courses successfully updated!\n');
     })
     .catch((err) => console.log(err));
 }

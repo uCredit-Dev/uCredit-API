@@ -2,23 +2,23 @@
 
 //cs other courses: https://www.cs.jhu.edu/undergraduate-studies/academics/cs-other-courses/
 const bsCS = {
-  name: "B.S. Computer Science",
-  department: "EN Computer Science",
+  name: 'B.S. Computer Science',
+  department: 'EN Computer Science',
   distributions: [
     {
-      name: "Total",
+      name: 'Total',
       required: 120,
       filter: {},
     },
     {
-      name: "Computer Science",
+      name: 'Computer Science',
       required: 40,
       filter: {
         number: /EN\.601\.\d{3}|EN\.500\.11[2-4]/g, //"EN.601.***" or "EN.500.11*"
       },
     },
     {
-      name: "Math",
+      name: 'Math',
       required: 16,
       filter: {
         department: /AS Mathematics|EN Applied Mathematics & Statistics/g,
@@ -28,30 +28,30 @@ const bsCS = {
       },
     },
     {
-      name: "Basic Science",
+      name: 'Basic Science',
       required: 8,
       filter: {
         title: /General Physics|General Biology|Introductory Chemistry/g, //"General Physics", "General Biology", "Introductory Chemistry"]
       },
       description:
-        "Students must take two semesters of core science courses (any combination of Physics, Chemistry, Biology), with their associated labs, totaling at least 8 credits. These courses should be taken for a grade. However, AP credit is an acceptable substitute for these courses and labs.",
+        'Students must take two semesters of core science courses (any combination of Physics, Chemistry, Biology), with their associated labs, totaling at least 8 credits. These courses should be taken for a grade. However, AP credit is an acceptable substitute for these courses and labs.',
     },
     {
-      name: "Liberal Arts",
+      name: 'Liberal Arts',
       required: 18,
       filter: {
         area: /[HS]/g,
       },
     },
     {
-      name: "Electives",
+      name: 'Electives',
       required: 0,
       filter: {},
     },
   ],
   requirments: [
     {
-      name: "Computer Science Upper",
+      name: 'Computer Science Upper',
       required: 16,
       byCredit: true,
       filter: {
@@ -59,15 +59,16 @@ const bsCS = {
       },
     },
     {
-      name: "Computer Science Core",
+      name: 'Computer Science Core',
       required: 6,
       byCredit: false,
       filter: {
-        number: /EN\.500\.11[2-4]|EN\.601\.220|EN\.601\.226|EN\.601\.229|EN\.601\.230|EN\.601\.443/g,
+        number:
+          /EN\.500\.11[2-4]|EN\.601\.220|EN\.601\.226|EN\.601\.229|EN\.601\.230|EN\.601\.443/g,
       },
     },
     {
-      name: "Math Requirement",
+      name: 'Math Requirement',
       required: 3,
       byCredit: false,
       filter: {
@@ -75,7 +76,7 @@ const bsCS = {
       },
     },
     {
-      name: "Writing Intensive",
+      name: 'Writing Intensive',
       required: 2,
       byCredit: false,
       filter: {
@@ -83,27 +84,27 @@ const bsCS = {
       },
     },
     {
-      name: "Team",
+      name: 'Team',
       required: 1,
       byCredit: false,
       filter: {
-        tags: "CSCI-TEAM",
+        tags: 'CSCI-TEAM',
       },
     },
     {
-      name: "Areas",
+      name: 'Areas',
       required: 2,
       byCredit: false,
       filter: {
-        tags: ["CSCI-SYST", "CSCI-SOFT", "CSCI-APPL", "CSCI-RSNG"], //need refinement
+        tags: ['CSCI-SYST', 'CSCI-SOFT', 'CSCI-APPL', 'CSCI-RSNG'], //need refinement
       },
     },
     {
-      name: "Ethics",
+      name: 'Ethics',
       required: 1,
       byCredit: false,
       filter: {
-        tags: "CSCI-ETHS",
+        tags: 'CSCI-ETHS',
         number: /EN\.601\.104|EN\.660\.400|EN\.660\.406/g, //"601.104" or "660.400" or "660.406"
       },
     },

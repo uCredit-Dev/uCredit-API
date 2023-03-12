@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 /*  
@@ -44,4 +44,4 @@ const majorSchema = new Schema({
   ],
 });
 
-export default mongoose.model("Major", majorSchema);
+export default mongoose.model('Major', majorSchema);

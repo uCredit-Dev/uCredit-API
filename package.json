@@ -27,7 +27,8 @@
   },
   "scripts": {
     "start": "nodemon",
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
+    "prettier": "npx prettier --write ."
   },
   "repository": {
     "type": "git",

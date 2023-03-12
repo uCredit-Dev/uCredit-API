@@ -1,14 +1,14 @@
-import mongoose from "mongoose";
-import supertest from "supertest";
-import createApp from "../../app";
+import mongoose from 'mongoose';
+import supertest from 'supertest';
+import createApp from '../../app';
 
 const request = supertest(createApp());
-mongoose.set("strictQuery", true);
+mongoose.set('strictQuery', true);
 
-const TEST_NAME = "test";
+const TEST_NAME = 'test';
 
 beforeAll((done) => {
-  mongoose.connect("mongodb://localhost:27017/sisData", {
+  mongoose.connect('mongodb://localhost:27017/sisData', {
     useNewUrlParser: true,
   });
   done();
@@ -19,17 +19,17 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-describe("POST /api/sis/studentRecords student records", () => {
-  it("should return posted data on post", async () => {
+describe('POST /api/sis/studentRecords student records', () => {
+  it('should return posted data on post', async () => {
     const resp = await request
-      .post("/api/sis/studentRecords")
+      .post('/api/sis/studentRecords')
       .send({ name: TEST_NAME });
     expect(resp.status).toBe(200);
     expect(resp.body.data.name).toBe(TEST_NAME);
   });
 
-  it("should return status 400 on null data on post", async () => {
-    const resp = await request.post("/api/sis/studentRecords").send(null);
+  it('should return status 400 on null data on post', async () => {
+    const resp = await request.post('/api/sis/studentRecords').send(null);
     expect(resp.status).toBe(400);
   });
 });

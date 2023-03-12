@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 /*  
@@ -14,9 +14,9 @@ const distributionSchema = new Schema({
   planned: { type: Number, default: 0 },
   current: { type: Number, default: 0 },
   satisfied: { type: Boolean, default: false },
-  courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
+  courses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
   user_id: { type: String, required: true },
-  plan_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+  plan_id: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
   expireAt: { type: Date, expires: 60 * 60 * 24 },
 });
 
@@ -28,4 +28,4 @@ distributionSchema.statics.removeCourse = function (course_id, user_id) {};
 
 distributionSchema.statics.modifyCredits = function (field, value, user_id) {};
 
-export default mongoose.model("Distribution", distributionSchema);
+export default mongoose.model('Distribution', distributionSchema);
