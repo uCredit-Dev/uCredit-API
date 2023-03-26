@@ -23,22 +23,6 @@ router.get("/api/search/all", async (req, res) => {
   }
 });
 
-router.get("/api/search/skip/:num", async (req, res) => {
-  const toSkip = req.params.num;
-  const mod = parseInt(req.query.mod);
-  if (isNaN(toSkip) || isNaN(mod)) {
-    return missingHandler(res, { toSkip, mod });
-  }
-  try {
-    const courses = await SISCV.find({})
-      .skip(toSkip * mod)
-      .limit(mod);
-    returnData(courses, res);
-  } catch (err) {
-    errorHandler(res, 500, err);
-  }
-});
-
 router.get("/api/searchNumber/:number", async (req, res) => {
   let number = req.params.number;
   try {

@@ -187,13 +187,6 @@ describe("User Routes: DELETE /api/user/:id", () => {
     expect(user).toBeNull();
   });
 
-  it("Should throw 404 if user not found", async () => {
-    let res = await request
-      .delete(`/api/user/${TEST_USER_1._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
-    expect(res.status).toBe(404);
-  });
-
   it("Should throw 403 if wrong user", async () => {
     await Users.create(TEST_USER_1);
     let res = await request

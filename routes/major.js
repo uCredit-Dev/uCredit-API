@@ -13,12 +13,15 @@ router.get("/api/majors/all", async (req, res) => {
   }
 });
 
-router.get("/api/majors/:major_id", (req, res) => {
-  const m_id = req.params.major_id;
-  majors
-    .findById(m_id)
-    .then((major) => returnData(major, res))
-    .catch((err) => errorHandler(res, 500, err));
+router.get("/api/majors/:major_id", async (req, res) => {
+  const { major_id } = req.params;
+  try {
+    const major = await Majors.findById(major_id).exec();
+    if (!major) return errorHandler(res, 404, "Major not found."); 
+    returnData(major, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 router.post("/api/majors", async (req, res) => {

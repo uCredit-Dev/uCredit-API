@@ -24,4 +24,4 @@ function addSampleUsers(users) {
   });
 }
 
-export default { addSampleUsers };
+export { addSampleUsers };

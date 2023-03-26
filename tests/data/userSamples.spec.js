@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import users from "../model/User";
-import { addSampleUsers } from "../data/userSamples";
+import users from "../../model/User";
+import { addSampleUsers } from "../../data/userSamples";
 
 const SAMPLES = [
   {

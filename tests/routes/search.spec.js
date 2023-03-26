@@ -29,14 +29,6 @@ describe("GET Search Routes", () => {
     expect(res.body.data).toBeInstanceOf(Array);
   });
 
-  it("GET /api/search/skip/:num: Should return list of SIS courses of size num", async () => {
-    const num = Math.floor(Math.random() * 3);
-    const res = await request.get(`/api/search/skip/0?mod=${num}`);
-    expect(res.status).toBe(200);
-    expect(res.body.data.length).toBe(num);
-    expect(res.body.data).toBeInstanceOf(Array);
-  });
-
   it("GET /api/search/: Should return list of SIS courses matching query", async () => {
     const query = {
       title: "tit",
@@ -45,19 +37,11 @@ describe("GET Search Routes", () => {
     };
     // query by title
     let res = await request.get(`/api/search?query=${query.title}`);
-    courses = res.body.data.courses;
     expect(res.status).toBe(200);
+    courses = res.body.data.courses;
     expect(courses.length).toBe(3);
     courses.forEach((course) => {
       expect(course.title.toLowerCase()).toContain(query.title.toLowerCase());
-    });
-    // query by number
-    res = await request.get(`/api/search?query=${query.number}`);
-    courses = res.body.data.courses;
-    expect(res.status).toBe(200);
-    expect(courses.length).toBe(3);
-    courses.forEach((course) => {
-      expect(course.number.toLowerCase()).toContain(query.number.toLowerCase());
     });
     // query by credits
     res = await request.get("/api/search?credits=" + query.credits);

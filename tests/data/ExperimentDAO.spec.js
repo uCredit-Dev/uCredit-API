@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import experimentDAO from "../data/ExperimentDAO";
+import experimentDAO from "../../data/ExperimentDAO";
 
 const DAO = new experimentDAO();
 

@@ -1,4 +1,4 @@
-import mongoose, { trusted } from "mongoose";
+import mongoose from "mongoose";
 import supertest from "supertest";
 import Courses from "../../model/Course";
 import Users from "../../model/User";
@@ -91,7 +91,7 @@ describe("Course Routes: GET /api/courses/:id", () => {
 
 describe("Course Routes: GET /api/coursesByDistribution/:distribution_id", () => {
   it("Should return all courses with the distribution id", async () => {
-    // get courses in distribution (should be all)
+    // get courses in distribution
     const res = await request
       .get(`/api/coursesByDistribution/${distribution._id}`)
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
@@ -227,6 +227,11 @@ describe("Course Routes: POST /api/courses", () => {
     expect(newCourse.level).toBe(course.level);
     expect(newCourse.user_id).toBe(course.user_id);
     expect(newCourse.plan_id).toBe(course.plan_id);
+    // test distribution credit update
+    expect(newCourse.distribution_ids.length).toBeGreaterThan(0);
+    const dist = await Distributions.findById(newCourse.distribution_ids[0]);
+    expect(dist).toBeTruthy();
+    expect(dist.planned).toBeGreaterThan(0);
   });
 
   it("Should return status 403 for invalid user", async () => {
@@ -266,8 +271,6 @@ describe("Course Routes: POST /api/courses", () => {
       .send(course);
     expect(res.status).toBe(400);
   });
-
-  // TODO: test credit update
 });
 
 describe("Course Routes: DELETE /api/courses/:id", () => {
@@ -280,6 +283,12 @@ describe("Course Routes: DELETE /api/courses/:id", () => {
     // expect res.body.data to be course obj
     expect(res.status).toBe(200);
     expect(JSON.stringify(res.body.data._id)).toBe(JSON.stringify(course._id));
+    // check distribution updated
+    expect(course.distribution_ids.length).toBeGreaterThan(0);
+    const distribution = await Distributions.findById(
+      course.distribution_ids[0]
+    );
+    expect(distribution.planned).toBe(0);
     // check course deleted
     course = await Courses.findById(course._id);
     expect(course).toBeNull();
@@ -306,14 +315,11 @@ describe("Course Routes: DELETE /api/courses/:id", () => {
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
-
-  // TODO: test distributions
 });
 
 describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
   it("Should return course with changed status", async () => {
     // course.taken is false by default
-
     let course = courses[0];
     expect(course.taken).toBe(false);
     // change taken status to true

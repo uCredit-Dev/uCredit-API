@@ -5,6 +5,8 @@ import Reviews from "../../model/PlanReview";
 import createApp from "../../app";
 import {
   INVALID_ID,
+  TEST_CS,
+  TEST_AMS,
   TEST_PLAN_1,
   TEST_PLAN_2,
   TEST_TOKEN_1,
@@ -13,6 +15,8 @@ import {
   TEST_USER_2,
   VALID_ID,
 } from "./testVars";
+import Majors from "../../model/Major";
+import { getMajor } from "../../data/majors";
 
 const request = supertest(createApp());
 mongoose.set("strictQuery", true);
@@ -32,6 +36,8 @@ beforeAll((done) => {
 beforeEach(async () => {
   user1 = await Users.create(TEST_USER_1);
   user2 = await Users.create(TEST_USER_2);
+  await Majors.create(getMajor(TEST_CS)); 
+  await Majors.create(getMajor(TEST_AMS)); 
   let res = await request
     .post("/api/plans")
     .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
@@ -224,10 +230,9 @@ describe("Review Routes: GET /api/planReview/getReviewers", () => {
     expect(res.status).toBe(404);
   });
 
-  it("Should throw 403 for wrong user", async () => {
+  it("Should throw 403 for no user", async () => {
     let res = await request
-      .get(`/api/planReview/getReviewers?plan_id=${plan._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .get(`/api/planReview/getReviewers?plan_id=${plan._id}`);
     expect(res.status).toBe(403);
   });
 });

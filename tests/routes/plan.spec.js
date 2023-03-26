@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 import supertest from "supertest";
-import { allMajors, getMajor } from "../../data/majors.js";
+import { getMajor } from "../../data/majors.js";
 import createApp from "../../app";
 import Distributions from "../../model/Distribution";
 import Users from "../../model/User";
 import Majors from "../../model/Major.js";
+import Courses from "../../model/Course.js";
 import {
   TEST_TOKEN_1,
   TEST_PLAN_1,
@@ -138,6 +139,12 @@ describe("Plan Routes: DELETE /api/plans/:plan_id", () => {
     expect(res.status).toBe(200);
     const data = res.body.data;
     expect(data._id).toBe(plan._id);
+    // should delete distributions
+    const distributions = await Distributions.find({ plan_id: plan._id });
+    expect(distributions.length).toBe(0);
+    // should delete courses
+    const courses = await Courses.find({ plan_id: plan._id });
+    expect(courses.length).toBe(0);
   });
 
   it("Should return status 403 with unauthorized user", async () => {
@@ -153,8 +160,6 @@ describe("Plan Routes: DELETE /api/plans/:plan_id", () => {
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
-
-  // TODO: test distributions
 });
 
 describe("Plan Routes: PATCH /api/plans/update", () => {
@@ -207,6 +212,4 @@ describe("Plan Routes: PATCH /api/plans/update", () => {
       .send({});
     expect(res.status).toBe(400);
   });
-
-  // TODO: test distributions
 });

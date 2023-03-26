@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 import supertest from "supertest";
 import Majors from "../../model/Major";
 import createApp from "../../app";
-import { allMajors } from "../../data/majors";
+import { allMajors, getMajor } from "../../data/majors";
+import { TEST_AMS, TEST_COG, TEST_CS } from "./testVars";
 
 const request = supertest(createApp());
 mongoose.set("strictQuery", true);
@@ -42,15 +43,15 @@ describe("Major Routes: POST /api/majors", () => {
   });
 
   it("should return a major after posting", async () => {
-    const bsCS_Old = allMajors[1];
-    const res = await request.post("/api/majors").send(bsCS_Old);
+    const bscs = getMajor(TEST_CS);
+    const res = await request.post("/api/majors").send(bscs);
     const data = res.body.data;
-    expect(data.degree_name).toBe(bsCS_Old.degree_name);
+    expect(data._id).toBe(TEST_CS);
   });
 
   it("should return status 500 for invalid major", async () => {
-    const bsCS_Old = { ...allMajors[1], degree_name: null };
-    const res = await request.post("/api/majors").send(bsCS_Old);
+    const bscs = { ...getMajor(TEST_CS), _id: null };
+    const res = await request.post("/api/majors").send(bscs);
     expect(res.status).toBe(500);
   });
 });
@@ -62,13 +63,29 @@ describe("Major Routes: GET /api/majors/all", () => {
   });
 
   it("should return 2 majors when calling all majors after two posts", async () => {
-    let res = await request.post("/api/majors").send(allMajors[0]);
+    let res = await request.post("/api/majors").send(getMajor(TEST_CS));
     expect(res.status).toBe(200);
-    res = await request.post("/api/majors").send(allMajors[1]);
+    res = await request.post("/api/majors").send(getMajor(TEST_AMS));
     expect(res.status).toBe(200);
     res = await request.get("/api/majors/all");
     const majors = res.body.data;
     expect(majors.length).toBe(2);
+  });
+});
+
+describe("Major Routes: GET /api/majors/:major_id", () => {
+  it("should get major by id", async () => {
+    let res = await request.post("/api/majors").send(getMajor(TEST_COG));
+    expect(res.status).toBe(200);
+    res = await request.get(`/api/majors/${TEST_COG}`);
+    expect(res.status).toBe(200);
+    const major = res.body.data;
+    expect(major._id).toBe(TEST_COG);
+  });
+
+  it("should throw 404 for major not found", async () => {
+    const res = await request.get(`/api/majors/${TEST_AMS}`);
+    expect(res.status).toBe(404);
   });
 });
 
