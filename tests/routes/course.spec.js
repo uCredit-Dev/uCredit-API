@@ -2,20 +2,20 @@ import mongoose, { trusted } from "mongoose";
 import supertest from "supertest";
 import Courses from "../../model/Course";
 import Users from "../../model/User";
-import Years from "../../model/Year";
+import Majors from "../../model/Major";
 import Distributions from "../../model/Distribution";
 import createApp from "../../app";
+import { getMajor } from "../../data/majors";
 import {
   TEST_USER_1,
   TEST_TOKEN_1,
   TEST_TOKEN_2,
-  TEST_PLAN_NAME_1,
   TEST_CS,
   SAMEPLE_COURSES,
-  TEST_DATE,
   INVALID_ID,
-  VALID_ID,
   TEST_USER_2,
+  TEST_AMS,
+  TEST_PLAN_1,
 } from "./testVars";
 
 const request = supertest(createApp());
@@ -36,48 +36,29 @@ beforeEach(async () => {
   // make sample user
   await Users.create(TEST_USER_1);
   await Users.create(TEST_USER_2);
+  // make majors 
+  await Majors.create(getMajor(TEST_CS)); 
+  await Majors.create(getMajor(TEST_AMS));
   // make sample plan
   let res = await request
     .post("/api/plans")
     .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
-    .send({
-      name: TEST_PLAN_NAME_1,
-      user_id: TEST_USER_1._id,
-      majors: [TEST_CS],
-      expireAt: TEST_DATE,
-      year: "Junior",
-    });
+    .send(TEST_PLAN_1);
   plan = res.body.data;
-  // make sample distribution
-  res = await request
-    .post("/api/distributions")
-    .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
-    .send({
-      plan_id: plan._id,
-      user_id: TEST_USER_1._id,
-      name: "testDistribution",
-      required: 1,
-    });
-  distribution = res.body.data;
   // set plan_id and distribution_ids
   SAMEPLE_COURSES.forEach((sample) => {
     sample.plan_id = plan._id;
     sample.year_id = plan.years[3]._id;
-    sample.distribution_ids = [distribution._id];
   });
   // create courses
-  await Courses.insertMany(SAMEPLE_COURSES);
-  courses = await Courses.find({});
-  for (let course of courses) {
-    // insert course into Junior year
-    await Years.findByIdAndUpdate(plan.years[3]._id, {
-      $push: { courses: course._id },
-    });
-    // insert course into sample distribution
-    await Distributions.findByIdAndUpdate(distribution._id, {
-      $push: { courses: course._id },
-    });
+  for (let course of SAMEPLE_COURSES) {
+    await request
+      .post(`/api/courses/`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send(course);
   }
+  courses = await Courses.find({});
+  distribution = await Distributions.findOne({ plan_id: plan._id });
 });
 
 afterEach(async () => {
@@ -90,7 +71,6 @@ afterAll(async () => {
 
 describe("Course Routes: GET /api/courses/:id", () => {
   it("Should return course with the given _id", async () => {
-    courses = await Courses.find({});
     const course = courses[0];
     const res = await request
       .get(`/api/courses/${course._id}`)
@@ -111,14 +91,14 @@ describe("Course Routes: GET /api/courses/:id", () => {
 
 describe("Course Routes: GET /api/coursesByDistribution/:distribution_id", () => {
   it("Should return all courses with the distribution id", async () => {
-    courses = await Courses.find({});
     // get courses in distribution (should be all)
     const res = await request
       .get(`/api/coursesByDistribution/${distribution._id}`)
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     const resCourses = res.body.data;
-    expect(resCourses.length).toBe(courses.length);
+    // java in cs core req 
+    expect(resCourses.length).toBe(1);
     // confirm course distribution id
     resCourses.forEach((course) => {
       expect(JSON.stringify(course.distribution_ids[0])).toBe(
@@ -179,7 +159,6 @@ describe("Course Routes: GET /api/coursesByPlan/:plan_id", () => {
 
 describe("Course Routes: GET /api/coursesByTerm/:plan_id", () => {
   it("Should return all courses of a users terms for a plan", async () => {
-    courses = await Courses.find({});
     // find courses in Junior fall; gateway, expo, physics
     const res = await request
       .get(`/api/coursesByTerm/${plan._id}?year=Junior&term=fall`)
@@ -287,23 +266,10 @@ describe("Course Routes: POST /api/courses", () => {
       .send(course);
     expect(res.status).toBe(400);
   });
-
-  it("Should return status 400 for mismatch between plan_id and distribution_ids", async () => {
-    // set request course body
-    const course = SAMEPLE_COURSES[0];
-    course.distribution_ids = [VALID_ID]; // random objectid
-    // make request
-    const res = await request
-      .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
-      .send(course);
-    expect(res.status).toBe(400);
-  });
 });
 
 describe("Course Routes: DELETE /api/courses/:id", () => {
   it("Should return deleted course", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     // delete the course
     const res = await request
@@ -318,7 +284,6 @@ describe("Course Routes: DELETE /api/courses/:id", () => {
   });
 
   it("Should return status 403 for invalid user", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     // wrong user
     let res = await request
@@ -344,7 +309,7 @@ describe("Course Routes: DELETE /api/courses/:id", () => {
 describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
   it("Should return course with changed status", async () => {
     // course.taken is false by default
-    courses = await Courses.find({});
+
     let course = courses[0];
     expect(course.taken).toBe(false);
     // change taken status to true
@@ -361,7 +326,7 @@ describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
 
   it("Should return status 403 for invalid user", async () => {
     // course.taken is false by default
-    courses = await Courses.find({});
+
     let course = courses[0];
     // attempt to change taken status
     const res = await request
@@ -383,7 +348,6 @@ describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
   });
 
   it("Should return status 400 for missing taken", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     const res = await request
       .patch(`/api/courses/changeStatus/${course._id}`)
@@ -392,7 +356,6 @@ describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
   });
 
   it("Should return status 400 for invalid taken", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     const res = await request
       .patch(`/api/courses/changeStatus/${course._id}`)
@@ -405,7 +368,7 @@ describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
 describe("Course Routes: PATCH /api/courses/dragged", () => {
   it("Should return course with changed year", async () => {
     // course.taken is false by default
-    courses = await Courses.find({});
+
     let course = courses[0];
     const body = {
       courseId: course._id,
@@ -429,7 +392,6 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
   });
 
   it("Should return status 403 for invalid user", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: course._id,
@@ -450,7 +412,6 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
   });
 
   it("Should return status 400 for undefined id", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: undefined,
@@ -466,7 +427,6 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
   });
 
   it("Should return status 400 for undefined id", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: undefined,
@@ -482,7 +442,6 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
   });
 
   it("Should return status 400 for undefined newYear", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: course._id,
@@ -498,7 +457,6 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
   });
 
   it("Should return status 500 for invalid id", async () => {
-    courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: INVALID_ID,

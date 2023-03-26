@@ -21,6 +21,7 @@ const TEST_TOKEN_1 = createToken(TEST_USER_1);
 const TEST_TOKEN_2 = createToken(TEST_USER_2);
 const TEST_CS = "B.S. Computer Science (NEW - 2021 & after)";
 const TEST_AMS = "B.S. Applied Mathematics & Statistics";
+const TEST_COG = "B.A. Cognitive Science"; 
 const TEST_DATE = new Date(1519129864400);
 const SOPHOMORE = "AE UG SOPHOMORE";
 const FRESHMAN = "AE UG FRESHMAN";
@@ -63,7 +64,7 @@ const SAMEPLE_COURSES = [
     level: "Lower Level Undergraduate",
   },
   {
-    user_id: TEST_USER_2._id,
+    user_id: TEST_USER_1._id,
     title: "Cryptography",
     number: "301.227",
     term: "summer",
@@ -72,7 +73,7 @@ const SAMEPLE_COURSES = [
     level: "Lower Level Undergraduate",
   },
   {
-    user_id: TEST_USER_2._id,
+    user_id: TEST_USER_1._id,
     title: "physics",
     number: "301.280",
     term: "fall",
@@ -150,6 +151,7 @@ export {
   TEST_USER_2,
   TEST_AMS,
   TEST_CS,
+  TEST_COG, 
   TEST_DATE,
   TEST_TOKEN_1,
   TEST_TOKEN_2,
