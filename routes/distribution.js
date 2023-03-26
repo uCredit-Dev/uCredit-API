@@ -50,23 +50,6 @@ router.get("/api/distributionsByPlan/", auth, async (req, res) => {
   }
 });
 
-//create distribution and update its plan
-router.post("/api/distributions", auth, async (req, res) => {
-  const body = req.body;
-  if (!body || Object.keys(body).length == 0) {
-    return missingHandler(res, { distribution: body });
-  }
-  if (body.user_id !== req.user._id) {
-    return forbiddenHandler(res);
-  }
-  try {
-    const distribution = await Distributions.create(body);
-    returnData(distribution, res);
-  } catch (err) {
-    errorHandler(res, 400, err);
-  }
-});
-
 //change required credit setting for distribution
 router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) => {
     const required = req.query.required;
@@ -87,7 +70,7 @@ router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) 
       await distribution.save();
       returnData(distribution, res);
     } catch (err) {
-      errorHandler(res, 400, err);
+      errorHandler(res, 500, err);
     }
   }
 );
@@ -109,33 +92,7 @@ router.patch("/api/distributions/updateName", auth, async (req, res) => {
     await distribution.save();
     returnData(distribution, res);
   } catch (err) {
-    errorHandler(res, 400, err);
-  }
-});
-
-//delete a distribution and its associated courses(if that is the only distirbution the course belongs to) and update it's plan
-//return the deleted courses
-router.delete("/api/distributions/:d_id", auth, async (req, res) => {
-  const d_id = req.params.d_id;
-  try {
-    // verify that distribution belongs to user
-    const distribution = await Distributions.findById(d_id).exec();
-    if (req.user._id !== distribution.user_id) {
-      return forbiddenHandler(res);
-    }
-    await Distributions.findByIdAndDelete(d_id).exec();
-    //delete courses that only belong to the distribution
-    await Courses
-      .deleteMany({
-        $and: [
-          { distribution_ids: distribution._id },
-          { distribution_ids: { $size: 1 } },
-        ],
-      })
-      .exec();
-    returnData(distribution, res);
-  } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 
