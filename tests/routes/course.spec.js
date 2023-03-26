@@ -36,8 +36,8 @@ beforeEach(async () => {
   // make sample user
   await Users.create(TEST_USER_1);
   await Users.create(TEST_USER_2);
-  // make majors 
-  await Majors.create(getMajor(TEST_CS)); 
+  // make majors
+  await Majors.create(getMajor(TEST_CS));
   await Majors.create(getMajor(TEST_AMS));
   // make sample plan
   let res = await request
@@ -97,7 +97,7 @@ describe("Course Routes: GET /api/coursesByDistribution/:distribution_id", () =>
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     const resCourses = res.body.data;
-    // java in cs core req 
+    // java in cs core req
     expect(resCourses.length).toBe(1);
     // confirm course distribution id
     resCourses.forEach((course) => {
@@ -267,8 +267,7 @@ describe("Course Routes: POST /api/courses", () => {
     expect(res.status).toBe(400);
   });
 
-    // TODO: test credit update 
-
+  // TODO: test credit update
 });
 
 describe("Course Routes: DELETE /api/courses/:id", () => {
@@ -308,8 +307,7 @@ describe("Course Routes: DELETE /api/courses/:id", () => {
     expect(res.status).toBe(500);
   });
 
-    // TODO: test distributions 
-
+  // TODO: test distributions
 });
 
 describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import supertest from "supertest";
-import { allMajors, getMajor } from "../../data/majors.js"; 
+import { allMajors, getMajor } from "../../data/majors.js";
 import createApp from "../../app";
 import Distributions from "../../model/Distribution";
 import Users from "../../model/User";
@@ -30,7 +30,7 @@ beforeAll((done) => {
 beforeEach(async () => {
   await Users.create(TEST_USER_1);
   await Users.create(TEST_USER_2);
-  await Majors.create(getMajor(TEST_CS)); 
+  await Majors.create(getMajor(TEST_CS));
   await Majors.create(getMajor(TEST_AMS));
   const response = await request
     .post("/api/plans")
@@ -154,7 +154,7 @@ describe("Plan Routes: DELETE /api/plans/:plan_id", () => {
     expect(res.status).toBe(500);
   });
 
-    // TODO: test distributions 
+  // TODO: test distributions
 });
 
 describe("Plan Routes: PATCH /api/plans/update", () => {
@@ -208,5 +208,5 @@ describe("Plan Routes: PATCH /api/plans/update", () => {
     expect(res.status).toBe(400);
   });
 
-    // TODO: test distributions 
+  // TODO: test distributions
 });

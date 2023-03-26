@@ -31,7 +31,7 @@ beforeAll((done) => {
 beforeEach(async () => {
   // make sample user
   user = await Users.create(TEST_USER_1);
-  await Majors.create(getMajor(TEST_CS)); 
+  await Majors.create(getMajor(TEST_CS));
   await Majors.create(getMajor(TEST_AMS));
   // make sample plan
   const res = await request
@@ -90,15 +90,23 @@ describe("Distribution routes: GET /api/distributions/:distribution_id", () => {
 
 describe("Distribution routes: GET /api/distributionsByPlan/:plan_id", () => {
   it("should return distributions by plan id", async () => {
-    // note that request doesn't encode params to UTF-8, unlike axios 
+    // note that request doesn't encode params to UTF-8, unlike axios
     let res = await request
-      .get(`/api/distributionsByPlan/?plan_id=${plan._id}&major_id=${TEST_CS.replace('&', '%26')}`)
+      .get(
+        `/api/distributionsByPlan/?plan_id=${
+          plan._id
+        }&major_id=${TEST_CS.replace("&", "%26")}`
+      )
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     expect(res.body.data).toBeTruthy();
     expect(res.body.data.length).toBe(getMajor(TEST_CS).distributions.length);
     res = await request
-      .get(`/api/distributionsByPlan/?plan_id=${plan._id}&major_id=${TEST_AMS.replace('&', '%26')}`)
+      .get(
+        `/api/distributionsByPlan/?plan_id=${
+          plan._id
+        }&major_id=${TEST_AMS.replace("&", "%26")}`
+      )
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     expect(res.body.data).toBeTruthy();
