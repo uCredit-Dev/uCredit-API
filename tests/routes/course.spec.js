@@ -266,6 +266,9 @@ describe("Course Routes: POST /api/courses", () => {
       .send(course);
     expect(res.status).toBe(400);
   });
+
+    // TODO: test credit update 
+
 });
 
 describe("Course Routes: DELETE /api/courses/:id", () => {
@@ -304,6 +307,9 @@ describe("Course Routes: DELETE /api/courses/:id", () => {
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
+
+    // TODO: test distributions 
+
 });
 
 describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {

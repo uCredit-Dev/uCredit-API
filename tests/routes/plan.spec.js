@@ -153,6 +153,8 @@ describe("Plan Routes: DELETE /api/plans/:plan_id", () => {
       .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
+
+    // TODO: test distributions 
 });
 
 describe("Plan Routes: PATCH /api/plans/update", () => {
@@ -205,4 +207,6 @@ describe("Plan Routes: PATCH /api/plans/update", () => {
       .send({});
     expect(res.status).toBe(400);
   });
+
+    // TODO: test distributions 
 });
