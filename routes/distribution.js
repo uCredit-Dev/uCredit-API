@@ -8,6 +8,8 @@ import {
 import { auth } from "../util/token.js";
 import Courses from "../model/Course.js";
 import Distributions from "../model/Distribution.js";
+import Plans from "../model/Plan.js";
+import Majors from "../model/Major.js";
 import express from "express";
 import { initDistributions } from "./distributionMethods.js";
 
@@ -35,9 +37,9 @@ router.get("/api/distributionsByPlan/", auth, async (req, res) => {
   if (!plan_id || !major_id) return missingHandler(res, { plan_id, major_id }); 
   const reload = req.query.reload; 
   try {
-    const plan = Plans.findById(plan_id).exec();
+    const plan = await Plans.findById(plan_id).exec();
     if (!plan) return errorHandler(res, 404, { message: "Plan not found." }); 
-    const major = Majors.findById(major_id).exec();
+    const major = await Majors.findById(major_id).exec();
     if (!major) return errorHandler(res, 404, { message: "Major not found." }); 
     if (reload === "true") {
       await initDistributions(plan_id, major_id);
@@ -46,7 +48,7 @@ router.get("/api/distributionsByPlan/", auth, async (req, res) => {
       .find({ plan_id, major_id }).exec();
     returnData(distributions, res);
   } catch (err) {
-    errorHandler(res, 400, err);
+    errorHandler(res, 500, err);
   }
 });
 
@@ -54,7 +56,7 @@ router.get("/api/distributionsByPlan/", auth, async (req, res) => {
 router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) => {
     const required = req.query.required;
     const id = req.query.id;
-    if (!required || !id) {
+    if (Number.parseInt(required) === NaN || !id) {
       return missingHandler(res, { required, id });
     }
     try {
@@ -64,9 +66,9 @@ router.patch("/api/distributions/updateRequiredCredits", auth, async (req, res) 
         return forbiddenHandler(res);
       }
       //update distribution required
-      distribution.required = Number.parseInt(required);
+      distribution.required_credits = Number.parseInt(required);
       //recalculate whether distribution is satisfied
-      distribution.satisfied = distribution.planned >= distribution.required;
+      distribution.satisfied = distribution.planned >= distribution.required_credits;
       await distribution.save();
       returnData(distribution, res);
     } catch (err) {

@@ -5812,6 +5812,11 @@ const allMajors = [
   // bsCivEng,
 ];
 
+export function getMajor(major_id) {
+  const major = allMajors.find((m) => m._id === major_id); 
+  return major ? major : allMajors[0]; 
+}
+
 export {
   allMajors
 }

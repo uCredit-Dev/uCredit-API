@@ -29,14 +29,14 @@ const SENIOR = "AE UG SENIOR";
 const TEST_PLAN_1 = {
   name: TEST_PLAN_NAME_1,
   user_id: TEST_USER_1._id,
-  majors: [TEST_CS, TEST_AMS],
+  major_ids: [TEST_CS, TEST_AMS],
   expireAt: TEST_DATE,
   year: "Junior",
 };
 const TEST_PLAN_2 = {
   name: TEST_PLAN_NAME_2,
   user_id: TEST_USER_2._id,
-  majors: [TEST_AMS],
+  major_ids: [TEST_AMS],
   expireAt: TEST_DATE,
   year: "Freshman",
 };
