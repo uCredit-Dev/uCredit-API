@@ -29,7 +29,6 @@ async function replaceOldWithNew() {
         }
         plan.majors =  [...new Set(plan.majors)];
         // console.log("after: " + plan.majors + "");
-        await plan.save();
         // console.log("done!\n");
       }
       if (plan !== null && plan.major_ids != null && plan.major_ids.length > 0) {
@@ -52,9 +51,9 @@ async function replaceOldWithNew() {
         }
         plan.major_ids =  [...new Set(plan.major_ids)];
         console.log("after: " + plan.major_ids + "");
-        await plan.save();
         console.log("done!\n");
       }
+      await plan.save();
     }
   }
   console.log("done")
