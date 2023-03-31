@@ -12,6 +12,7 @@ import {
   TEST_PLAN_2,
   TEST_TOKEN_1,
   TEST_TOKEN_2,
+  TEST_USER_2,
 } from './testVars';
 
 const request = supertest(createApp());
@@ -27,6 +28,7 @@ beforeAll((done) => {
 
 beforeEach(async () => {
   await Users.create(TEST_USER_1);
+  await Users.create(TEST_USER_2);
   const resp1 = await request
     .post('/api/plans')
     .set('Authorization', `Bearer ${TEST_TOKEN_1}`)

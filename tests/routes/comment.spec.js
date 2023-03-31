@@ -23,6 +23,7 @@ const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/comment';
 mongoose.set('strictQuery', true);
 
 let user1;
+let user2;
 let plan1;
 let plan2;
 let thread;

@@ -41,7 +41,7 @@ describe('GET Search Routes', () => {
   it('GET /api/search/: Should return list of SIS courses matching query', async () => {
     const query = {
       title: 'tit',
-      number: 'numbe',
+      number: 'num',
       credits: '3',
     };
     // query by title
@@ -54,8 +54,8 @@ describe('GET Search Routes', () => {
     });
     // query by number
     res = await request.get(`/api/search?query=${query.number}`);
-    courses = res.body.data.courses;
     expect(res.status).toBe(200);
+    courses = res.body.data.courses;
     expect(courses.length).toBe(3);
     courses.forEach((course) => {
       expect(course.number.toLowerCase()).toContain(query.number.toLowerCase());

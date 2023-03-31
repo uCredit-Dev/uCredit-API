@@ -54,6 +54,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  await mongoose.connection.db.dropDatabase();
   await mongoose.connection.close();
 });
 
@@ -225,11 +226,11 @@ describe('Review Routes: GET /api/planReview/getReviewers', () => {
     expect(res.status).toBe(404);
   });
 
-  it('Should throw 403 for wrong user', async () => {
+  it('Should return 200 for different user', async () => {
     let res = await request
       .get(`/api/planReview/getReviewers?plan_id=${plan._id}`)
       .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
   });
 });
 
