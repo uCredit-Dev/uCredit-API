@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const ExperimentSchema = new Schema({
@@ -8,4 +8,4 @@ const ExperimentSchema = new Schema({
   active: { type: [String], required: true },
 });
 
-export default mongoose.model("Experiment", ExperimentSchema);
+export default mongoose.model('Experiment', ExperimentSchema);

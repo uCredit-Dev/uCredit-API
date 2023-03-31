@@ -1,10 +1,10 @@
-import mongoose, { trusted } from "mongoose";
-import supertest from "supertest";
-import Courses from "../../model/Course";
-import Users from "../../model/User";
-import Years from "../../model/Year";
-import Distributions from "../../model/Distribution";
-import createApp from "../../app";
+import mongoose, { trusted } from 'mongoose';
+import supertest from 'supertest';
+import Courses from '../../model/Course';
+import Users from '../../model/User';
+import Years from '../../model/Year';
+import Distributions from '../../model/Distribution';
+import createApp from '../../app';
 import {
   TEST_USER_1,
   TEST_TOKEN_1,
@@ -16,17 +16,17 @@ import {
   INVALID_ID,
   VALID_ID,
   TEST_USER_2,
-} from "./testVars";
+} from './testVars';
 
 const request = supertest(createApp());
-mongoose.set("strictQuery", true);
+mongoose.set('strictQuery', true);
 
 let plan;
 let distribution;
 let courses;
 
 beforeAll((done) => {
-  mongoose.connect("mongodb://localhost:27017/course", {
+  mongoose.connect('mongodb://localhost:27017/course', {
     useNewUrlParser: true,
   });
   done();
@@ -38,24 +38,24 @@ beforeEach(async () => {
   await Users.create(TEST_USER_2);
   // make sample plan
   let res = await request
-    .post("/api/plans")
-    .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+    .post('/api/plans')
+    .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
     .send({
       name: TEST_PLAN_NAME_1,
       user_id: TEST_USER_1._id,
       majors: [TEST_CS],
       expireAt: TEST_DATE,
-      year: "Junior",
+      year: 'Junior',
     });
   plan = res.body.data;
   // make sample distribution
   res = await request
-    .post("/api/distributions")
-    .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+    .post('/api/distributions')
+    .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
     .send({
       plan_id: plan._id,
       user_id: TEST_USER_1._id,
-      name: "testDistribution",
+      name: 'testDistribution',
       required: 1,
     });
   distribution = res.body.data;
@@ -88,65 +88,65 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-describe("Course Routes: GET /api/courses/:id", () => {
-  it("Should return course with the given _id", async () => {
+describe('Course Routes: GET /api/courses/:id', () => {
+  it('Should return course with the given _id', async () => {
     courses = await Courses.find({});
     const course = courses[0];
     const res = await request
       .get(`/api/courses/${course._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     const resCourse = res.body.data;
     expect(JSON.stringify(resCourse._id)).toBe(JSON.stringify(course._id));
     expect(resCourse.name).toBe(course.name);
   });
 
-  it("Should return status 400 for invalid id", async () => {
+  it('Should return status 400 for invalid id', async () => {
     const res = await request
       .get(`/api/courses/${INVALID_ID}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(400);
   });
 });
 
-describe("Course Routes: GET /api/coursesByDistribution/:distribution_id", () => {
-  it("Should return all courses with the distribution id", async () => {
+describe('Course Routes: GET /api/coursesByDistribution/:distribution_id', () => {
+  it('Should return all courses with the distribution id', async () => {
     courses = await Courses.find({});
     // get courses in distribution (should be all)
     const res = await request
       .get(`/api/coursesByDistribution/${distribution._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     const resCourses = res.body.data;
     expect(resCourses.length).toBe(courses.length);
     // confirm course distribution id
     resCourses.forEach((course) => {
       expect(JSON.stringify(course.distribution_ids[0])).toBe(
-        JSON.stringify(distribution._id)
+        JSON.stringify(distribution._id),
       );
     });
   });
 
-  it("Should return status 403 for invalid user", async () => {
+  it('Should return status 403 for invalid user', async () => {
     // wrong user
     let res = await request
       .get(`/api/coursesByDistribution/${distribution._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(403);
     // no user (jwt token)
     res = await request.get(`/api/coursesByDistribution/${distribution._id}`);
     expect(res.status).toBe(403);
   });
 
-  it("Should return status 400 for invalid id", async () => {
+  it('Should return status 400 for invalid id', async () => {
     const res = await request
       .get(`/api/coursesByDistribution/${INVALID_ID}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(400);
   });
 });
 
-describe("Course Routes: GET /api/coursesByPlan/:plan_id", () => {
+describe('Course Routes: GET /api/coursesByPlan/:plan_id', () => {
   // it("Should return all courses associated with the plan id", async () => {
   //   await SISCourseV.insertMany({ })
   //   courses = await Courses.find({});
@@ -163,82 +163,82 @@ describe("Course Routes: GET /api/coursesByPlan/:plan_id", () => {
   //   });
   // });
 
-  it("Should return status 403 for no user", async () => {
+  it('Should return status 403 for no user', async () => {
     // no user (jwt token)
     const res = await request.get(`/api/coursesByPlan/${plan._id}`);
     expect(res.status).toBe(403);
   });
 
-  it("Should return status 500 for invalid id", async () => {
+  it('Should return status 500 for invalid id', async () => {
     const res = await request
       .get(`/api/coursesByPlan/${INVALID_ID}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
 });
 
-describe("Course Routes: GET /api/coursesByTerm/:plan_id", () => {
-  it("Should return all courses of a users terms for a plan", async () => {
+describe('Course Routes: GET /api/coursesByTerm/:plan_id', () => {
+  it('Should return all courses of a users terms for a plan', async () => {
     courses = await Courses.find({});
     // find courses in Junior fall; gateway, expo, physics
     const res = await request
       .get(`/api/coursesByTerm/${plan._id}?year=Junior&term=fall`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(3);
     // term should be fall and year should be Junior
     courses.forEach((course) => {
       expect(
-        res.body.data.find((course) => course._id === course._id).term
-      ).toBe("fall");
+        res.body.data.find((course) => course._id === course._id).term,
+      ).toBe('fall');
       expect(
-        res.body.data.find((course) => course._id === course._id).year
-      ).toBe("Junior");
+        res.body.data.find((course) => course._id === course._id).year,
+      ).toBe('Junior');
     });
   });
 
-  it("Should return status 403 for invalid user", async () => {
+  it('Should return status 403 for invalid user', async () => {
     // wrong user
     let res = await request
       .get(`/api/coursesByTerm/${plan._id}?year=Junior&term=fall`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(403);
     // no user (jwt token)
     res = await request.get(
-      `/api/coursesByTerm/${plan._id}?year=Junior&term=fall`
+      `/api/coursesByTerm/${plan._id}?year=Junior&term=fall`,
     );
     expect(res.status).toBe(403);
   });
 
-  it("Should return status 400 for invalid plan id", async () => {
+  it('Should return status 400 for invalid plan id', async () => {
     const res = await request
       .get(`/api/coursesByTerm/${INVALID_ID}?year=Junior&term=fall`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(400);
   });
 
-  it("Should return status 400 for missing params", async () => {
+  it('Should return status 400 for missing params', async () => {
     // missing term
     let res = await request
       .get(`/api/coursesByTerm/${plan._id}?year=Junior`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(400);
     // missing year
     res = await request
       .get(`/api/coursesByTerm/${plan._id}?term=fall`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(400);
   });
 });
 
-describe("Course Routes: POST /api/courses", () => {
-  it("Should return created course via post request", async () => {
+describe('Course Routes: POST /api/courses', () => {
+  it('Should return created course via post request', async () => {
     // set request course body
     const course = SAMEPLE_COURSES[0];
     // POST new course
     const res = await request
       .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(course);
     expect(res.status).toBe(200);
     const newCourse = res.body.data;
@@ -250,65 +250,65 @@ describe("Course Routes: POST /api/courses", () => {
     expect(newCourse.plan_id).toBe(course.plan_id);
   });
 
-  it("Should return status 403 for invalid user", async () => {
+  it('Should return status 403 for invalid user', async () => {
     // set request course body
     const course = SAMEPLE_COURSES[0];
     // wrong user
     const res = await request
       .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`)
       .send(course);
     expect(res.status).toBe(403);
   });
 
-  it("Should return status 500 for undefined body", async () => {
+  it('Should return status 500 for undefined body', async () => {
     const res = await request
       .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
 
-  it("Should return status 500 for empty body", async () => {
+  it('Should return status 500 for empty body', async () => {
     const res = await request
       .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send({});
     expect(res.status).toBe(500);
   });
 
-  it("Should return status 500 for incomplete body", async () => {
+  it('Should return status 500 for incomplete body', async () => {
     // course body missing plan_id
     const course = SAMEPLE_COURSES[0];
     delete course.plan_id;
     // make reqest
     const res = await request
       .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(course);
     expect(res.status).toBe(500);
   });
 
-  it("Should return status 500 for mismatch between plan_id and distribution_ids", async () => {
+  it('Should return status 500 for mismatch between plan_id and distribution_ids', async () => {
     // set request course body
     const course = SAMEPLE_COURSES[0];
     course.distribution_ids = [VALID_ID]; // random objectid
     // make request
     const res = await request
       .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(course);
     expect(res.status).toBe(500);
   });
 });
 
-describe("Course Routes: DELETE /api/courses/:id", () => {
-  it("Should return deleted course", async () => {
+describe('Course Routes: DELETE /api/courses/:id', () => {
+  it('Should return deleted course', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     // delete the course
     const res = await request
       .delete(`/api/courses/${course._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     // expect res.body.data to be course obj
     expect(res.status).toBe(200);
     expect(JSON.stringify(res.body.data._id)).toBe(JSON.stringify(course._id));
@@ -317,13 +317,13 @@ describe("Course Routes: DELETE /api/courses/:id", () => {
     expect(course).toBeNull();
   });
 
-  it("Should return status 403 for invalid user", async () => {
+  it('Should return status 403 for invalid user', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     // wrong user
     let res = await request
       .delete(`/api/courses/${course._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(403);
     // no user (jwt token)
     res = await request.delete(`/api/courses/${course._id}`);
@@ -333,16 +333,16 @@ describe("Course Routes: DELETE /api/courses/:id", () => {
     expect(course).toBeTruthy();
   });
 
-  it("Should return status 500 for invalid id", async () => {
+  it('Should return status 500 for invalid id', async () => {
     const res = await request
       .delete(`/api/courses/${INVALID_ID}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
 });
 
-describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
-  it("Should return course with changed status", async () => {
+describe('Course Routes: PATCH /api/courses/changeStatus/:course_id', () => {
+  it('Should return course with changed status', async () => {
     // course.taken is false by default
     courses = await Courses.find({});
     let course = courses[0];
@@ -350,7 +350,7 @@ describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
     // change taken status to true
     const res = await request
       .patch(`/api/courses/changeStatus/${course._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send({ taken: true });
     expect(res.status).toBe(200);
     expect(res.body.data.taken).toBe(true);
@@ -359,14 +359,14 @@ describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
     expect(course.taken).toBe(true);
   });
 
-  it("Should return status 403 for invalid user", async () => {
+  it('Should return status 403 for invalid user', async () => {
     // course.taken is false by default
     courses = await Courses.find({});
     let course = courses[0];
     // attempt to change taken status
     const res = await request
       .patch(`/api/courses/changeStatus/${course._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`)
       .send({ taken: true });
     expect(res.status).toBe(403);
     // check status still false
@@ -374,36 +374,36 @@ describe("Course Routes: PATCH /api/courses/changeStatus/:course_id", () => {
     expect(course.taken).toBe(false);
   });
 
-  it("Should return status 500 for invalid id", async () => {
+  it('Should return status 500 for invalid id', async () => {
     const res = await request
       .patch(`/api/courses/changeStatus/${INVALID_ID}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send({ taken: true });
     expect(res.status).toBe(500);
   });
 
-  it("Should return status 400 for missing taken", async () => {
+  it('Should return status 400 for missing taken', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     const res = await request
       .patch(`/api/courses/changeStatus/${course._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(400);
   });
 
-  it("Should return status 400 for invalid taken", async () => {
+  it('Should return status 400 for invalid taken', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     const res = await request
       .patch(`/api/courses/changeStatus/${course._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send({ taken: 1 });
     expect(res.status).toBe(400);
   });
 });
 
-describe("Course Routes: PATCH /api/courses/dragged", () => {
-  it("Should return course with changed year", async () => {
+describe('Course Routes: PATCH /api/courses/dragged', () => {
+  it('Should return course with changed year', async () => {
     // course.taken is false by default
     courses = await Courses.find({});
     let course = courses[0];
@@ -411,12 +411,12 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
       courseId: course._id,
       oldYear: plan.years[3]._id,
       newYear: plan.years[1]._id,
-      newTerm: "spring",
+      newTerm: 'spring',
     };
     // change year and term
     const res = await request
       .patch(`/api/courses/dragged`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(body);
     // returns update course
     expect(res.status).toBe(200);
@@ -428,19 +428,19 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
     expect(course.term).toBe(body.newTerm);
   });
 
-  it("Should return status 403 for invalid user", async () => {
+  it('Should return status 403 for invalid user', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: course._id,
       oldYear: plan.years[3]._id,
       newYear: plan.years[1]._id,
-      newTerm: "spring",
+      newTerm: 'spring',
     };
     // attempt to change year and term
     const res = await request
       .patch(`/api/courses/dragged`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`)
       .send(body);
     expect(res.status).toBe(403);
     // check db not updated
@@ -449,82 +449,81 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
     expect(course.term).toBe(course.term);
   });
 
-  it("Should return status 400 for undefined id", async () => {
+  it('Should return status 400 for undefined id', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: undefined,
       oldYear: plan.years[3]._id,
       newYear: plan.years[1]._id,
-      newTerm: "spring",
+      newTerm: 'spring',
     };
     const res = await request
       .patch(`/api/courses/dragged`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(body);
     expect(res.status).toBe(400);
   });
 
-  it("Should return status 400 for trying to add identical course twice", async () => {
+  it('Should return status 400 for trying to add identical course twice', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     const res = await request
       .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(course);
     expect(res.status).toBe(200);
     const res2 = await request
       .post(`/api/courses/`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(course);
     expect(res2.status).toBe(400);
-
   });
 
-  it("Should return status 400 for undefined id", async () => {
+  it('Should return status 400 for undefined id', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: undefined,
       oldYear: plan.years[3]._id,
       newYear: plan.years[1]._id,
-      newTerm: "spring",
+      newTerm: 'spring',
     };
     const res = await request
       .patch(`/api/courses/dragged`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(body);
     expect(res.status).toBe(400);
   });
 
-  it("Should return status 400 for undefined newYear", async () => {
+  it('Should return status 400 for undefined newYear', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: course._id,
       oldYear: plan.years[3]._id,
       newYear: null,
-      newTerm: "spring",
+      newTerm: 'spring',
     };
     const res = await request
       .patch(`/api/courses/dragged`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(body);
     expect(res.status).toBe(400);
   });
 
-  it("Should return status 500 for invalid id", async () => {
+  it('Should return status 500 for invalid id', async () => {
     courses = await Courses.find({});
     let course = courses[0];
     const body = {
       courseId: INVALID_ID,
       oldYear: plan.years[3]._id,
       newYear: plan.years[1]._id,
-      newTerm: "spring",
+      newTerm: 'spring',
     };
     const res = await request
       .patch(`/api/courses/dragged`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(body);
     expect(res.status).toBe(500);
   });

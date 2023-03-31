@@ -1,16 +1,16 @@
-import mongoose from "mongoose";
-import supertest from "supertest";
-import SISCV from "../../model/SISCourseV";
-import createApp from "../../app";
-import { SAMEPLE_SIS_COURSES } from "./testVars";
+import mongoose from 'mongoose';
+import supertest from 'supertest';
+import SISCV from '../../model/SISCourseV';
+import createApp from '../../app';
+import { SAMEPLE_SIS_COURSES } from './testVars';
 
 const request = supertest(createApp());
-mongoose.set("strictQuery", true);
+mongoose.set('strictQuery', true);
 
 let courses;
 
 beforeAll(async () => {
-  mongoose.connect("mongodb://localhost:27017/search", {
+  mongoose.connect('mongodb://localhost:27017/search', {
     useNewUrlParser: true,
   });
   courses = await SISCV.insertMany(SAMEPLE_SIS_COURSES);
@@ -21,15 +21,15 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-describe("GET Search Routes", () => {
-  it("GET /api/search/all: Should return list of all SIS courses", async () => {
-    const res = await request.get("/api/search/all");
+describe('GET Search Routes', () => {
+  it('GET /api/search/all: Should return list of all SIS courses', async () => {
+    const res = await request.get('/api/search/all');
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(courses.length);
     expect(res.body.data).toBeInstanceOf(Array);
   });
 
-  it("GET /api/search/skip/:num: Should return list of SIS courses of size num", async () => {
+  it('GET /api/search/skip/:num: Should return list of SIS courses of size num', async () => {
     const num = Math.floor(Math.random() * 3);
     const res = await request.get(`/api/search/skip/0?mod=${num}`);
     expect(res.status).toBe(200);
@@ -37,11 +37,11 @@ describe("GET Search Routes", () => {
     expect(res.body.data).toBeInstanceOf(Array);
   });
 
-  it("GET /api/search/: Should return list of SIS courses matching query", async () => {
+  it('GET /api/search/: Should return list of SIS courses matching query', async () => {
     const query = {
-      title: "tit",
-      number: "numbe",
-      credits: "3",
+      title: 'tit',
+      number: 'numbe',
+      credits: '3',
     };
     // query by title
     let res = await request.get(`/api/search?query=${query.title}`);
@@ -60,7 +60,7 @@ describe("GET Search Routes", () => {
       expect(course.number.toLowerCase()).toContain(query.number.toLowerCase());
     });
     // query by credits
-    res = await request.get("/api/search?credits=" + query.credits);
+    res = await request.get('/api/search?credits=' + query.credits);
     expect(res.status).toBe(200);
     courses = res.body.data.courses;
     expect(courses.length).toBe(1);
@@ -71,19 +71,19 @@ describe("GET Search Routes", () => {
     });
   });
 
-  it("GET /api/searchVersion: Should return a specific version of a course", async () => {
+  it('GET /api/searchVersion: Should return a specific version of a course', async () => {
     const query = {
-      version: "fall",
-      title: "Title1",
-      number: "Number1",
+      version: 'fall',
+      title: 'Title1',
+      number: 'Number1',
     };
     const res = await request.get(
-      "/api/searchVersion?version=" +
+      '/api/searchVersion?version=' +
         query.version +
-        "&title=" +
+        '&title=' +
         query.title +
-        "&number=" +
-        query.number
+        '&number=' +
+        query.number,
     );
     expect(res.status).toBe(200);
     expect(res.body.data.title).toBe(query.title);

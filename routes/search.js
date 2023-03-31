@@ -1,19 +1,19 @@
 //routes to handle search requests
-import express from "express";
-import { 
+import express from 'express';
+import {
   returnData,
-  errorHandler, 
-  simpleSearch, 
-  fuzzySearch, 
-  constructQuery, 
-  sendCourseVersion 
-} from "./helperMethods.js";
-import SISCV from "../model/SISCourseV.js";
-import { criteriaSearch } from "./helperMethods.js";
+  errorHandler,
+  simpleSearch,
+  fuzzySearch,
+  constructQuery,
+  sendCourseVersion,
+} from './helperMethods.js';
+import SISCV from '../model/SISCourseV.js';
+import { criteriaSearch } from './helperMethods.js';
 
 const router = express.Router();
 
-router.get("/api/search/all", async (req, res) => {
+router.get('/api/search/all', async (req, res) => {
   try {
     const courses = await SISCV.find({}).exec();
     returnData(courses, res);
@@ -22,7 +22,7 @@ router.get("/api/search/all", async (req, res) => {
   }
 });
 
-router.get("/api/search/skip/:num", async (req, res) => {
+router.get('/api/search/skip/:num', async (req, res) => {
   const toSkip = req.params.num;
   const mod = parseInt(req.query.mod);
   if (isNaN(toSkip) || isNaN(mod)) {
@@ -38,7 +38,7 @@ router.get("/api/search/skip/:num", async (req, res) => {
   }
 });
 
-router.get("/api/searchNumber/:number", async (req, res) => {
+router.get('/api/searchNumber/:number', async (req, res) => {
   let number = req.params.number;
   try {
     let courses = await SISCV.find({ number }).exec();
@@ -51,7 +51,7 @@ router.get("/api/searchNumber/:number", async (req, res) => {
       if (courses.length == 0) {
         return returnData(-1, res);
       }
-    } 
+    }
     returnData(courses[0], res);
   } catch (err) {
     errorHandler(res, 400, err);
@@ -59,18 +59,18 @@ router.get("/api/searchNumber/:number", async (req, res) => {
 });
 
 //return all versions of the course based on the filters
-router.get("/api/search", async (req, res) => {
+router.get('/api/search', async (req, res) => {
   // page is defined or 0
   const page = parseInt(req.query.page) || 0;
   let result = {};
-  // define queryTerm 
+  // define queryTerm
   let queryTerm =
-    req.query.term === "All" || !req.query.term ? "" : req.query.term;
-  if (queryTerm.length > 0) queryTerm += " ";
+    req.query.term === 'All' || !req.query.term ? '' : req.query.term;
+  if (queryTerm.length > 0) queryTerm += ' ';
   queryTerm +=
-    req.query.year && req.query.year !== "All" ? req.query.year.toString() : "";
-  // construct query for simple search 
-  const searchTerm = req.query.query; 
+    req.query.year && req.query.year !== 'All' ? req.query.year.toString() : '';
+  // construct query for simple search
+  const searchTerm = req.query.query;
   const query = constructQuery({
     userQuery: req.query.query,
     school: req.query.school,
@@ -85,51 +85,54 @@ router.get("/api/search", async (req, res) => {
   // get 10 matching courses in specified page range
   try {
     if (!searchTerm || searchTerm.length <= 3) {
-      // simple search if term is 3 letters or less 
+      // simple search if term is 3 letters or less
       result = await simpleSearch(query, page);
     } else {
       // substring search if term is longer than 3 letters
       result = await fuzzySearch(query, searchTerm, page);
     }
-    // result includes courses array and pagination data 
+    // result includes courses array and pagination data
     returnData(result, res);
   } catch (err) {
-    errorHandler(res, 500, err.message); 
+    errorHandler(res, 500, err.message);
   }
 });
 
 //return all versions of the course based on the filters
-router.get("/api/cartSearch", async (req, res) => {
-    // page is defined or 0
-    const PERPAGE = 10; 
-    const page = parseInt(req.query.page) || 0;
-    const expr = req.query.expr; 
-    let result = {}; 
-    try {
-      if (expr.length === 0) {
-        result.courses = await SISCV.find({}).skip(page * PERPAGE).limit(PERPAGE).exec(); 
-        result.pagination = {
-          page: page, 
-          limit: PERPAGE, 
-          last: 10,
-          total: 100
-        }; 
-      } else {
-        result = await criteriaSearch(expr, page);
-      }
-      returnData(result, res);
-    } catch (err) {
-      errorHandler(res, 500, err); 
-    }  
+router.get('/api/cartSearch', async (req, res) => {
+  // page is defined or 0
+  const PERPAGE = 10;
+  const page = parseInt(req.query.page) || 0;
+  const expr = req.query.expr;
+  let result = {};
+  try {
+    if (expr.length === 0) {
+      result.courses = await SISCV.find({})
+        .skip(page * PERPAGE)
+        .limit(PERPAGE)
+        .exec();
+      result.pagination = {
+        page: page,
+        limit: PERPAGE,
+        last: 10,
+        total: 100,
+      };
+    } else {
+      result = await criteriaSearch(expr, page);
+    }
+    returnData(result, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
 });
 
 //return the term version of a specific course
-router.get("/api/searchVersion", async (req, res) => {
+router.get('/api/searchVersion', async (req, res) => {
   const version = req.query.version;
   const title = req.query.title;
   const number = req.query.number;
   if (!version || !title || !number) {
-    missingHandler(res, { version, title, number }); 
+    missingHandler(res, { version, title, number });
   } else {
     const query = {
       title,
@@ -141,10 +144,10 @@ router.get("/api/searchVersion", async (req, res) => {
 });
 
 // return min and max possible years for current courses in db
-router.get("/api/getYearRange", async (req, res) => {
+router.get('/api/getYearRange', async (req, res) => {
   // .distinct returns an array of all possible elements in the "terms" array
   try {
-    const resp = await SISCV.distinct("terms");
+    const resp = await SISCV.distinct('terms');
     let years = { min: Infinity, max: -Infinity };
     // parse term for year value and update min / max
     resp.forEach((term) => {

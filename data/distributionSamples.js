@@ -1,33 +1,33 @@
 //two distribution fields for each student
 const samples = [
   {
-    user_id: "csStudent",
-    name: "H/S",
+    user_id: 'csStudent',
+    name: 'H/S',
     required: 18,
   },
   {
-    user_id: "csStudent",
-    name: "core",
+    user_id: 'csStudent',
+    name: 'core',
     required: 42,
   },
   {
-    user_id: "mathStudent",
-    name: "BS",
+    user_id: 'mathStudent',
+    name: 'BS',
     required: 42,
   },
   {
-    user_id: "mathStudent",
-    name: "core",
+    user_id: 'mathStudent',
+    name: 'core',
     required: 42,
   },
   {
-    user_id: "bioStudent",
-    name: "math",
+    user_id: 'bioStudent',
+    name: 'math',
     required: 24,
   },
   {
-    user_id: "bioStudent",
-    name: "core",
+    user_id: 'bioStudent',
+    name: 'core',
     required: 42, // FAULT: Required field not created correctly
   },
 ];

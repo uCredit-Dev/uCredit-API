@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 /*  
@@ -10,10 +10,10 @@ const notificationSchema = new Schema({
   quick_link_id: { type: Schema.Types.ObjectId },
   link_type: {
     type: String,
-    enum: ["PLAN", "PLANREVIEW", "USER", "DISTRIBUTION"],
+    enum: ['PLAN', 'PLANREVIEW', 'USER', 'DISTRIBUTION'],
   },
   read: { type: Boolean, default: false },
   date: { type: Date, default: Date.now() },
 });
 
-export default mongoose.model("Notification", notificationSchema);
+export default mongoose.model('Notification', notificationSchema);
