@@ -17,7 +17,8 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
-const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/distribution';
+const TEST_URI =
+  process.env.TEST_URI || 'mongodb://localhost:27017/distribution';
 mongoose.set('strictQuery', true);
 
 let distributions;

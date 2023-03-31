@@ -14,7 +14,8 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
-const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/notification';
+const TEST_URI =
+  process.env.TEST_URI || 'mongodb://localhost:27017/notification';
 mongoose.set('strictQuery', true);
 
 let plan = [];

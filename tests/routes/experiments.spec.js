@@ -5,7 +5,8 @@ import ExperimentDao from '../../data/ExperimentDao';
 import User from '../../model/User';
 
 const request = supertest(createApp());
-const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/experiments';
+const TEST_URI =
+  process.env.TEST_URI || 'mongodb://localhost:27017/experiments';
 mongoose.set('strictQuery', true);
 
 const experiments = new ExperimentDao();
