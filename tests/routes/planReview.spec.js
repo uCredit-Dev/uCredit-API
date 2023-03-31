@@ -15,6 +15,7 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/planReview';
 mongoose.set('strictQuery', true);
 
 let plan;
@@ -23,7 +24,7 @@ let user2;
 let review;
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/planReview', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
   done();

@@ -19,10 +19,10 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/comment';
 mongoose.set('strictQuery', true);
 
 let user1;
-let user2;
 let plan1;
 let plan2;
 let thread;
@@ -42,7 +42,7 @@ const THREAD_BODY = {
 };
 
 beforeAll(async () => {
-  mongoose.connect('mongodb://localhost:27017/comment', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
 });

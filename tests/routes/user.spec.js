@@ -16,10 +16,11 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/user';
 mongoose.set('strictQuery', true);
 
 beforeAll(async () => {
-  mongoose.connect('mongodb://localhost:27017/user', { useNewUrlParser: true });
+  mongoose.connect(TEST_URI, { useNewUrlParser: true });
   const samples = [];
   for (let i = 1; i <= 98; i++) {
     const userObj = { _id: `User${i}`, name: `User${i}` };

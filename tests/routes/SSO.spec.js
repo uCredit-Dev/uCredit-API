@@ -8,10 +8,11 @@ import { decodeToken } from '../../util/token';
 import { TEST_USER_1 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/sso';
 mongoose.set('strictQuery', true);
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/SSO', { useNewUrlParser: true });
+  mongoose.connect(TEST_URI, { useNewUrlParser: true });
   done();
 });
 

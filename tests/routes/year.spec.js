@@ -15,12 +15,13 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/year';
 mongoose.set('strictQuery', true);
 
 let plan;
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/year', { useNewUrlParser: true });
+  mongoose.connect(TEST_URI, { useNewUrlParser: true });
   done();
 });
 

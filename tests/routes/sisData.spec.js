@@ -3,12 +3,13 @@ import supertest from 'supertest';
 import createApp from '../../app';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/sisData';
 mongoose.set('strictQuery', true);
 
 const TEST_NAME = 'test';
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/sisData', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
   done();

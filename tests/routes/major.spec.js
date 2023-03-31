@@ -5,10 +5,11 @@ import createApp from '../../app';
 import { allMajors } from '../../data/majors';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/major';
 mongoose.set('strictQuery', true);
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/major', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
   done();

@@ -5,12 +5,13 @@ import createApp from '../../app';
 import { SAMEPLE_SIS_COURSES } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/search';
 mongoose.set('strictQuery', true);
 
 let courses;
 
 beforeAll(async () => {
-  mongoose.connect('mongodb://localhost:27017/search', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
   courses = await SISCV.insertMany(SAMEPLE_SIS_COURSES);
