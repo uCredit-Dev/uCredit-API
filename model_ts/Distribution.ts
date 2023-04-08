@@ -4,8 +4,8 @@ import mongoose from "mongoose";
   Fields needed to create a new distribution.
 */
 export interface DistributionAttrs {
-  name: String;
-  required: Number;
+  name: string;
+  required: number;
   user_id: mongoose.Schema.Types.ObjectId;
   plan_id: mongoose.Schema.Types.ObjectId;
 }
@@ -14,11 +14,11 @@ export interface DistributionAttrs {
   Declare fields in a created distribution document.
 */
 export interface DistributionDoc extends mongoose.Document {
-  name: String;
-  required: Number;
-  planned?: Number;
-  current?: Number;
-  satisfied?: Boolean;
+  name: string;
+  required: number;
+  planned: number;
+  current: number;
+  satisfied: boolean;
   courses?: mongoose.Schema.Types.ObjectId[];
   user_id: mongoose.Schema.Types.ObjectId;
   plan_id: mongoose.Schema.Types.ObjectId;

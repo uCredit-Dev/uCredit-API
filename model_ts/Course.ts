@@ -8,29 +8,29 @@ export enum CourseTerm {
 }
 
 type PreReq = {
-  Description: String;
-  Expression: String;
-  IsNegative: String;
+  Description: string;
+  Expression: string;
+  IsNegative: string;
 };
 
 /*
   Fields needed to create a new Course.
 */
 export interface CourseAttrs {
-  title: String;
+  title: string;
   term: CourseTerm;
-  year: String;
-  version: String;
-  number: String;
-  area: String;
+  year: string;
+  version: string;
+  number: string;
+  area: string;
   preReq: PreReq[];
-  credits: Number;
-  isPlaceholder: Boolean;
+  credits: number;
+  isPlaceholder: boolean;
   distribution_id: mongoose.Schema.Types.ObjectId;
   year_id: mongoose.Schema.Types.ObjectId;
   plan_id: mongoose.Schema.Types.ObjectId;
   user_id: mongoose.Schema.Types.ObjectId;
-  level: String;
+  level: string;
   expireAt: Date | undefined;
 }
 
@@ -38,28 +38,28 @@ export interface CourseAttrs {
   Declare fields in a created course document.
 */
 export interface CourseDoc extends mongoose.Document {
-  title: String;
+  title: string;
   term: CourseTerm;
-  termOffered?: String[];
-  year: String;
-  version?: String;
-  number?: String;
-  department?: String;
-  tags?: String[];
-  area?: String;
-  credits: Number;
-  wi?: Boolean;
-  taken?: Boolean;
+  termOffered?: string[];
+  year: string;
+  version?: string;
+  number?: string;
+  department?: string;
+  tags?: string[];
+  area?: string;
+  credits: number;
+  wi?: boolean;
+  taken?: boolean;
   preReq?: PreReq[];
-  isPlaceholder?: Boolean;
-  isTransfer?: Boolean;
-  ratings?: String[];
+  isPlaceholder?: boolean;
+  isTransfer?: boolean;
+  ratings?: string[];
   distribution_ids: mongoose.Schema.Types.ObjectId[];
   year_id: mongoose.Schema.Types.ObjectId;
   plan_id: mongoose.Schema.Types.ObjectId;
   user_id: mongoose.Schema.Types.ObjectId;
-  level: String;
-  forceSatisfied?: String;
+  level: string;
+  forceSatisfied?: string;
   expireAt?: Date;
 }
 
