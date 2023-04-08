@@ -43,7 +43,7 @@ const decodeToken = (token: string) => {
   return decoded;
 };
 
-const auth = async (req: Request & {user: UserDoc}, res: Response, next) => {
+const auth = async (req: any, res: Response, next) => {
   const { authorization } = req.headers;
   if (authorization) {
     const [_, token] = authorization.trim().split(" ");
