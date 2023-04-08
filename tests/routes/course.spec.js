@@ -242,7 +242,7 @@ describe('Course Routes: POST /api/courses', () => {
       .send(TEST_PLAN_2);
     const plan = res.body.data;
     const course = SAMEPLE_COURSES[1];
-    course.plan_id = plan._id; 
+    course.plan_id = plan._id;
     course.user_id = TEST_USER_2._id;
     course.year = plan.years[3]._id;
     course.distribution_ids = [];

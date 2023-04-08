@@ -185,7 +185,7 @@ describe('User Routes: DELETE /api/user/:id', () => {
       .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(204);
     // db check
-    const user = await Users.findById("TEST_DEV");
+    const user = await Users.findById('TEST_DEV');
     expect(user).toBeNull();
   });
 
@@ -200,11 +200,10 @@ describe('User Routes: DELETE /api/user/:id', () => {
     await Users.create({ ...TEST_USER_1, _id: 'TEST_DEV' });
     await Plans.create({ ...TEST_PLAN_1, user_id: 'TEST_DEV' });
     // check that plan successfully created
-    let res = await request
-      .delete(`/api/user/TEST_DEV`);
+    let res = await request.delete(`/api/user/TEST_DEV`);
     expect(res.status).toBe(204);
     // check that plan deleted with user
-    const plans = await Plans.find({ user_id: "TEST_DEV" });
+    const plans = await Plans.find({ user_id: 'TEST_DEV' });
     expect(plans.length).toBe(0);
   });
 });

@@ -1,7 +1,6 @@
-import mongoose, { set } from 'mongoose';
+import mongoose from 'mongoose';
 import Notifications from '../../model/Notification';
 import Users from '../../model/User';
-import Plans from '../../model/Plan';
 import supertest from 'supertest';
 import createApp from '../../app';
 import {
@@ -47,7 +46,6 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.connection.db.dropDatabase();
   await mongoose.connection.close();
 });
 
