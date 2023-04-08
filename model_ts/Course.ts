@@ -65,6 +65,8 @@ export interface CourseDoc extends mongoose.Document {
 
 interface CourseModel extends mongoose.Model<CourseDoc> {
   build(attrs: CourseAttrs): CourseDoc;
+  findByDistributionId(d_id: mongoose.Schema.Types.ObjectId): any;
+  findByPlanId(id: mongoose.Schema.Types.ObjectId): any; // TODO what type??
 }
 
 /*  
@@ -124,13 +126,13 @@ courseSchema.statics.build = (attrs: CourseAttrs) => {
 
 courseSchema.statics.findByDistributionId = function (
   d_id: mongoose.Schema.Types.ObjectId
-): CourseDoc {
+) {
   return this.find({ distribution_ids: d_id });
 };
 
 courseSchema.statics.findByPlanId = function (
   plan_id: mongoose.Schema.Types.ObjectId
-): CourseDoc {
+) {
   return this.find({ plan_id });
 };
 

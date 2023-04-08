@@ -23,7 +23,7 @@ export interface YearDoc extends mongoose.Document {
   courses: mongoose.Schema.Types.ObjectId[],
   plan_id: mongoose.Schema.Types.ObjectId[],
   user_id: String,
-  year?: Number
+  year?: number,
   expireAt: Date
 }
 
