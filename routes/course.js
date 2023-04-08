@@ -187,6 +187,7 @@ router.patch('/api/courses/dragged', auth, async (req, res) => {
   const newYear_id = req.body.newYear;
   const oldYear_id = req.body.oldYear;
   const newTerm = req.body.newTerm;
+  const newYear = await Years.findById(newYear_id);
   // raise error if required param is undefined
   if (!newYear_id || !oldYear_id || !c_id || !newTerm) {
     return missingHandler(res, { newYear_id, oldYear_id, c_id, newTerm });
@@ -205,7 +206,28 @@ router.patch('/api/courses/dragged', auth, async (req, res) => {
       }).exec();
       // check if course is held at new term!
       if (!checkDestValid(sisCourses, course, newTerm)) {
-        return errorHandler(res, 400, { message: 'no course this semester' });
+        return errorHandler(res, 400, {
+          message: "Course isn't usually held this semester!",
+        });
+      }
+      // check if course is a duplicate at new term!
+      const retrievedCourses = await Courses.findByPlanId(course.plan_id);
+      for (const existingCourse of retrievedCourses) {
+        if (
+          existingCourse.number === course.number &&
+          existingCourse.term === newTerm.toLowerCase() &&
+          existingCourse.year === newYear.name &&
+          existingCourse.title === course.title
+        ) {
+          console.log(newTerm);
+          console.log(existingCourse.term);
+          console.log(newYear.name);
+          console.log(existingCourse.year);
+          return errorHandler(res, 400, {
+            message:
+              'Cannot take same course multiple times in the same semester',
+          });
+        }
       }
       // remove course from old year
       await Years.findByIdAndUpdate(
