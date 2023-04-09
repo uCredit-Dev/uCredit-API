@@ -14,7 +14,7 @@ export interface NotificationAttrs {
   user_id: mongoose.Schema.Types.ObjectId[];
   message: String;
   quick_link_id?: mongoose.Schema.Types.ObjectId;
-  link_type?: LinkType;
+  link_type?: String;
   read?: Boolean;
   date?: Date;
 }
@@ -26,7 +26,7 @@ export interface NotificationDoc extends mongoose.Document {
   user_id: mongoose.Schema.Types.ObjectId[];
   message: String;
   quick_link_id?: mongoose.Schema.Types.ObjectId;
-  link_type?: LinkType;
+  link_type?: String;
   read?: Boolean;
   date?: Date;
 }

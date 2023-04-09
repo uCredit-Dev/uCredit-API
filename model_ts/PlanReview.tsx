@@ -15,8 +15,8 @@ export enum PlanReviewStatus {
  * Data Transfer Object (DTO) specification for CREATING a new Plan Review
  */
 export interface PlanReviewAttrs {
-  reviewee_id: String,
-  reviewer_id: String,
+  reviewee_id: mongoose.Schema.Types.ObjectId,
+  reviewer_id: mongoose.Schema.Types.ObjectId,  
   plan_id: String,
   status: PlanReviewStatus,
   // TODO (needed?): request_time: Date
@@ -26,8 +26,8 @@ export interface PlanReviewAttrs {
  * Declare fields in a created PlanReview document
  */
 export interface PlanReviewDoc extends mongoose.Document {
-  reviewee_id: String,
-  reviewer_id: String,
+  reviewee_id: mongoose.Schema.Types.ObjectId,
+  reviewer_id: mongoose.Schema.Types.ObjectId,
   plan_id: String,
   status: PlanReviewStatus,
   request_time: Date
@@ -43,12 +43,12 @@ interface PlanReviewModel extends mongoose.Model<PlanReviewDoc> {
 
 const planReviewSchema = new mongoose.Schema ({
   reviewee_id: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
   reviewer_id: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
   },

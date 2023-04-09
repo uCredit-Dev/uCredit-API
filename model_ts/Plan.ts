@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import MongooseResult from "./MongooseResult";
 
 /*  
     This model refers to a user plan.
@@ -19,7 +20,7 @@ export interface PlanAttrs {
 /**
  * Declare fields in a created Plan document
  */
-export interface PlanDoc extends mongoose.Document {
+export interface PlanDoc extends mongoose.Document, MongooseResult {
   name: String,
   majors: String[],
   year_ids: mongoose.Schema.Types.ObjectId[],
