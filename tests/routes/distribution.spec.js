@@ -17,13 +17,15 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI =
+  process.env.TEST_URI || 'mongodb://localhost:27017/distribution';
 mongoose.set('strictQuery', true);
 
 let distributions;
 let plans;
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/distribution', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
   done();

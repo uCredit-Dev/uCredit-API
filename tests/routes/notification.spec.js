@@ -1,7 +1,6 @@
-import mongoose, { set } from 'mongoose';
+import mongoose from 'mongoose';
 import Notifications from '../../model/Notification';
 import Users from '../../model/User';
-import Plans from '../../model/Plan';
 import supertest from 'supertest';
 import createApp from '../../app';
 import {
@@ -14,6 +13,8 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI =
+  process.env.TEST_URI || 'mongodb://localhost:27017/notification';
 mongoose.set('strictQuery', true);
 
 const NOTIF_BODY = {
@@ -26,7 +27,7 @@ let user2;
 let notification;
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/notification', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
   done();

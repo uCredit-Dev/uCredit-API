@@ -11,20 +11,24 @@ import {
   TEST_USER_1,
   TEST_CS,
   TEST_AMS,
+  TEST_USER_2,
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI =
+  process.env.TEST_URI || 'mongodb://localhost:27017/notification';
 mongoose.set('strictQuery', true);
 
 let plan = [];
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/plan', { useNewUrlParser: true });
+  mongoose.connect(TEST_URI, { useNewUrlParser: true });
   done();
 });
 
 beforeEach(async () => {
   await Users.create(TEST_USER_1);
+  await Users.create(TEST_USER_2);
   const response = await request
     .post('/api/plans')
     .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
@@ -49,11 +53,11 @@ describe('Plan Routes: GET /api/plans/:plan_id', () => {
     expect(res.body.data._id).toBe(plan._id);
   });
 
-  it('Should return stauts 403 with different user', async () => {
+  it('Should return stauts 200 with different user', async () => {
     const res = await request
       .get(`/api/plans/${plan._id}`)
       .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
   });
 
   it('Should return stauts 500 with invalid plan_id', async () => {

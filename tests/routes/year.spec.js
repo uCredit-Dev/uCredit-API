@@ -12,20 +12,23 @@ import {
   TEST_PLAN_2,
   TEST_TOKEN_1,
   TEST_TOKEN_2,
+  TEST_USER_2,
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/year';
 mongoose.set('strictQuery', true);
 
 let plan;
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/year', { useNewUrlParser: true });
+  mongoose.connect(TEST_URI, { useNewUrlParser: true });
   done();
 });
 
 beforeEach(async () => {
   await Users.create(TEST_USER_1);
+  await Users.create(TEST_USER_2);
   const resp1 = await request
     .post('/api/plans')
     .set('Authorization', `Bearer ${TEST_TOKEN_1}`)

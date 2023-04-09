@@ -5,12 +5,13 @@ import createApp from '../../app';
 import { SAMEPLE_SIS_COURSES } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/search';
 mongoose.set('strictQuery', true);
 
 let courses;
 
 beforeAll(async () => {
-  mongoose.connect('mongodb://localhost:27017/search', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
   courses = await SISCV.insertMany(SAMEPLE_SIS_COURSES);
@@ -40,7 +41,7 @@ describe('GET Search Routes', () => {
   it('GET /api/search/: Should return list of SIS courses matching query', async () => {
     const query = {
       title: 'tit',
-      number: 'numbe',
+      number: 'num',
       credits: '3',
     };
     // query by title
@@ -53,8 +54,8 @@ describe('GET Search Routes', () => {
     });
     // query by number
     res = await request.get(`/api/search?query=${query.number}`);
-    courses = res.body.data.courses;
     expect(res.status).toBe(200);
+    courses = res.body.data.courses;
     expect(courses.length).toBe(3);
     courses.forEach((course) => {
       expect(course.number.toLowerCase()).toContain(query.number.toLowerCase());

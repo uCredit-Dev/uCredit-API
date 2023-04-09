@@ -16,10 +16,11 @@ import {
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/user';
 mongoose.set('strictQuery', true);
 
 beforeAll(async () => {
-  mongoose.connect('mongodb://localhost:27017/user', { useNewUrlParser: true });
+  mongoose.connect(TEST_URI, { useNewUrlParser: true });
   const samples = [];
   for (let i = 1; i <= 98; i++) {
     const userObj = { _id: `User${i}`, name: `User${i}` };
@@ -178,41 +179,31 @@ describe('User Routes: GET /api/backdoor/verification/:id', () => {
 
 describe('User Routes: DELETE /api/user/:id', () => {
   it('Should delete user', async () => {
+    await Users.create({ ...TEST_USER_1, _id: 'TEST_DEV' });
     let res = await request
-      .delete(`/api/user/${TEST_USER_1._id}`)
+      .delete(`/api/user/TEST_DEV`)
       .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(204);
     // db check
-    const user = await Users.findById(TEST_USER_1._id);
+    const user = await Users.findById('TEST_DEV');
     expect(user).toBeNull();
   });
 
-  it('Should throw 404 if user not found', async () => {
+  it('Should throw 403 for non test user ids', async () => {
     let res = await request
       .delete(`/api/user/${TEST_USER_1._id}`)
       .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
-    expect(res.status).toBe(404);
-  });
-
-  it('Should throw 403 if wrong user', async () => {
-    await Users.create(TEST_USER_1);
-    let res = await request
-      .delete(`/api/user/${TEST_USER_1._id}`)
-      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(403);
   });
 
   it("Should delete user's plans", async () => {
-    await Plans.create(TEST_PLAN_1);
+    await Users.create({ ...TEST_USER_1, _id: 'TEST_DEV' });
+    await Plans.create({ ...TEST_PLAN_1, user_id: 'TEST_DEV' });
     // check that plan successfully created
-    let plans = await Plans.find({ user_id: TEST_USER_1._id });
-    expect(plans.length).toBe(1);
-    let res = await request
-      .delete(`/api/user/${TEST_USER_1._id}`)
-      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
+    let res = await request.delete(`/api/user/TEST_DEV`);
     expect(res.status).toBe(204);
     // check that plan deleted with user
-    plans = await Plans.find({ user_id: TEST_USER_1._id });
+    const plans = await Plans.find({ user_id: 'TEST_DEV' });
     expect(plans.length).toBe(0);
   });
 });

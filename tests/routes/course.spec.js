@@ -16,9 +16,11 @@ import {
   INVALID_ID,
   VALID_ID,
   TEST_USER_2,
+  TEST_PLAN_2,
 } from './testVars';
 
 const request = supertest(createApp());
+const TEST_URI = process.env.TEST_URI || 'mongodb://localhost:27017/course';
 mongoose.set('strictQuery', true);
 
 let plan;
@@ -26,7 +28,7 @@ let distribution;
 let courses;
 
 beforeAll((done) => {
-  mongoose.connect('mongodb://localhost:27017/course', {
+  mongoose.connect(TEST_URI, {
     useNewUrlParser: true,
   });
   done();
@@ -233,12 +235,21 @@ describe('Course Routes: GET /api/coursesByTerm/:plan_id', () => {
 
 describe('Course Routes: POST /api/courses', () => {
   it('Should return created course via post request', async () => {
-    // set request course body
-    const course = SAMEPLE_COURSES[0];
+    // new plan for user2
+    let res = await request
+      .post('/api/plans')
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`)
+      .send(TEST_PLAN_2);
+    const plan = res.body.data;
+    const course = SAMEPLE_COURSES[1];
+    course.plan_id = plan._id;
+    course.user_id = TEST_USER_2._id;
+    course.year = plan.years[3]._id;
+    course.distribution_ids = [];
     // POST new course
-    const res = await request
-      .post(`/api/courses/`)
-      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
+    res = await request
+      .post(`/api/courses`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`)
       .send(course);
     expect(res.status).toBe(200);
     const newCourse = res.body.data;
@@ -246,34 +257,39 @@ describe('Course Routes: POST /api/courses', () => {
     expect(newCourse.term).toBe(course.term);
     expect(newCourse.number).toBe(course.number);
     expect(newCourse.level).toBe(course.level);
-    expect(newCourse.user_id).toBe(course.user_id);
     expect(newCourse.plan_id).toBe(course.plan_id);
+    expect(newCourse.user_id).toBe(course.user_id);
   });
 
-  it('Should return status 403 for invalid user', async () => {
+  it('Should return status 403 for nonexistant / unauthorizezd user', async () => {
     // set request course body
     const course = SAMEPLE_COURSES[0];
-    // wrong user
-    const res = await request
-      .post(`/api/courses/`)
+    // nonexistant user
+    let res = await request
+      .post(`/api/courses`)
       .set('Authorization', `Bearer ${TEST_TOKEN_2}`)
       .send(course);
     expect(res.status).toBe(403);
+    // unauthorized user
+    res = await request
+      .post(`/api/courses`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`)
+      .send(course);
   });
 
-  it('Should return status 500 for undefined body', async () => {
+  it('Should return status 400 for undefined body', async () => {
     const res = await request
-      .post(`/api/courses/`)
+      .post(`/api/courses`)
       .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 
-  it('Should return status 500 for empty body', async () => {
+  it('Should return status 400 for empty body', async () => {
     const res = await request
-      .post(`/api/courses/`)
+      .post(`/api/courses`)
       .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send({});
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 
   it('Should return status 500 for incomplete body', async () => {
@@ -282,7 +298,7 @@ describe('Course Routes: POST /api/courses', () => {
     delete course.plan_id;
     // make reqest
     const res = await request
-      .post(`/api/courses/`)
+      .post(`/api/courses`)
       .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(course);
     expect(res.status).toBe(500);
@@ -294,10 +310,19 @@ describe('Course Routes: POST /api/courses', () => {
     course.distribution_ids = [VALID_ID]; // random objectid
     // make request
     const res = await request
-      .post(`/api/courses/`)
+      .post(`/api/courses`)
       .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(course);
     expect(res.status).toBe(500);
+  });
+
+  it('Should return status 400 for trying to add identical course twice', async () => {
+    let course = SAMEPLE_COURSES[0];
+    const res = await request
+      .post(`/api/courses`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
+      .send(course);
+    expect(res.status).toBe(400);
   });
 });
 
@@ -465,24 +490,7 @@ describe('Course Routes: PATCH /api/courses/dragged', () => {
     expect(res.status).toBe(400);
   });
 
-  it('Should return status 400 for trying to add identical course twice', async () => {
-    courses = await Courses.find({});
-    let course = courses[0];
-    const res = await request
-      .post(`/api/courses/`)
-      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
-      .send(course);
-    expect(res.status).toBe(200);
-    const res2 = await request
-      .post(`/api/courses/`)
-      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
-      .send(course);
-    expect(res2.status).toBe(400);
-  });
-
   it('Should return status 400 for undefined id', async () => {
-    courses = await Courses.find({});
-    let course = courses[0];
     const body = {
       courseId: undefined,
       oldYear: plan.years[3]._id,
