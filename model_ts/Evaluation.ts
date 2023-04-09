@@ -46,3 +46,5 @@ const Evaluation = mongoose.model<EvaluationDoc, mongoose.Model<EvaluationDoc>>(
   "Evaluation",
   evalSchema
 );
+
+export { Evaluation };
