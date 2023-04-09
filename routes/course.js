@@ -211,23 +211,18 @@ router.patch('/api/courses/dragged', auth, async (req, res) => {
         });
       }
       // check if course is a duplicate at new term!
-      const retrievedCourses = await Courses.findByPlanId(course.plan_id);
-      for (const existingCourse of retrievedCourses) {
-        if (
-          existingCourse.number === course.number &&
-          existingCourse.term === newTerm.toLowerCase() &&
-          existingCourse.year === newYear.name &&
-          existingCourse.title === course.title
-        ) {
-          console.log(newTerm);
-          console.log(existingCourse.term);
-          console.log(newYear.name);
-          console.log(existingCourse.year);
-          return errorHandler(res, 400, {
-            message:
-              'Cannot take same course multiple times in the same semester',
-          });
-        }
+      const retrievedCourses = await Courses.find({
+        plan_id: course.plan_id,
+        number: course.number,
+        term: newTerm.toLowerCase(),
+        title: course.title,
+        year: newYear.name,
+      });
+      if (retrievedCourses.length !== 0) {
+        return errorHandler(res, 400, {
+          message:
+            'Cannot take same course multiple times in the same semester',
+        });
       }
       // remove course from old year
       await Years.findByIdAndUpdate(
