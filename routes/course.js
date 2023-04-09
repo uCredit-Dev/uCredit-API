@@ -187,6 +187,7 @@ router.patch('/api/courses/dragged', auth, async (req, res) => {
   const newYear_id = req.body.newYear;
   const oldYear_id = req.body.oldYear;
   const newTerm = req.body.newTerm;
+  const newYear = await Years.findById(newYear_id);
   // raise error if required param is undefined
   if (!newYear_id || !oldYear_id || !c_id || !newTerm) {
     return missingHandler(res, { newYear_id, oldYear_id, c_id, newTerm });
@@ -205,7 +206,23 @@ router.patch('/api/courses/dragged', auth, async (req, res) => {
       }).exec();
       // check if course is held at new term!
       if (!checkDestValid(sisCourses, course, newTerm)) {
-        return errorHandler(res, 400, { message: 'no course this semester' });
+        return errorHandler(res, 400, {
+          message: "Course isn't usually held this semester!",
+        });
+      }
+      // check if course is a duplicate at new term!
+      const retrievedCourses = await Courses.find({
+        plan_id: course.plan_id,
+        number: course.number,
+        term: newTerm.toLowerCase(),
+        title: course.title,
+        year: newYear.name,
+      });
+      if (retrievedCourses.length !== 0) {
+        return errorHandler(res, 400, {
+          message:
+            'Cannot take same course multiple times in the same semester',
+        });
       }
       // remove course from old year
       await Years.findByIdAndUpdate(
