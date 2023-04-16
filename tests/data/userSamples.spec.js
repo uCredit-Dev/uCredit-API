@@ -1,25 +1,25 @@
-import mongoose from "mongoose";
-import users from "../../model/User";
-import { addSampleUsers } from "../../data/userSamples";
+import mongoose from 'mongoose';
+import users from '../model/User';
+import { addSampleUsers } from '../data/userSamples';
 
 const SAMPLES = [
   {
-    _id: "csStudent",
-    major: "cs",
+    _id: 'csStudent',
+    major: 'cs',
   },
   {
-    _id: "mathStudent",
-    major: "math",
+    _id: 'mathStudent',
+    major: 'math',
   },
   {
-    _id: "bioStudent",
-    major: "bio",
+    _id: 'bioStudent',
+    major: 'bio',
   },
 ];
 
 beforeEach((done) => {
   mongoose
-    .connect("mongodb://localhost:27017/userSamples", { useNewUrlParser: true })
+    .connect('mongodb://localhost:27017/userSamples', { useNewUrlParser: true })
     .then(() => {
       addSampleUsers(users);
       done();
@@ -27,36 +27,36 @@ beforeEach((done) => {
 });
 
 afterEach((done) => {
-  mongoose.connection.db.collection("userSamples").drop(() => {
+  mongoose.connection.db.collection('userSamples').drop(() => {
     mongoose.connection.close(() => done());
   });
 });
 
-describe("userSamples should create new sample users", () => {
-  it("userSamples should create 3 students", async () => {
+describe('userSamples should create new sample users', () => {
+  it('userSamples should create 3 students', async () => {
     const userList = await users.find({});
     expect(userList.length).toBe(SAMPLES.length);
   });
 
-  it("first student id should match first sample id", async () => {
+  it('first student id should match first sample id', async () => {
     const userList = await users.find({});
     expect(userList[0]._id).toBe(SAMPLES[0]._id);
   });
 
-  it("second student id should match for second sample id", async () => {
+  it('second student id should match for second sample id', async () => {
     const userList = await users.find({});
     expect(userList[1]._id).toBe(SAMPLES[1]._id);
   });
 
-  it("third student id should match for third sample id", async () => {
+  it('third student id should match for third sample id', async () => {
     const userList = await users.find({});
     expect(userList[2]._id).toBe(SAMPLES[2]._id);
   });
 
-  it("should throw error for invalid parameter", async () => {
+  it('should throw error for invalid parameter', async () => {
     try {
       addSampleUsers(null);
-      fail("should throw error");
+      fail('should throw error');
     } catch (err) {
       expect(err).toBeTruthy();
     }

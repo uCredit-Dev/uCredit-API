@@ -1,5 +1,5 @@
-const db = require("./db");
-const fineRequirements = require("../model/FineRequirement.js");
+const db = require('./db');
+const fineRequirements = require('../model/FineRequirement.js');
 
 deleteFineRequirementsDocuments();
 
@@ -9,7 +9,7 @@ async function deleteFineRequirementsDocuments() {
   fineRequirements
     .deleteMany({})
     .then(() => {
-      console.log("Fine Requirements documents deleted");
+      console.log('Fine Requirements documents deleted');
     })
     .catch((error) => {
       console.log(error);

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 /*  
@@ -8,9 +8,9 @@ const Schema = mongoose.Schema;
 const planSchema = new Schema({
   name: { type: String, required: true },
   major_ids: [{ type: String, required: true }],
-  year_ids: [{ type: Schema.Types.ObjectId, ref: "Year" }],
+  year_ids: [{ type: Schema.Types.ObjectId, ref: 'Year' }],
   user_id: { type: String, required: true },
   expireAt: { type: Date, expires: 60 * 60 * 24 },
 });
 
-export default mongoose.model("Plan", planSchema);
+export default mongoose.model('Plan', planSchema);

@@ -1,5 +1,5 @@
-const db = require("./db");
-const distributions = require("../model/Distribution.js");
+const db = require('./db');
+const distributions = require('../model/Distribution.js');
 
 // addDistributionsDocuments();
 

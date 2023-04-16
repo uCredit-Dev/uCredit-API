@@ -124,7 +124,11 @@ const bsECE = {
         'Students must take a total of 12 credits of advanced laboratory, design intensive, or senior design project courses. A minimum of six (6) credits must come from ECE. The remaining 6 credits of advanced lab can come from any department, as long as the class is listed as an option in this section of the degree audit and degree checksheet.',
       criteria:
         'EN Computer Science[D]^OR^EN Electrical & Computer Engineering[D]',
-      double_count: ['Humanity & Social Sciences', 'Writing Intensive', 'Other Engineering'],
+      double_count: [
+        'Humanity & Social Sciences',
+        'Writing Intensive',
+        'Other Engineering',
+      ],
       fine_requirements: [
         {
           description: 'Advanced Laboratory Courses in ECE',
@@ -1907,10 +1911,7 @@ const bsBME = {
       min_credits_per_course: 1,
       description: 'Select 9 credits from any area.',
       criteria: 'H[A]^OR^S[A]^OR^Q[A]^OR^N[A]^OR^E[A]',
-      double_count: [
-        'Humanities and Social Sciences',
-        'Writing Intensive',
-      ],
+      double_count: ['Humanities and Social Sciences', 'Writing Intensive'],
     },
     {
       name: 'Humanities and Social Sciences',
@@ -3100,7 +3101,8 @@ const bsCS_Old = {
       description:
         "For more information please visit the <a href='https://www.cs.jhu.edu/undergraduate-studies/academics/ugrad-advising-manual/'>" +
         'major degree requirement</a> section on the department website.',
-      criteria: 'EN Computer Science[D]^OR^EN.500.112[C]^OR^EN.601.104[C]^OR^EN.660.400[C]',
+      criteria:
+        'EN Computer Science[D]^OR^EN.500.112[C]^OR^EN.601.104[C]^OR^EN.660.400[C]',
       double_count: [
         'Mathematics',
         'Humanities/Social Sciences',
@@ -5813,10 +5815,8 @@ const allMajors = [
 ];
 
 export function getMajor(major_id) {
-  const major = allMajors.find((m) => m._id === major_id); 
-  return major ? major : allMajors[0]; 
+  const major = allMajors.find((m) => m._id === major_id);
+  return major ? major : allMajors[0];
 }
 
-export {
-  allMajors
-}
+export { allMajors };

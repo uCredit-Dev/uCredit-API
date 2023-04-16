@@ -1,16 +1,16 @@
 //three users with no courses/distribution added yet.
 const samples = [
   {
-    _id: "csStudent",
-    major: "cs",
+    _id: 'csStudent',
+    major: 'cs',
   },
   {
-    _id: "mathStudent",
-    major: "math",
+    _id: 'mathStudent',
+    major: 'math',
   },
   {
-    _id: "bioStudent",
-    major: "bio", // FAULT: unneeded
+    _id: 'bioStudent',
+    major: 'bio', // FAULT: unneeded
   },
 ];
 

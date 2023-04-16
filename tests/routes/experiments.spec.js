@@ -1,30 +1,32 @@
-import mongoose from "mongoose";
-import supertest from "supertest";
-import createApp from "../../app";
-import ExperimentDao from "../../data/ExperimentDao";
-import User from "../../model/User";
+import mongoose from 'mongoose';
+import supertest from 'supertest';
+import createApp from '../../app';
+import ExperimentDao from '../../data/ExperimentDao';
+import User from '../../model/User';
 
 const request = supertest(createApp());
-mongoose.set("strictQuery", true);
+const TEST_URI =
+  process.env.TEST_URI || 'mongodb://localhost:27017/experiments';
+mongoose.set('strictQuery', true);
 
 const experiments = new ExperimentDao();
-const endpoint = "/api/experiments";
+const endpoint = '/api/experiments';
 
-describe("Test experiments endpoints", () => {
+describe('Test experiments endpoints', () => {
   describe(`Test ${endpoint} endpoints`, () => {
-    const MARK_JHED = "mtiavis1";
-    const WILL_JHED = "wtong10";
-    const EMPTY_JHED = "User1";
-    const JUNK_JHED = "njunk13";
-    const EXPERIMENT_ONE = "New UI";
-    const EXPERIMENT_TWO = "Golden Cover";
-    const EXPERIMENT_THREE = "Home Button";
+    const MARK_JHED = 'mtiavis1';
+    const WILL_JHED = 'wtong10';
+    const EMPTY_JHED = 'User1';
+    const JUNK_JHED = 'njunk13';
+    const EXPERIMENT_ONE = 'New UI';
+    const EXPERIMENT_TWO = 'Golden Cover';
+    const EXPERIMENT_THREE = 'Home Button';
     const MARK_ACTIVE = [EXPERIMENT_ONE, EXPERIMENT_THREE];
     const WILL_ACTIVE = [EXPERIMENT_ONE, EXPERIMENT_TWO];
 
     const setupFunc = async (done) => {
       //This will be slow, usually beforeAll, but need to reset experiments because post routes would affect other tests
-      mongoose.connect("mongodb://localhost:27017/experiments", {
+      mongoose.connect(TEST_URI, {
         useNewUrlParser: true,
       });
       //Fake creation of 98 more users to use in post tests
@@ -68,26 +70,26 @@ describe("Test experiments endpoints", () => {
     });
 
     describe(`Test GET ${endpoint}/allExperiments`, () => {
-      describe("Return 200 and experiment names for successful request", () => {
-        test("Return status 200", async () => {
+      describe('Return 200 and experiment names for successful request', () => {
+        test('Return status 200', async () => {
           const response = await request.get(`${endpoint}/allExperiments`);
           expect(response.status).toBe(200);
         });
 
-        test("Return all experiment names except White List", async () => {
+        test('Return all experiment names except White List', async () => {
           const response = await request.get(`${endpoint}/allExperiments`);
           expect(response.status).toBe(200);
           expect(response.body.data.length).toBe(3);
           for (const experimentName of response.body.data) {
-            expect(experimentName).not.toBe("White List");
+            expect(experimentName).not.toBe('White List');
           }
         });
       });
     });
 
     describe(`Test GET ${endpoint}/:user_id`, () => {
-      describe("Return 200 and experiment names for successful request", () => {
-        test("Return experiment names for an existing user", async () => {
+      describe('Return 200 and experiment names for successful request', () => {
+        test('Return experiment names for an existing user', async () => {
           const response = await request.get(`${endpoint}/${MARK_JHED}`);
           expect(response.status).toBe(200);
           expect(response.body.data.length).toBe(MARK_ACTIVE.length);
@@ -96,13 +98,13 @@ describe("Test experiments endpoints", () => {
           }
         });
 
-        test("Return empty array for user with no experiments", async () => {
+        test('Return empty array for user with no experiments', async () => {
           const response = await request.get(`${endpoint}/${EMPTY_JHED}`);
           expect(response.status).toBe(200);
           expect(response.body.data.length).toBe(0);
         });
 
-        test("Return status 400 for invalid JHED", async () => {
+        test('Return status 400 for invalid JHED', async () => {
           const response = await request.get(`${endpoint}/${JUNK_JHED}`);
           expect(response.status).toBe(400);
         });
@@ -110,8 +112,8 @@ describe("Test experiments endpoints", () => {
     });
 
     describe(`Test POST ${endpoint}/:experiment_name`, () => {
-      describe("Return 200 and updated experiment", () => {
-        test("Update Percentage of Experiment", async () => {
+      describe('Return 200 and updated experiment', () => {
+        test('Update Percentage of Experiment', async () => {
           const response = await request
             .post(`${endpoint}/${EXPERIMENT_THREE}`)
             .send({ percent_participating: 10 });
@@ -128,22 +130,22 @@ describe("Test experiments endpoints", () => {
         });
       });
 
-      describe("Return 400 for invalid parameters", () => {
-        test("No Percentage Given", async () => {
+      describe('Return 400 for invalid parameters', () => {
+        test('No Percentage Given', async () => {
           const response = await request.post(
-            `${endpoint}/${EXPERIMENT_THREE}`
+            `${endpoint}/${EXPERIMENT_THREE}`,
           );
           expect(response.status).toBe(400);
         });
 
-        test("Attempt to update Whitelist percentage", async () => {
+        test('Attempt to update Whitelist percentage', async () => {
           const response = await request
             .post(`${endpoint}/White List`)
             .send({ percent_participating: 50 });
           expect(response.status).toBe(400);
         });
 
-        test("Invalid Percentage Given", async () => {
+        test('Invalid Percentage Given', async () => {
           const response = await request
             .post(`${endpoint}/${EXPERIMENT_THREE}}`)
             .send({ percent_participating: -1 });
@@ -156,36 +158,36 @@ describe("Test experiments endpoints", () => {
 
           const responseThree = await request
             .post(`${endpoint}/${EXPERIMENT_THREE}}`)
-            .send({ percent_participating: "abs" });
+            .send({ percent_participating: 'abs' });
           expect(responseThree.status).toBe(400);
         });
       });
     });
 
     describe(`Test GET ${endpoint}/percent/:experiment_name`, () => {
-      describe("Return 200 and percentage of users participating in an experiment", () => {
-        test("Return initial percentage of an experiment (0%)", async () => {
+      describe('Return 200 and percentage of users participating in an experiment', () => {
+        test('Return initial percentage of an experiment (0%)', async () => {
           const allExperiments = await request.get(
-            `${endpoint}/allExperiments`
+            `${endpoint}/allExperiments`,
           );
           // console.log(allExperiments.body.data);
           const response = await request.get(
-            `${endpoint}/percent/${EXPERIMENT_ONE}`
+            `${endpoint}/percent/${EXPERIMENT_ONE}`,
           );
           expect(response.status).toBe(200);
           expect(response.body).toBe(2);
         });
 
-        test("Return status 400 when using an experiment that does not exist", async () => {
+        test('Return status 400 when using an experiment that does not exist', async () => {
           const response = await request.get(
-            `${endpoint}/percent/${JUNK_JHED}`
+            `${endpoint}/percent/${JUNK_JHED}`,
           );
           expect(response.status).toBe(400);
         });
 
-        test("Return percentage of an experiment after a post (must pass post tests first)", async () => {
+        test('Return percentage of an experiment after a post (must pass post tests first)', async () => {
           const allExperiments = await request.get(
-            `${endpoint}/allExperiments`
+            `${endpoint}/allExperiments`,
           );
           // console.log(allExperiments.body.data);
           const response = await request
@@ -196,7 +198,7 @@ describe("Test experiments endpoints", () => {
           expect(response.body.data.percent_participating).toBe(10);
 
           const percentResponse = await request.get(
-            `${endpoint}/percent/${EXPERIMENT_ONE}`
+            `${endpoint}/percent/${EXPERIMENT_ONE}`,
           );
           expect(percentResponse.status).toBe(200);
           //does not need to be exactly 10 - it depends on how many users are in the database
@@ -206,16 +208,16 @@ describe("Test experiments endpoints", () => {
     });
 
     describe(`Test PUT ${endpoint}/add/:experiment_name`, () => {
-      describe("Return 200 and updated experiment when adding user", () => {
-        test("Adding User to Active", async () => {
+      describe('Return 200 and updated experiment when adding user', () => {
+        test('Adding User to Active', async () => {
           const response = await request
             .put(`${endpoint}/add/${EXPERIMENT_ONE}`)
-            .send({ user_id: "TestUser1" });
+            .send({ user_id: 'TestUser1' });
           expect(response.status).toBe(200);
           expect(response.body.data.active.length - 1).toBe(2);
         });
 
-        test("Adding User on Blacklist to active", async () => {
+        test('Adding User on Blacklist to active', async () => {
           const response = await request
             .put(`${endpoint}/add/${EXPERIMENT_TWO}`)
             .send({ user_id: `${MARK_JHED}` });
@@ -226,28 +228,28 @@ describe("Test experiments endpoints", () => {
         });
       });
 
-      describe("Return 400 when given invalid parameters", () => {
-        test("Adding User that does not exist", async () => {
+      describe('Return 400 when given invalid parameters', () => {
+        test('Adding User that does not exist', async () => {
           const response = await request.put(
-            `${endpoint}/add/${EXPERIMENT_ONE}`
+            `${endpoint}/add/${EXPERIMENT_ONE}`,
           );
           expect(response.status).toBe(400);
         });
-        test("Adding User that is guest user", async () => {
+        test('Adding User that is guest user', async () => {
           const response = await request
             .put(`${endpoint}/add/${EXPERIMENT_ONE}`)
-            .send({ user_id: "guestUser" });
+            .send({ user_id: 'guestUser' });
           expect(response.status).toBe(400);
         });
 
-        test("Adding User to experiment that does not exist", async () => {
+        test('Adding User to experiment that does not exist', async () => {
           const response = await request
             .put(`${endpoint}/add/${JUNK_JHED}`)
             .send({ user_id: `${JUNK_JHED}` });
           expect(response.status).toBe(400);
         });
 
-        test("Adding User to experiment that they are already a part of", async () => {
+        test('Adding User to experiment that they are already a part of', async () => {
           const response = await request
             .put(`${endpoint}/add/${EXPERIMENT_ONE}`)
             .send({ user_id: `${MARK_JHED}` });
@@ -257,8 +259,8 @@ describe("Test experiments endpoints", () => {
     });
 
     describe(`Test PUT ${endpoint}/delete/:experiment_name`, () => {
-      describe("Return 200 and updated experiment when deleting user", () => {
-        test("Deleting User from Active, add to blacklist", async () => {
+      describe('Return 200 and updated experiment when deleting user', () => {
+        test('Deleting User from Active, add to blacklist', async () => {
           const response = await request
             .put(`${endpoint}/delete/${EXPERIMENT_ONE}`)
             .send({ user_id: `${WILL_JHED}` });
@@ -269,27 +271,27 @@ describe("Test experiments endpoints", () => {
         });
       });
 
-      describe("Return 400 when given invalid parameters", () => {
-        test("Deleting User that does not exist", async () => {
+      describe('Return 400 when given invalid parameters', () => {
+        test('Deleting User that does not exist', async () => {
           const response = await request.put(
-            `${endpoint}/delete/${EXPERIMENT_ONE}`
+            `${endpoint}/delete/${EXPERIMENT_ONE}`,
           );
           expect(response.status).toBe(400);
         });
-        test("Deleting User to experiment that does not exist", async () => {
+        test('Deleting User to experiment that does not exist', async () => {
           const response = await request
             .put(`${endpoint}/delete/${JUNK_JHED}`)
             .send({ user_id: `${JUNK_JHED}` });
           expect(response.status).toBe(400);
         });
-        test("Deleting User with invalid JHED", async () => {
+        test('Deleting User with invalid JHED', async () => {
           const response = await request
             .put(`${endpoint}/delete/$%00`)
             .send({ user_id: null });
           expect(response.status).toBe(400);
         });
 
-        test("Deleting User to experiment that they are already a part of in blacklist", async () => {
+        test('Deleting User to experiment that they are already a part of in blacklist', async () => {
           await request
             .put(`${endpoint}/delete/${EXPERIMENT_ONE}`)
             .send({ user_id: `${MARK_JHED}` });
@@ -304,8 +306,8 @@ describe("Test experiments endpoints", () => {
     });
 
     describe(`Test PUT ${endpoint}/changeName/:experiment_name`, () => {
-      describe("Return 200 and updated experiment when changing name of experiment", () => {
-        test("Change the name of an experiment", async () => {
+      describe('Return 200 and updated experiment when changing name of experiment', () => {
+        test('Change the name of an experiment', async () => {
           const response = await request
             .put(`${endpoint}/changeName/${EXPERIMENT_ONE}`)
             .send({ new_name: `New Experiment Name` });
@@ -314,24 +316,24 @@ describe("Test experiments endpoints", () => {
         });
       });
 
-      describe("Return 400 when given invalid parameters", () => {
-        test("Changing experiment name for experiment that does not exist", async () => {
+      describe('Return 400 when given invalid parameters', () => {
+        test('Changing experiment name for experiment that does not exist', async () => {
           const response = await request
             .put(`${endpoint}/changeName/${JUNK_JHED}`)
             .send({ new_name: `${EXPERIMENT_ONE}` });
           expect(response.status).toBe(400);
         });
 
-        test("Changing experiment name for invalid JHED", async () => {
+        test('Changing experiment name for invalid JHED', async () => {
           const response = await request
             .put(`${endpoint}/changeName/%00`)
             .send({ new_name: `${EXPERIMENT_ONE}` });
           expect(response.status).toBe(400);
         });
 
-        test("Changing experiment name for invalid body", async () => {
+        test('Changing experiment name for invalid body', async () => {
           const response = await request.put(
-            `${endpoint}/changeName/${JUNK_JHED}`
+            `${endpoint}/changeName/${JUNK_JHED}`,
           );
           expect(response.status).toBe(400);
         });
@@ -339,10 +341,10 @@ describe("Test experiments endpoints", () => {
     });
 
     describe(`Test DELETE ${endpoint}/:experiment_name`, () => {
-      describe("Return 200 and deleted experiment", () => {
-        test("Delete Experiment", async () => {
+      describe('Return 200 and deleted experiment', () => {
+        test('Delete Experiment', async () => {
           const response = await request.delete(
-            `${endpoint}/${EXPERIMENT_ONE}`
+            `${endpoint}/${EXPERIMENT_ONE}`,
           );
           expect(response.status).toBe(200);
           expect(response.body.data.experimentName).toBe(`${EXPERIMENT_ONE}`);
@@ -351,12 +353,12 @@ describe("Test experiments endpoints", () => {
         });
       });
 
-      describe("Return 400 when given invalid parameters", () => {
-        test("Attempting to delete experiment name that does not exist", async () => {
+      describe('Return 400 when given invalid parameters', () => {
+        test('Attempting to delete experiment name that does not exist', async () => {
           const response = await request.delete(`${endpoint}/${JUNK_JHED}`);
           expect(response.status).toBe(400);
         });
-        test("Attempting to delete experiment with invalid JHED ", async () => {
+        test('Attempting to delete experiment with invalid JHED ', async () => {
           const response = await request.delete(`${endpoint}/%00`);
           expect(response.status).toBe(400);
         });

@@ -7,36 +7,36 @@
   Courses that include these titles will be ommitted:
   "independent study", "internship", "independent research"
 */
-import SISCoursesV from "../model/SISCourseV.js";
-import db from "./db.js";
-import axios from "axios";
-import dotenv from "dotenv";
+import SISCoursesV from '../model/SISCourseV.js';
+import db from './db.js';
+import axios from 'axios';
+import dotenv from 'dotenv';
 
 dotenv.config();
 const key = process.env.SIS_API_KEY;
 
 const terms = [
-  "Fall 2019",
-  "Intersession 2020",
-  "Spring 2020",
-  "Summer 2020",
-  "Fall 2020",
-  "Intersession 2021",
-  "Spring 2021",
-  "Summer 2021",
-  "Fall 2021",
-  "Intersession 2022",
-  "Spring 2022",
-  "Fall 2022",
-  "Spring 2023",
+  'Fall 2019',
+  'Intersession 2020',
+  'Spring 2020',
+  'Summer 2020',
+  'Fall 2020',
+  'Intersession 2021',
+  'Spring 2021',
+  'Summer 2021',
+  'Fall 2021',
+  'Intersession 2022',
+  'Spring 2022',
+  'Fall 2022',
+  'Spring 2023',
 ]; //, "Fall 2019", "Spring 2020", "Spring 2021", "Spring 2022"]; //specify the terms you want to cache
 
 cache();
 
 async function cache() {
-  console.log("connecting to db...");
+  console.log('connecting to db...');
   await db.connect();
-  console.log("db connected");
+  console.log('db connected');
   for (let i = 0; i < terms.length; i++) {
     await cacheCourse(terms[i]);
   }
@@ -47,7 +47,7 @@ async function cacheCourse(term) {
   console.log(courses.length);
   const newCourses = await extractProperty(courses, term);
   SISCoursesV.insertMany(newCourses)
-    .then((result) => console.log(term, " saved to database!"))
+    .then((result) => console.log(term, ' saved to database!'))
     .catch((err) => console.log(err));
 }
 
@@ -55,28 +55,28 @@ async function cacheCourse(term) {
   Term example: "Fall 2021" *must include space*
 */
 async function cleanDup(term) {
-  console.log("fetching raw data from SIS and filter unique course number...");
+  console.log('fetching raw data from SIS and filter unique course number...');
   const filteredCourses = [];
   await axios
     .get(
-      `https://sis.jhu.edu/api/classes/?key=${key}&term=${term}&school=Krieger School of Arts and Sciences&school=Whiting School of Engineering`
+      `https://sis.jhu.edu/api/classes/?key=${key}&term=${term}&school=Krieger School of Arts and Sciences&school=Whiting School of Engineering`,
     )
     .then((res) => {
       const data = res.data;
 
-      console.log("length before filter dup is " + data.length);
+      console.log('length before filter dup is ' + data.length);
       for (let i in data) {
         const course = data[i];
         // check if course is a dup: same title and number
         const index = filteredCourses.findIndex(
           (e) =>
-            e.OfferingName == course.OfferingName && e.Title == course.Title
+            e.OfferingName == course.OfferingName && e.Title == course.Title,
         );
         if (index == -1) {
           filteredCourses.push(course);
         }
       }
-      console.log("length after filter dup is " + filteredCourses.length);
+      console.log('length after filter dup is ' + filteredCourses.length);
     })
     .catch((err) => console.log(err));
   return filteredCourses;
@@ -99,7 +99,7 @@ async function extractProperty(courses, term) {
           course.OfferingName,
           course.SectionName,
           briefCourses,
-          term
+          term,
         );
       } else {
         // if course version not already in db:
@@ -109,25 +109,25 @@ async function extractProperty(courses, term) {
             course.OfferingName,
             course.SectionName,
             courseFromDB,
-            term
+            term,
           );
           dupCount++;
         }
       }
     } else {
       console.log(
-        "******bypassed ",
+        '******bypassed ',
         course.Title,
         course.OfferingName,
-        course.Credits
+        course.Credits,
       );
       bp++;
     }
   }
   await sleep(10000);
-  console.log("new course amount saved to db: " + briefCourses.length);
-  console.log("courses with new versions across db: " + dupCount);
-  console.log("bypassed: " + bp);
+  console.log('new course amount saved to db: ' + briefCourses.length);
+  console.log('courses with new versions across db: ' + dupCount);
+  console.log('bypassed: ' + bp);
   return briefCourses;
 }
 
@@ -139,16 +139,16 @@ function byPass(course) {
   let title = course.Title.toLowerCase();
   let credit = Number.parseFloat(course.Credits);
   return (
-    title.includes("independent study") ||
-    title.includes("internship") ||
-    title.includes("independent research") ||
+    title.includes('independent study') ||
+    title.includes('internship') ||
+    title.includes('independent research') ||
     isNaN(credit)
   );
 }
 
 async function pushNewCourse(offeringName, section, briefCourses, TERM) {
   const regex = /\./g;
-  const number = offeringName.replace(regex, "") + section;
+  const number = offeringName.replace(regex, '') + section;
   await axios
     .get(`https://sis.jhu.edu/api/classes/${number}/${TERM}?key=${key}`)
     .then((res) => {
@@ -166,7 +166,7 @@ async function pushNewCourse(offeringName, section, briefCourses, TERM) {
             school: course.SchoolName,
             department: course.Department,
             credits: Number.parseFloat(course.Credits),
-            wi: course.IsWritingIntensive === "Yes" ? true : false,
+            wi: course.IsWritingIntensive === 'Yes' ? true : false,
             level: course.Level,
             bio: details.Description,
             preReq: details.Prerequisites,
@@ -175,21 +175,21 @@ async function pushNewCourse(offeringName, section, briefCourses, TERM) {
             tags:
               details.PosTags.length == 0
                 ? []
-                : getField(details.PosTags, "Tag"),
+                : getField(details.PosTags, 'Tag'),
           },
         ],
       };
       if (brief.title !== undefined) {
         briefCourses.push(brief);
       }
-      console.log("$$$$$$new course:", brief.title);
+      console.log('$$$$$$new course:', brief.title);
     })
     .catch((err) => console.log(err));
 }
 
 async function pushNewVersion(offeringName, section, courseFromDB, TERM) {
   const regex = /\./g;
-  const number = offeringName.replace(regex, "") + section;
+  const number = offeringName.replace(regex, '') + section;
   await axios
     .get(`https://sis.jhu.edu/api/classes/${number}/${TERM}?key=${key}`)
     .then(async (res) => {
@@ -202,14 +202,14 @@ async function pushNewVersion(offeringName, section, courseFromDB, TERM) {
         school: course.SchoolName,
         department: course.Department,
         credits: Number.parseFloat(course.Credits),
-        wi: course.IsWritingIntensive === "Yes" ? true : false,
+        wi: course.IsWritingIntensive === 'Yes' ? true : false,
         level: course.Level,
         bio: details.Description,
         preReq: details.Prerequisites,
         coReq: details.CoRequisites,
         restrictions: details.Restrictions,
         tags:
-          details.PosTags.length == 0 ? [] : getField(details.PosTags, "Tag"),
+          details.PosTags.length == 0 ? [] : getField(details.PosTags, 'Tag'),
       };
       if (version.wi !== undefined) {
         courseFromDB.versions.unshift(version);

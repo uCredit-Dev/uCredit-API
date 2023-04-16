@@ -4,8 +4,8 @@
     Then run this script.
 */
 
-const db = require("./db");
-const distributions = require("../model/Distribution.js");
+const db = require('./db');
+const distributions = require('../model/Distribution.js');
 
 deleteDistributionsDocuments();
 
@@ -15,7 +15,7 @@ async function deleteDistributionsDocuments() {
   distributions
     .deleteMany({})
     .then(() => {
-      console.log("Distributions documents deleted");
+      console.log('Distributions documents deleted');
     })
     .catch((error) => {
       console.log(error);

@@ -3,13 +3,13 @@ import {
   errorHandler,
   forbiddenHandler,
   missingHandler,
-} from "./helperMethods.js";
-import Plans from "../model/Plan.js";
-import Threads from "../model/Thread.js";
-import Comments from "../model/Comment.js";
-import { auth } from "../util/token.js";
-import express from "express";
-import Users from "../model/User.js";
+} from './helperMethods.js';
+import Plans from '../model/Plan.js';
+import Threads from '../model/Thread.js';
+import Comments from '../model/Comment.js';
+import { auth } from '../util/token.js';
+import express from 'express';
+import Users from '../model/User.js';
 
 const router = express.Router();
 
@@ -17,17 +17,17 @@ const router = express.Router();
   Returns all threads of a plan with comments populated
   Comments of a thread are sorted by timestamp in ascending order
 */
-router.get("/api/thread/getByPlan/:plan_id", auth, async (req, res) => {
+router.get('/api/thread/getByPlan/:plan_id', auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   try {
     // verify that plan belongs to request user
     const plan = await Plans.findById(plan_id).exec();
-    if (!plan) return errorHandler(res, 404, { message: "Plan not found." }); 
+    if (!plan) return errorHandler(res, 404, { message: 'Plan not found.' });
     // get all threads in plan
     const threads = await Threads.find({ plan_id }).exec();
     for (let i = 0; i < threads.length; i++) {
       const comments = await Comments.find({ thread_id: threads[i]._id })
-        .populate("commenter_id", "name")
+        .populate('commenter_id', 'name')
         .sort({ date: 1 })
         .exec();
       threads[i] = {
@@ -44,10 +44,15 @@ router.get("/api/thread/getByPlan/:plan_id", auth, async (req, res) => {
 /*
   Create a new comment(which results in creating a new thread)
 */
-router.post("/api/thread/new", auth, async (req, res) => {
+router.post('/api/thread/new', auth, async (req, res) => {
   const thread = req.body.thread;
   const comment = req.body.comment;
-  if (!thread || !comment || Object.keys(thread).length == 0 || Object.keys(comment).length == 0) {
+  if (
+    !thread ||
+    !comment ||
+    Object.keys(thread).length == 0 ||
+    Object.keys(comment).length == 0
+  ) {
     return missingHandler(res, { thread, comment });
   }
   // verify that commenter is request user
@@ -67,7 +72,7 @@ router.post("/api/thread/new", auth, async (req, res) => {
 /*
   Add a reply to a thread
 */
-router.post("/api/thread/reply", auth, async (req, res) => {
+router.post('/api/thread/reply', auth, async (req, res) => {
   const body = req.body.comment;
   if (!body || Object.keys(body).length == 0) {
     return missingHandler(res, { comment: body });
@@ -87,7 +92,7 @@ router.post("/api/thread/reply", auth, async (req, res) => {
 /*
   Resolve a thread
 */
-router.patch("/api/thread/resolve", auth, async (req, res) => {
+router.patch('/api/thread/resolve', auth, async (req, res) => {
   const thread_id = req.body.thread_id;
   if (!thread_id) {
     return missingHandler(res, { thread_id });
@@ -96,7 +101,7 @@ router.patch("/api/thread/resolve", auth, async (req, res) => {
     // check that thread exists
     const thread = await Threads.findById(thread_id).exec();
     if (!thread) {
-      return errorHandler(res, 404, { message: "Thread not found." }); 
+      return errorHandler(res, 404, { message: 'Thread not found.' });
     }
     // only plan owner can resolve?
     const plan = await Plans.findById(thread.plan_id).exec();
@@ -115,7 +120,7 @@ router.patch("/api/thread/resolve", auth, async (req, res) => {
 /*
   Edit a comment
 */
-router.patch("/api/comment", auth, async (req, res) => {
+router.patch('/api/comment', auth, async (req, res) => {
   const comment_id = req.body.comment_id;
   const message = req.body.message;
   if (!comment_id || !message) {
@@ -125,7 +130,7 @@ router.patch("/api/comment", auth, async (req, res) => {
     const comment = await Comments.findById(comment_id).exec();
     // verify that commenter is request user
     if (!comment) {
-      return errorHandler(res, 404, { message: "Comment not found." }); 
+      return errorHandler(res, 404, { message: 'Comment not found.' });
     } else if (req.user._id !== comment.commenter_id) {
       return forbiddenHandler(res);
     }
@@ -141,7 +146,7 @@ router.patch("/api/comment", auth, async (req, res) => {
 /*
   Delete a comment
 */
-router.delete("/api/comment", auth, async (req, res) => {
+router.delete('/api/comment', auth, async (req, res) => {
   const comment_id = req.body.comment_id;
   if (!comment_id) {
     return missingHandler(res, { comment_id });
@@ -150,7 +155,7 @@ router.delete("/api/comment", auth, async (req, res) => {
     const toDelete = await Comments.findById(comment_id).exec();
     // verify that commenter is request user
     if (!toDelete) {
-      return errorHandler(res, 404, { message: "Comment not found." }); 
+      return errorHandler(res, 404, { message: 'Comment not found.' });
     } else if (req.user._id !== toDelete.commenter_id) {
       return forbiddenHandler(res);
     }
@@ -164,7 +169,7 @@ router.delete("/api/comment", auth, async (req, res) => {
 /*
   Delete a thread and its comments
 */
-router.delete("/api/thread", auth, async (req, res) => {
+router.delete('/api/thread', auth, async (req, res) => {
   const thread_id = req.body.thread_id;
   if (!thread_id) {
     return missingHandler(res, { thread_id });
@@ -173,7 +178,7 @@ router.delete("/api/thread", auth, async (req, res) => {
     // verify that thread exists
     const thread = await Threads.findById(thread_id).exec();
     if (!thread) {
-      return errorHandler(res, 404, { message: "Thread not found." }); 
+      return errorHandler(res, 404, { message: 'Thread not found.' });
     }
     // verify plan (and thread) belongs to req user
     const plan = await Plans.findById(thread.plan_id).exec();

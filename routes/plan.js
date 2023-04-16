@@ -4,43 +4,44 @@ import {
   errorHandler,
   forbiddenHandler,
   missingHandler,
-} from "./helperMethods.js";
-import { addPlanDistributions, removePlanDistributions } from "./distributionMethods.js";
-import Courses from "../model/Course.js";
-import Distributions from "../model/Distribution.js";
-import Users from "../model/User.js";
-import Plans from "../model/Plan.js";
-import Years from "../model/Year.js";
-import Reviews from "../model/PlanReview.js";
-import { auth } from "../util/token.js";
-import express from "express";
+} from './helperMethods.js';
+import {
+  addPlanDistributions,
+  removePlanDistributions,
+} from './distributionMethods.js';
+import Courses from '../model/Course.js';
+import Distributions from '../model/Distribution.js';
+import Users from '../model/User.js';
+import Plans from '../model/Plan.js';
+import Years from '../model/Year.js';
+import Reviews from '../model/PlanReview.js';
+import { auth } from '../util/token.js';
+import express from 'express';
 
 const router = express.Router();
-const yearName = ["AP/Transfer", "Freshman", "Sophomore", "Junior", "Senior"];
+const yearName = ['AP/Transfer', 'Freshman', 'Sophomore', 'Junior', 'Senior'];
 
 const getAPI = (window) => {
-  if (window.location.href.includes("http://localhost:3000")) {
-    return "http://localhost:4567/api";
+  if (window.location.href.includes('http://localhost:3000')) {
+    return 'http://localhost:4567/api';
   } else {
-    if (window.location.href.includes("https://ucredit.me")) {
-      return "https://ucredit-api.herokuapp.com/api";
+    if (window.location.href.includes('https://ucredit.me')) {
+      return 'https://ucredit-api.herokuapp.com/api';
     } else {
-      ("https://ucredit-dev.herokuapp.com/api");
+      ('https://ucredit-dev.herokuapp.com/api');
     }
   }
 };
 
-
 //get plan by plan id
-router.get("/api/plans/:plan_id", auth, async (req, res) => {
+router.get('/api/plans/:plan_id', auth, async (req, res) => {
   const p_id = req.params.plan_id;
   try {
-    const plan = await Plans
-      .findById(p_id)
+    const plan = await Plans.findById(p_id)
       .populate({
-        path: "year_ids",
+        path: 'year_ids',
         populate: {
-          path: "courses",
+          path: 'courses',
         },
       })
       .exec();
@@ -48,9 +49,8 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
     let result = { ...plan._doc };
     delete result.year_ids;
     result = { ...result, years };
-    const reviewers = await Reviews
-      .find({ plan_id: p_id })
-      .populate("reviewer_id")
+    const reviewers = await Reviews.find({ plan_id: p_id })
+      .populate('reviewer_id')
       .exec();
     result = { ...result, reviewers };
     returnData(result, res);
@@ -60,7 +60,7 @@ router.get("/api/plans/:plan_id", auth, async (req, res) => {
 });
 
 //get all plans of a user
-router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
+router.get('/api/plansByUser/:user_id', auth, async (req, res) => {
   const user_id = req.params.user_id;
   if (req.user._id !== user_id) {
     return forbiddenHandler(res);
@@ -74,17 +74,16 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
       });
     let total = user.plan_ids.length;
     for (let plan_id of user.plan_ids) {
-      let plan = await Plans.findById(plan_id).populate("year_ids").exec();
+      let plan = await Plans.findById(plan_id).populate('year_ids').exec();
       if (!plan) {
         total--;
         continue;
       }
-      plan.populate("year_ids.courses", async () => {
+      plan.populate('year_ids.courses', async () => {
         plan = { ...plan._doc, years: plan.year_ids };
         delete plan.year_ids;
-        const reviewers = await Reviews
-          .find({ plan_id: plan_id })
-          .populate("reviewer_id")
+        const reviewers = await Reviews.find({ plan_id: plan_id })
+          .populate('reviewer_id')
           .exec();
         plan = { ...plan, reviewers };
         plansTotal.push(plan);
@@ -100,7 +99,7 @@ router.get("/api/plansByUser/:user_id", auth, async (req, res) => {
 
 //create plan and add the plan id to user
 //require user_id in body
-router.post("/api/plans", auth, async (req, res) => {
+router.post('/api/plans', auth, async (req, res) => {
   if (!req.body.user_id) {
     return missingHandler(res, { user_id: req.body.user_id });
   }
@@ -113,7 +112,7 @@ router.post("/api/plans", auth, async (req, res) => {
   const year = req.body.year;
   const numYears = !req.params.numYears ? 5 : req.params.numYears;
   if (numYears <= 0 || numYears > 5) {
-    return errorHandler(res, 400, "numYear must be between 1-5");
+    return errorHandler(res, 400, 'numYear must be between 1-5');
   }
   if (planBody.user_id !== req.user._id) {
     return forbiddenHandler(res);
@@ -121,15 +120,13 @@ router.post("/api/plans", auth, async (req, res) => {
   try {
     const plan = await Plans.create(planBody);
     //update user
-    await Users
-      .findByIdAndUpdate(
-        plan.user_id,
-        { $push: { plan_ids: plan._id } },
-        { new: true, runValidators: true }
-      )
-      .exec();
     // add distributions for selected major(s)
     await addPlanDistributions(plan);
+    await Users.findByIdAndUpdate(
+      retrievedPlan.user_id,
+      { $push: { plan_ids: retrievedPlan._id } },
+      { new: true, runValidators: true },
+    ).exec();
     //create default year documents according to numYears
     const years = [];
     for (let i = 0; i < numYears; i++) {
@@ -138,8 +135,7 @@ router.post("/api/plans", auth, async (req, res) => {
         plan_id: plan._id,
         user_id: plan.user_id,
         year: i === 0 ? 0 : getStartYear(year) + i,
-        expireAt:
-        plan.user_id === "guestUser" ? Date.now() : undefined,
+        expireAt: plan.user_id === 'guestUser' ? Date.now() : undefined,
       };
       const newYear = await Years.create(yearBody);
       years.push(newYear);
@@ -161,22 +157,22 @@ router.post("/api/plans", auth, async (req, res) => {
 const getStartYear = (year) => {
   const date = new Date();
   if (
-    (year.includes("Sophomore") && date.getMonth() > 7) ||
-    (year.includes("Freshman") && date.getMonth() >= 0 && date.getMonth() <= 7)
+    (year.includes('Sophomore') && date.getMonth() > 7) ||
+    (year.includes('Freshman') && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 2;
   } else if (
-    (year.includes("Junior") && date.getMonth() > 7) ||
-    (year.includes("Sophomore") && date.getMonth() >= 0 && date.getMonth() <= 7)
+    (year.includes('Junior') && date.getMonth() > 7) ||
+    (year.includes('Sophomore') && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 3;
   } else if (
-    (year.includes("Senior") && date.getMonth() > 7) ||
-    (year.includes("Junior") && date.getMonth() >= 0 && date.getMonth() <= 7)
+    (year.includes('Senior') && date.getMonth() > 7) ||
+    (year.includes('Junior') && date.getMonth() >= 0 && date.getMonth() <= 7)
   ) {
     return date.getFullYear() - 4;
   } else if (
-    year.includes("Senior") &&
+    year.includes('Senior') &&
     date.getMonth() >= 0 &&
     date.getMonth() <= 7
   ) {
@@ -186,9 +182,9 @@ const getStartYear = (year) => {
   }
 };
 
-// delete a plan and its years, distributions and courses
-// return deleted courses
-router.delete("/api/plans/:plan_id", auth, async (req, res) => {
+//delete a plan and its years, distributions and courses
+//return deleted courses
+router.delete('/api/plans/:plan_id', auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   try {
     // check plan belongs to user
@@ -203,14 +199,12 @@ router.delete("/api/plans/:plan_id", auth, async (req, res) => {
     await Courses.deleteMany({ plan_id: plan._id }).exec();
     await Years.deleteMany({ plan_id: plan._id }).exec();
     await Reviews.deleteMany({ plan_id: plan._id }).exec();
-    await Users
-      .findByIdAndUpdate(
-        //delete plan_id from user
-        plan.user_id,
-        { $pull: { plan_ids: plan._id } },
-        { new: true, runValidators: true }
-      )
-      .exec();
+    await Users.findByIdAndUpdate(
+      //delete plan_id from user
+      plan.user_id,
+      { $pull: { plan_ids: plan._id } },
+      { new: true, runValidators: true },
+    ).exec();
     returnData(plan, res);
   } catch (err) {
     errorHandler(res, 500, err);
@@ -218,8 +212,8 @@ router.delete("/api/plans/:plan_id", auth, async (req, res) => {
 });
 
 //***need to consider not allow user to change major for a plan ***/
-router.patch("/api/plans/update", auth, async (req, res) => {
-  const plan_id = req.body.plan_id;
+router.patch('/api/plans/update', auth, async (req, res) => {
+  const id = req.body.plan_id;
   const majors = req.body.majors;
   const name = req.body.name;
   if (!majors && !name) {
@@ -239,18 +233,18 @@ router.patch("/api/plans/update", auth, async (req, res) => {
       return forbiddenHandler(res);
     }
     // update plan
-    plan = await Plans
-      .findByIdAndUpdate(plan_id, updateBody, { new: true, runValidators: true })
-      .exec();
+    plan = await Plans.findByIdAndUpdate(plan_id, updateBody, {
+      new: true,
+      runValidators: true,
+    }).exec();
     if (majors) {
       await addPlanDistributions(plan);
       await removePlanDistributions(plan);
     }
 
     // return plan with reviews and distributions
-    const reviewers = await Reviews
-      .find({ plan_id })
-      .populate("reviewer_id")
+    const reviewers = await Reviews.find({ plan_id })
+      .populate('reviewer_id')
       .exec();
     plan = { ...plan, reviewers };
     returnData(plan, res);

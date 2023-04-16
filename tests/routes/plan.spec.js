@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
-import supertest from "supertest";
-import { getMajor } from "../../data/majors.js";
-import createApp from "../../app";
-import Distributions from "../../model/Distribution";
-import Users from "../../model/User";
-import Majors from "../../model/Major.js";
-import Courses from "../../model/Course.js";
+import mongoose from 'mongoose';
+import supertest from 'supertest';
+import { getMajor } from '../../data/majors.js';
+import createApp from '../../app';
+import Distributions from '../../model/Distribution';
+import Users from '../../model/User';
+import Majors from '../../model/Major.js';
+import Courses from '../../model/Course.js';
 import {
   TEST_TOKEN_1,
   TEST_PLAN_1,
@@ -16,15 +16,17 @@ import {
   TEST_CS,
   TEST_AMS,
   TEST_USER_2,
-} from "./testVars";
+} from './testVars';
 
 const request = supertest(createApp());
-mongoose.set("strictQuery", true);
+const TEST_URI =
+  process.env.TEST_URI || 'mongodb://localhost:27017/notification';
+mongoose.set('strictQuery', true);
 
 let plan = [];
 
 beforeAll((done) => {
-  mongoose.connect("mongodb://localhost:27017/plan", { useNewUrlParser: true });
+  mongoose.connect(TEST_URI, { useNewUrlParser: true });
   done();
 });
 
@@ -34,8 +36,8 @@ beforeEach(async () => {
   await Majors.create(getMajor(TEST_CS));
   await Majors.create(getMajor(TEST_AMS));
   const response = await request
-    .post("/api/plans")
-    .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+    .post('/api/plans')
+    .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
     .send(TEST_PLAN_1);
   plan = response.body.data;
 });
@@ -48,94 +50,94 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-describe("Plan Routes: GET /api/plans/:plan_id", () => {
-  it("Should return plan with the given _id", async () => {
+describe('Plan Routes: GET /api/plans/:plan_id', () => {
+  it('Should return plan with the given _id', async () => {
     const res = await request
       .get(`/api/plans/${plan._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     expect(res.body.data._id).toBe(plan._id);
   });
 
-  it("Should return 200 even with different user", async () => {
+  it('Should return 200 even with different user', async () => {
     const res = await request
       .get(`/api/plans/${plan._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(200);
   });
 
-  it("Should return stauts 500 with invalid plan_id", async () => {
+  it('Should return stauts 500 with invalid plan_id', async () => {
     const res = await request
       .get(`/api/plans/${INVALID_ID}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
 });
 
-describe("Plan Routes: GET /api/plansByUser/:user_id", () => {
-  it("Should return plan by User1", async () => {
+describe('Plan Routes: GET /api/plansByUser/:user_id', () => {
+  it('Should return plan by User1', async () => {
     const res = await request
       .get(`/api/plansByUser/${TEST_USER_1._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     const plans = res.body.data;
     expect(plans.length).toBe(1);
     expect(plans[0].name).toBe(TEST_PLAN_1.name);
   });
 
-  it("Should return stauts 403 with different user", async () => {
+  it('Should return stauts 403 with different user', async () => {
     const res = await request
       .get(`/api/plansByUser/${TEST_USER_1._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(403);
   });
 });
 
-describe("Plan Routes: POST /api/plans", () => {
-  it("Should return created plan", async () => {
+describe('Plan Routes: POST /api/plans', () => {
+  it('Should return created plan', async () => {
     const res = await request
       .post(`/api/plans`)
       .send(TEST_PLAN_2)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(200);
     const plan = res.body.data;
     expect(plan.name).toBe(TEST_PLAN_2.name);
   });
 
-  it("Should create distributions", async () => {
+  it('Should create distributions', async () => {
     const res = await request
       .post(`/api/plans`)
       .send(TEST_PLAN_2)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(200);
     const plan = res.body.data;
     const distributions = await Distributions.find({ plan_id: plan._id });
     expect(distributions.length).toBeGreaterThan(0);
   });
 
-  it("Should return status 403 with wrong user", async () => {
+  it('Should return status 403 with wrong user', async () => {
     const res = await request
       .post(`/api/plans`)
       .send(TEST_PLAN_2)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(403);
   });
 
-  it("Should return status 400 with no user_id", async () => {
+  it('Should return status 400 with no user_id', async () => {
     const body = { ...TEST_PLAN_2, user_id: null };
     const res = await request
       .post(`/api/plans`)
       .send(body)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(400);
   });
 });
 
-describe("Plan Routes: DELETE /api/plans/:plan_id", () => {
-  it("Should return deleted plan", async () => {
+describe('Plan Routes: DELETE /api/plans/:plan_id', () => {
+  it('Should return deleted plan', async () => {
     const res = await request
       .delete(`/api/plans/${plan._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(200);
     const data = res.body.data;
     expect(data._id).toBe(plan._id);
@@ -147,30 +149,30 @@ describe("Plan Routes: DELETE /api/plans/:plan_id", () => {
     expect(courses.length).toBe(0);
   });
 
-  it("Should return status 403 with unauthorized user", async () => {
+  it('Should return status 403 with unauthorized user', async () => {
     const res = await request
       .delete(`/api/plans/${plan._id}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`);
     expect(res.status).toBe(403);
   });
 
-  it("Should return status 500 with invalid plan_id", async () => {
+  it('Should return status 500 with invalid plan_id', async () => {
     const res = await request
       .delete(`/api/plans/${INVALID_ID}`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`);
     expect(res.status).toBe(500);
   });
 });
 
-describe("Plan Routes: PATCH /api/plans/update", () => {
-  it("Should update majors", async () => {
+describe('Plan Routes: PATCH /api/plans/update', () => {
+  it('Should update majors', async () => {
     const body = {
       plan_id: plan._id,
       majors: [TEST_CS, TEST_AMS],
     };
     const res = await request
       .patch(`/api/plans/update`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(body);
     expect(res.status).toBe(200);
     const newPlan = res.body.data._doc;
@@ -178,14 +180,14 @@ describe("Plan Routes: PATCH /api/plans/update", () => {
     expect(newPlan.major_ids).toStrictEqual(body.majors);
   });
 
-  it("Should update name", async () => {
+  it('Should update name', async () => {
     const body = {
       plan_id: plan._id,
-      name: "New Plan Name",
+      name: 'New Plan Name',
     };
     const res = await request
       .patch(`/api/plans/update`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send(body);
     expect(res.status).toBe(200);
     const newPlan = res.body.data._doc;
@@ -193,22 +195,22 @@ describe("Plan Routes: PATCH /api/plans/update", () => {
     expect(newPlan.name).toBe(body.name);
   });
 
-  it("Should return status 403 for different user", async () => {
+  it('Should return status 403 for different user', async () => {
     const body = {
       plan_id: plan._id,
-      name: "New Plan Name",
+      name: 'New Plan Name',
     };
     const res = await request
       .patch(`/api/plans/update`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_2}`)
       .send(body);
     expect(res.status).toBe(403);
   });
 
-  it("Should return status 400 for missing params", async () => {
+  it('Should return status 400 for missing params', async () => {
     const res = await request
       .patch(`/api/plans/update`)
-      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .set('Authorization', `Bearer ${TEST_TOKEN_1}`)
       .send({});
     expect(res.status).toBe(400);
   });
