@@ -123,8 +123,8 @@ router.post('/api/plans', auth, async (req, res) => {
     // add distributions for selected major(s)
     await addPlanDistributions(plan);
     await Users.findByIdAndUpdate(
-      retrievedPlan.user_id,
-      { $push: { plan_ids: retrievedPlan._id } },
+      plan.user_id,
+      { $push: { plan_ids: plan._id } },
       { new: true, runValidators: true },
     ).exec();
     //create default year documents according to numYears
@@ -216,8 +216,8 @@ router.patch('/api/plans/update', auth, async (req, res) => {
   const id = req.body.plan_id;
   const majors = req.body.majors;
   const name = req.body.name;
-  if (!majors && !name) {
-    return missingHandler(res, { plan_id, majors, name });
+  if (!id || (!majors && !name)) {
+    return missingHandler(res, { id, majors, name });
   }
   let updateBody = {};
   if (majors) {
