@@ -529,3 +529,63 @@ describe("Course Routes: PATCH /api/courses/dragged", () => {
     expect(res.status).toBe(500);
   });
 });
+
+
+
+describe("Course Routes: PATCH /api/courses/:course_id", () => {
+  it("Should return the new course added", async () => {
+    courses = await Courses.find({});
+    let oldCourse = courses[0];
+    const newCourse = SAMEPLE_COURSES[0];
+    // change taken status to true
+    const res = await request
+      .patch(`/api/courses/${course._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send(newCourse);
+    
+    expect(res.status).toBe(200);
+    // check course deleted
+    oldCourse = await Courses.findById(oldCourse._id);
+    expect(oldCourse).toBeNull();
+    // check new course returned
+    const returnedCourse = res.body.data;
+    expect(returnedCourse.title).toBe(newCourse.title);
+    expect(returnedCourse.term).toBe(newCourse.term);
+    expect(returnedCourse.number).toBe(newCourse.number);
+    expect(returnedCourse.level).toBe(newCourse.level);
+    expect(returnedCourse.user_id).toBe(newCourse.user_id);
+    expect(returnedCourse.plan_id).toBe(newCourse.plan_id);
+  });
+
+  it("Should return status 403 for invalid user", async () => {
+    // course.taken is false by default
+    courses = await Courses.find({});
+    let course = courses[0];
+    // attempt to change taken status
+    const res = await request
+      .patch(`/api/courses/${course._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_2}`)
+      .send(SAMEPLE_COURSES[0]);
+    expect(res.status).toBe(403);
+    // check old course still there
+    const thatCourse = await Courses.findById(course._id);
+    expect(thatCourse.title).toBe(course.title);
+  });
+
+  it("Should return status 500 for invalid id", async () => {
+    const res = await request
+      .patch(`/api/courses/changeStatus/${INVALID_ID}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`)
+      .send(SAMEPLE_COURSES[0]);
+    expect(res.status).toBe(500);
+  });
+
+  it("Should return status 400 for missing taken", async () => {
+    courses = await Courses.find({});
+    let course = courses[0];
+    const res = await request
+      .patch(`/api/courses/changeStatus/${course._id}`)
+      .set("Authorization", `Bearer ${TEST_TOKEN_1}`);
+    expect(res.status).toBe(400);
+  });
+});
