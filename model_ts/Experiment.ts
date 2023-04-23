@@ -21,6 +21,7 @@ export interface ExperimentDoc extends mongoose.Document {
 
 interface ExperimentModel extends mongoose.Model<ExperimentDoc> {
   build(attrs: ExperimentAttrs): ExperimentDoc;
+  findExperiment(experiment_name: String): Promise<ExperimentDoc>;
 }
 
 const experimentSchema = new mongoose.Schema({
@@ -32,6 +33,19 @@ const experimentSchema = new mongoose.Schema({
 
 experimentSchema.statics.build = (attrs: ExperimentAttrs) => {
   return new Experiment(attrs);
+}
+
+experimentSchema.statics.findExperiment = async (experiment_name: String) => {
+  let experiments = await Experiment.find({}).select("-__v");
+
+  let lowerCaseExperiment = experiment_name.toLowerCase();
+  let target: ExperimentDoc | undefined;
+  for (const experiment of experiments) {
+    if (lowerCaseExperiment === experiment.name.toLowerCase()) {
+      target = experiment;
+    }
+  }
+  return target;
 }
 
 const Experiment = mongoose.model<ExperimentDoc, ExperimentModel>(
