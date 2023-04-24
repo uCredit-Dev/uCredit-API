@@ -12,6 +12,6 @@ const planSchema = new Schema({
   distribution_ids: [{ type: Schema.Types.ObjectId, ref: 'Distribution' }],
   user_id: { type: String, required: true },
   expireAt: { type: Date, expires: 60 * 60 * 24 },
-});
+}, {timestamps: true});
 
 export default mongoose.model('Plan', planSchema);
