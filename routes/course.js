@@ -139,7 +139,9 @@ router.post('/api/courses', auth, async (req, res) => {
     await Years.findByIdAndUpdate(retrievedCourse.year_id, {
       $push: { courses: retrievedCourse._id },
     }).exec();
-    await Plans.findByIdAndUpdate(course.plan_id, {updatedAt: Date().toLocaleString()});
+    await Plans.findByIdAndUpdate(course.plan_id, {
+      updatedAt: Date().toLocaleString(),
+    });
     returnData(retrievedCourse, res);
   } catch (err) {
     errorHandler(res, 500, err);
@@ -248,7 +250,9 @@ router.patch('/api/courses/dragged', auth, async (req, res) => {
         },
         { new: true, runValidators: true },
       ).exec();
-      await Plans.findByIdAndUpdate(retrievedCourses.plan_id, {updatedAt: Date().toLocaleString()});
+      await Plans.findByIdAndUpdate(retrievedCourses.plan_id, {
+        updatedAt: Date().toLocaleString(),
+      });
       returnData(updated, res);
     }
   } catch (err) {
@@ -283,7 +287,9 @@ router.delete('/api/courses/:course_id', auth, async (req, res) => {
       ).exec();
       await distributionCreditUpdate(distribution, course, false);
     }
-    await Plans.findByIdAndUpdate(course.plan_id, {updatedAt: Date().toLocaleString()});
+    await Plans.findByIdAndUpdate(course.plan_id, {
+      updatedAt: Date().toLocaleString(),
+    });
     returnData(course, res);
   } catch (err) {
     errorHandler(res, 500, err);
