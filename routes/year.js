@@ -92,6 +92,9 @@ router.patch('/api/years/updateName', auth, async (req, res) => {
     year.name = name;
     await year.save();
     await Courses.updateMany({ year_id }, { year: name }).exec();
+    await Plans.findByIdAndUpdate(year.plan_id, {
+      updatedAt: Date().toLocaleString(),
+    });
     returnData(year, res);
   } catch (err) {
     errorHandler(res, 400, err);
@@ -115,6 +118,9 @@ router.patch('/api/years/updateYear', auth, async (req, res) => {
     }
     retrievedYear.year = year;
     await retrievedYear.save();
+    await Plans.findByIdAndUpdate(retrievedYear.plan_id, {
+      updatedAt: Date().toLocaleString(),
+    });
     returnData(retrievedYear, res);
   } catch (err) {
     errorHandler(res, 400, err);
