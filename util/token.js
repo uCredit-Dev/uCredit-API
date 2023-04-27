@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
-import Users from "../model/User.js";
-import { forbiddenHandler } from "../routes/helperMethods.js";
-import dotenv from "dotenv";
+import jwt from 'jsonwebtoken';
+import Users from '../model/User.js';
+import { forbiddenHandler } from '../routes/helperMethods.js';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -14,9 +14,9 @@ const createToken = (user) => {
     },
     process.env.JWT_SECRET,
     {
-      algorithm: "HS256",
-      expiresIn: "30d",
-    }
+      algorithm: 'HS256',
+      expiresIn: '30d',
+    },
   );
 };
 
@@ -25,14 +25,14 @@ const verifyToken = (token) => {
     jwt.verify(
       token,
       process.env.JWT_SECRET,
-      { algorithms: ["HS256"] },
+      { algorithms: ['HS256'] },
       (err, _decoded) => {
         if (err) {
           resolve(false);
         } else {
           resolve(true);
         }
-      }
+      },
     );
   });
 };
@@ -45,7 +45,7 @@ const decodeToken = (token) => {
 const auth = async (req, res, next) => {
   const { authorization } = req.headers;
   if (authorization) {
-    const [_, token] = authorization.trim().split(" ");
+    const [_, token] = authorization.trim().split(' ');
     const valid = await verifyToken(token);
     if (valid) {
       req.user = decodeToken(token);

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 /*  
@@ -10,7 +10,7 @@ const courseSchema = new Schema({
   term: {
     type: String,
     required: true,
-    enum: ["fall", "spring", "summer", "intersession"],
+    enum: ['fall', 'spring', 'summer', 'intersession'],
   },
   termOffered: [{ type: String }],
   year: {
@@ -30,10 +30,10 @@ const courseSchema = new Schema({
   isTransfer: { type: Boolean, default: false },
   ratings: Array,
   distribution_ids: [
-    { type: Schema.Types.ObjectId, ref: "Distribution", required: true },
+    { type: Schema.Types.ObjectId, ref: 'Distribution', required: true },
   ],
-  year_id: { type: Schema.Types.ObjectId, ref: "Year" },
-  plan_id: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
+  year_id: { type: Schema.Types.ObjectId, ref: 'Year' },
+  plan_id: { type: Schema.Types.ObjectId, ref: 'Plan', required: true },
   user_id: { type: String, required: true },
   level: { type: String, required: true },
   forceSatisfied: { type: String, required: false },
@@ -49,4 +49,4 @@ courseSchema.statics.findByPlanId = function (plan_id) {
   return this.find({ plan_id });
 };
 
-export default mongoose.model("Course", courseSchema);
+export default mongoose.model('Course', courseSchema);

@@ -1,6 +1,6 @@
 //passport is manageing session storage
 
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const sessionSchema = new Schema({
@@ -10,4 +10,4 @@ const sessionSchema = new Schema({
   hash: { type: String },
 });
 
-export default mongoose.model("Session", sessionSchema);
+export default mongoose.model('Session', sessionSchema);

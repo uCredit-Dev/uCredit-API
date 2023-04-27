@@ -4,12 +4,12 @@
     Then run this script with the model you want to update.
 */
 
-import * as db from "./db.js";
-import plans from "../model/Plan.js";
-import users from "../model/User.js";
-import courses from "../model/Course.js";
-import SISCV from "../model/SISCourseV.js";
-import years from "../model/Year.js";
+import * as db from './db.js';
+import plans from '../model/Plan.js';
+import users from '../model/User.js';
+import courses from '../model/Course.js';
+import SISCV from '../model/SISCourseV.js';
+import years from '../model/Year.js';
 
 //addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
@@ -26,7 +26,7 @@ async function addFieldsToCollection(model) {
         await doc.save();
       });
       console.log(
-        "Done! Check DB to confirm the field has been added to all documents."
+        'Done! Check DB to confirm the field has been added to all documents.',
       );
     })
     .catch((err) => console.log(err));
@@ -39,8 +39,8 @@ async function addFieldsToCollection(model) {
 async function updateFieldsInCollection(model, matchCriteria, modification) {
   await db.connect();
   model.updateMany(matchCriteria, modification).then((res) => {
-    console.log(res.matchedCount, "documents matched.");
-    console.log(res.modifiedCount, "documents modified.");
+    console.log(res.matchedCount, 'documents matched.');
+    console.log(res.modifiedCount, 'documents modified.');
   });
 }
 
@@ -70,21 +70,21 @@ async function setLevelInCourses() {
           course.number.length > 7 &&
           !isNaN(course.number[7])
         ) {
-          if (course.number[7] <= "2") {
-            course.level = "Lower Level Undergraduate";
+          if (course.number[7] <= '2') {
+            course.level = 'Lower Level Undergraduate';
           } else {
-            course.level = "Upper Level Undergraduate";
+            course.level = 'Upper Level Undergraduate';
           }
         } else {
-          course.level = "Lower Level Undergraduate";
+          course.level = 'Lower Level Undergraduate';
         }
       }
-      console.log(course.title + ": " + course.level);
+      console.log(course.title + ': ' + course.level);
       await course.save();
     }
-    console.log("matched: %d", res.length);
-    console.log("updated from SISCourseV: %d", updated);
-    console.log("updated from course number: %d", res.length - updated);
+    console.log('matched: %d', res.length);
+    console.log('updated from SISCourseV: %d', updated);
+    console.log('updated from course number: %d', res.length - updated);
   });
 }
 
@@ -101,12 +101,12 @@ async function setVersionInCourses() {
       let version = course.term.toLowerCase();
       const year = await years.findById(course.year_id);
       version =
-        version.charAt(0).toUpperCase() + version.slice(1) + " " + year.year;
+        version.charAt(0).toUpperCase() + version.slice(1) + ' ' + year.year;
       course.version = version;
-      console.log(course.title + ": " + course.version);
+      console.log(course.title + ': ' + course.version);
       await course.save();
     }
-    console.log("matched: %d", res.length);
-    console.log("updated: %d", updated);
+    console.log('matched: %d', res.length);
+    console.log('updated: %d', updated);
   });
 }

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 /*  
@@ -11,7 +11,7 @@ const courseSchema = new Schema({
   areas: { type: String, required: true },
   terms: [{ type: String, required: true }],
   school: { type: String, required: true },
-  department: { type: String, default: "Unspecified" },
+  department: { type: String, default: 'Unspecified' },
   credits: { type: Number, required: true },
   wi: { type: Boolean, required: true },
   bio: { type: String },
@@ -22,4 +22,4 @@ const courseSchema = new Schema({
   restrictions: { type: Array },
 });
 
-export default mongoose.model("SISCourse", courseSchema);
+export default mongoose.model('SISCourse', courseSchema);

@@ -1,24 +1,26 @@
-import SISCourses from "../model/SISCourse.js";
-import db from "./db.js";
-import fs from "fs";
-import util from "util";
-import path from "path";
+import SISCourses from '../model/SISCourse.js';
+import db from './db.js';
+import fs from 'fs';
+import util from 'util';
+import path from 'path';
 const readFile = util.promisify(fs.readFile);
 
 async function cacheCourse(fileName) {
   let courses = [];
   await db.connect();
   const data = await readFile(
-    path.resolve(__dirname, "../" + fileName),
-    "utf-8"
+    path.resolve(__dirname, '../' + fileName),
+    'utf-8',
   );
   courses = JSON.parse(data.toString());
   const newCourses = await extractProperty(courses);
   SISCourses.insertMany(newCourses)
-    .then((result) => console.log("saved to database!"))
+    .then((result) => console.log('saved to database!'))
     .catch((err) => console.log(err));
   console.log(
-    "started with " + courses.length + " raw courses with unique course numbers"
+    'started with ' +
+      courses.length +
+      ' raw courses with unique course numbers',
   );
 }
 
@@ -44,10 +46,10 @@ async function extractProperty(courses) {
           school: course.SchoolName,
           department: course.Department,
           credits: Number.parseFloat(course.Credits),
-          wi: course.IsWritingIntensive === "Yes",
+          wi: course.IsWritingIntensive === 'Yes',
         };
 
-        console.log("$$$$$new course:", brief.title);
+        console.log('$$$$$new course:', brief.title);
         briefCourses.push(brief);
       } else {
         //update terms offered
@@ -58,17 +60,17 @@ async function extractProperty(courses) {
       }
     } else {
       console.log(
-        "******bypassed ",
+        '******bypassed ',
         course.Title,
         course.OfferingName,
-        course.Credits
+        course.Credits,
       );
       bp++;
     }
   }
-  console.log("new course amount saved to db: " + briefCourses.length);
-  console.log("dupCount across db: " + dupCount);
-  console.log("bypassed: " + bp);
+  console.log('new course amount saved to db: ' + briefCourses.length);
+  console.log('dupCount across db: ' + dupCount);
+  console.log('bypassed: ' + bp);
   return briefCourses;
 }
 
@@ -76,14 +78,14 @@ function byPass(course) {
   let title = course.Title.toLowerCase();
   let credit = Number.parseFloat(course.Credits);
   return (
-    title.includes("independent study") ||
-    title.includes("internship") ||
-    title.includes("independent research") ||
+    title.includes('independent study') ||
+    title.includes('internship') ||
+    title.includes('independent research') ||
     isNaN(credit)
   );
 }
 
-const filename = "ftrFA2021.json";
+const filename = 'ftrFA2021.json';
 cacheCourse(filename);
 
 export default { cacheCourse };

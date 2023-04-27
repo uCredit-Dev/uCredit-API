@@ -1,0 +1,24 @@
+name: Jest Tests
+
+on:
+  pull_request:
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # in GitHub repo → Settings → Secrets → Actions
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      TEST_URI: ${{ secrets.TEST_URI }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ArtiomTr/jest-coverage-report-action@v2
+        with:
+          test-script: npm test
+          annotations: failed-tests
+
