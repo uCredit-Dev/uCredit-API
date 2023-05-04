@@ -21,18 +21,6 @@ import express from 'express';
 const router = express.Router();
 const yearName = ['AP/Transfer', 'Freshman', 'Sophomore', 'Junior', 'Senior'];
 
-const getAPI = (window) => {
-  if (window.location.href.includes('http://localhost:3000')) {
-    return 'http://localhost:4567/api';
-  } else {
-    if (window.location.href.includes('https://ucredit.me')) {
-      return 'https://ucredit-api.herokuapp.com/api';
-    } else {
-      ('https://ucredit-dev.herokuapp.com/api');
-    }
-  }
-};
-
 //get plan by plan id
 router.get('/api/plans/:plan_id', auth, async (req, res) => {
   const p_id = req.params.plan_id;
@@ -127,6 +115,8 @@ router.post('/api/plans', auth, async (req, res) => {
       { $push: { plan_ids: plan._id } },
       { new: true, runValidators: true },
     ).exec();
+    const startYear = getStartYear(year);
+    const yearObjs = [];
     //create default year documents according to numYears
     const years = [];
     for (let i = 0; i < numYears; i++) {
@@ -134,7 +124,7 @@ router.post('/api/plans', auth, async (req, res) => {
         name: yearName[i],
         plan_id: plan._id,
         user_id: plan.user_id,
-        year: i === 0 ? 0 : getStartYear(year) + i,
+        year: i === 0 ? 0 : startYear + i,
         expireAt: plan.user_id === 'guestUser' ? Date.now() : undefined,
       };
       const newYear = await Years.create(yearBody);
@@ -213,11 +203,11 @@ router.delete('/api/plans/:plan_id', auth, async (req, res) => {
 
 //***need to consider not allow user to change major for a plan ***/
 router.patch('/api/plans/update', auth, async (req, res) => {
-  const id = req.body.plan_id;
+  const plan_id = req.body.plan_id;
   const majors = req.body.majors;
   const name = req.body.name;
-  if (!id || (!majors && !name)) {
-    return missingHandler(res, { id, majors, name });
+  if (!plan_id || (!majors && !name)) {
+    return missingHandler(res, { plan_id, majors, name });
   }
   let updateBody = {};
   if (majors) {

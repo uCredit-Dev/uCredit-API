@@ -1,13 +1,7 @@
 name: Jest Tests
 
 on:
-  push:
-    branches:
-      - '**'
   pull_request:
-    branches:
-      - '**'
-    types: [opened, reopened]
 
 jobs:
   coverage:

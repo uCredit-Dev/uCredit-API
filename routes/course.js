@@ -24,7 +24,10 @@ router.get('/api/coursesByPlan/:plan_id', auth, async (req, res) => {
   const plan_id = req.params.plan_id;
   // verify that plan belongs to request user
   try {
-    const plan = await Plans.findById(plan_id).exec();
+    const user = await Users.findById(req.user._id).exec();
+    if (!user) {
+      return forbiddenHandler(res);
+    }
     // return courses associated with plan
     const data = [];
     const retrievedCourses = await Courses.findByPlanId(plan_id);
@@ -149,7 +152,10 @@ router.post('/api/courses', auth, async (req, res) => {
     await Years.findByIdAndUpdate(retrievedCourse.year_id, {
       $push: { courses: retrievedCourse._id },
     }).exec();
-    returnData(retrievedCourse, res);
+    await Plans.findByIdAndUpdate(course.plan_id, {
+      updatedAt: Date().toLocaleString(),
+    });
+    returnData(updated, res);
   } catch (err) {
     errorHandler(res, 500, err);
   }
@@ -257,6 +263,9 @@ router.patch('/api/courses/dragged', auth, async (req, res) => {
         },
         { new: true, runValidators: true },
       ).exec();
+      await Plans.findByIdAndUpdate(retrievedCourses.plan_id, {
+        updatedAt: Date().toLocaleString(),
+      });
       returnData(updated, res);
     }
   } catch (err) {
@@ -284,6 +293,9 @@ router.delete('/api/courses/:course_id', auth, async (req, res) => {
       { runValidators: true },
     ).exec();
     await removeCourseFromDistributions(course);
+    await Plans.findByIdAndUpdate(course.plan_id, {
+      updatedAt: Date().toLocaleString(),
+    });
     returnData(course, res);
   } catch (err) {
     errorHandler(res, 500, err);

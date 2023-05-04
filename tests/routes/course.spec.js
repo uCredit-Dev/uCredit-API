@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import supertest from 'supertest';
 import Courses from '../../model/Course';
 import Users from '../../model/User';
+import Years from '../../model/Year';
 import Distributions from '../../model/Distribution';
 import createApp from '../../app';
 import {
@@ -14,6 +15,7 @@ import {
   TEST_USER_2,
   TEST_AMS,
   TEST_PLAN_1,
+  TEST_PLAN_2,
 } from './testVars';
 
 const request = supertest(createApp());
