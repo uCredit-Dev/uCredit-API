@@ -29,12 +29,16 @@ const courseSchema = new Schema({
   isPlaceholder: { type: Boolean, default: false },
   isTransfer: { type: Boolean, default: false },
   ratings: Array,
-  distribution_ids: [
-    { type: Schema.Types.ObjectId, ref: 'Distribution', default: [] },
-  ],
-  fineReq_ids: [
-    { type: Schema.Types.ObjectId, ref: 'FineRequirement', default: [] },
-  ],
+  distribution_ids: {
+    type: [Schema.Types.ObjectId],
+    ref: 'Distribution',
+    default: [],
+  },
+  fineReq_ids: {
+    type: [Schema.Types.ObjectId],
+    ref: 'FineRequirement',
+    default: [],
+  },
   year_id: { type: Schema.Types.ObjectId, ref: 'Year' },
   plan_id: { type: Schema.Types.ObjectId, ref: 'Plan', required: true },
   user_id: { type: String, required: true },

@@ -5179,7 +5179,7 @@ const minorMath = {
 
 // https://e-catalogue.jhu.edu/engineering/full-time-residential-programs/degree-programs/robotics-computational-sensing/computer-integrated-surgery-minor/#requirementstext
 const minorCIS = {
-  degree_name: 'Minor Computer Integrated Surgery',
+  _id: 'Minor Computer Integrated Surgery',
   abbrev: 'Minor CIS',
   department: 'EN Robotics and Computational Sensing',
   total_degree_credit: 43,

@@ -11,6 +11,7 @@ import Distributions from '../model/Distribution.js';
 import Years from '../model/Year.js';
 import SISCV from '../model/SISCourseV.js';
 import Plans from '../model/Plan.js';
+import Users from '../model/User.js';
 import { auth } from '../util/token.js';
 import express from 'express';
 import {
@@ -131,24 +132,24 @@ router.post('/api/courses', auth, async (req, res) => {
       }
     }
     // create course
-    const retrievedCourse = await Courses.create(course);
+    const created = await Courses.create(course);
     // update plan's distribution objs by major
     for (let major_id of plan.major_ids) {
       const dists = await Distributions.find({
         plan_id: course.plan_id,
         major_id,
       });
-      await addCourseToDists(course, dists);
+      await addCourseToDists(created, dists);
       const promises = dists.map((dist) => dist.save());
       await Promise.all(promises);
     }
     // get updated course to return (because modified in helper method)
-    const updated = await Courses.findById(course._id);
+    const updated = await Courses.findById(created._id);
     // update year with new course
-    await Years.findByIdAndUpdate(retrievedCourse.year_id, {
-      $push: { courses: retrievedCourse._id },
+    await Years.findByIdAndUpdate(updated.year_id, {
+      $push: { courses: updated._id },
     }).exec();
-    await Plans.findByIdAndUpdate(course.plan_id, {
+    await Plans.findByIdAndUpdate(updated.plan_id, {
       updatedAt: Date().toLocaleString(),
     });
     returnData(updated, res);
