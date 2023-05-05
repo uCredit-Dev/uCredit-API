@@ -13,13 +13,12 @@ updateAllMajors();
 
 // add majors in allMajors array if not already in production DB
 async function addAllMajors() {
-  await db.connect(); 
+  await db.connect();
   let new_count = 0;
   for (let major of allMajors) {
     const existing_major = await Majors.findById(major);
     if (!existing_major) {
-      Majors
-        .insert(major)
+      Majors.insert(major)
         .then((res) => {
           console.log(`added new degree: ${res.data}`);
           new_count++;
@@ -29,12 +28,14 @@ async function addAllMajors() {
       console.log(`${major._id} already exists!`);
     }
   }
-  console.log(`Done adding ${new_count} new majors! Check DB to confirm the documents have been added to the collection`);
+  console.log(
+    `Done adding ${new_count} new majors! Check DB to confirm the documents have been added to the collection`,
+  );
 }
 
 // add new majors and update existing ones in production DB
 async function updateAllMajors() {
-  await db.connect(); 
+  await db.connect();
   let new_count = 0;
   let update_count = 0;
   for (let major of allMajors) {
@@ -53,17 +54,19 @@ async function updateAllMajors() {
       console.log(err);
     }
   }
-  console.log(`Done adding ${new_count} new majors and updating ${update_count} existing majors! Check DB to confirm.`);
+  console.log(
+    `Done adding ${new_count} new majors and updating ${update_count} existing majors! Check DB to confirm.`,
+  );
 }
 
 // Add a specified major in allMajors array to production DB
 // majorName is _id of the major
 async function addOneMajor(majorName) {
-  await db.connect(); 
+  await db.connect();
   let documentAdded = false;
   for (let major of allMajors) {
     if (major._id === majorName) {
-      // found specified major 
+      // found specified major
       await Majors.create(major)
         .then((majorDocument) => {
           documentAdded = true;
@@ -73,7 +76,7 @@ async function addOneMajor(majorName) {
           );
         })
         .catch((err) => console.log(err));
-      break; 
+      break;
     }
   }
   if (!documentAdded) {

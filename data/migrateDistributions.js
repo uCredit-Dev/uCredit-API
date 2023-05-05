@@ -124,8 +124,7 @@ async function setTagInCourses() {
 // delete all Distributions Documents
 async function deleteDistributionsDocuments() {
   await db.connect(); // comment out this line before running jest test
-  Distributions
-    .deleteMany({})
+  Distributions.deleteMany({})
     .then(() => {
       console.log('Distributions documents deleted');
     })
@@ -137,8 +136,7 @@ async function deleteDistributionsDocuments() {
 // delete all Distributions Documents
 async function deleteFineRequirementsDocuments() {
   await db.connect(); // comment out this line before running jest test
-  FineRequirements
-    .deleteMany({})
+  FineRequirements.deleteMany({})
     .then(() => {
       console.log('Fine Requirements documents deleted');
     })
