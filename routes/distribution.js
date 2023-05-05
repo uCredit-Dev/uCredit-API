@@ -30,7 +30,7 @@ router.get('/api/distributions/:distribution_id', auth, async (req, res) => {
 });
 
 //get all distributions in a plan
-router.get('/api/distributionsByPlan/', auth, async (req, res) => {
+router.get('/api/distributionsByPlan/', async (req, res) => {
   const plan_id = req.query.plan_id;
   const major_id = req.query.major_id;
   if (!plan_id || !major_id) return missingHandler(res, { plan_id, major_id });
@@ -39,9 +39,6 @@ router.get('/api/distributionsByPlan/', auth, async (req, res) => {
   try {
     const plan = await Plans.findById(plan_id).exec();
     if (!plan) return errorHandler(res, 404, { message: 'Plan not found.' });
-    if (req.user._id !== plan.user_id) {
-      return forbiddenHandler(res);
-    }
     const major = await Majors.findById(major_id).exec();
     if (!major) return errorHandler(res, 404, { message: 'Major not found.' });
     if (reload === 'true') {
