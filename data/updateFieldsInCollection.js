@@ -5,17 +5,12 @@
 */
 
 import * as db from './db.js';
-import plans from '../model/Plan.js';
-import users from '../model/User.js';
 import courses from '../model/Course.js';
 import SISCV from '../model/SISCourseV.js';
 import years from '../model/Year.js';
 
-//addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
-// setLevelInCourses();
-// setVersionInCourses();
 
 async function addFieldsToCollection(model) {
   await db.connect();
@@ -33,6 +28,7 @@ async function addFieldsToCollection(model) {
 }
 
 /*
+  Script to update fields in a collection
   matchCriteria: an object that filters the document
   modification: an object that specificed the modified field and its new value
 */

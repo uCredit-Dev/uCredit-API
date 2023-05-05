@@ -2,7 +2,8 @@ import { connect } from './db.js';
 import User from '../model/User.js';
 import Plan from '../model/Plan.js';
 
-async function replaceOldWithNew() {
+// replace old major names with new ones
+async function renameOldWithNew() {
   connect();
 
   const users = await User.find({});

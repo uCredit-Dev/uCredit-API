@@ -1,4 +1,4 @@
-import { updateFieldsInCollection } from './addFieldsToCollection.js';
+import { updateFieldsInCollection } from './updateFieldsInCollection.js';
 import {
   addPlanDistributions,
   initDistributions,
@@ -8,6 +8,8 @@ import Courses from '../model/Course.js';
 import SISCV from '../model/SISCourseV.js';
 import Plans from '../model/Plan.js';
 import Years from '../model/Year.js';
+import Distributions from '../model/Distribution.js';
+import FineRequirements from '../model/FineRequirement.js';
 import mongoose from 'mongoose';
 
 mongoose.set('strictQuery', false);
@@ -116,6 +118,32 @@ async function setTagInCourses() {
     })
     .catch((err) => {
       console.log(err);
+    });
+}
+
+// delete all Distributions Documents
+async function deleteDistributionsDocuments() {
+  await db.connect(); // comment out this line before running jest test
+  Distributions
+    .deleteMany({})
+    .then(() => {
+      console.log('Distributions documents deleted');
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
+
+// delete all Distributions Documents
+async function deleteFineRequirementsDocuments() {
+  await db.connect(); // comment out this line before running jest test
+  FineRequirements
+    .deleteMany({})
+    .then(() => {
+      console.log('Fine Requirements documents deleted');
+    })
+    .catch((error) => {
+      console.log(error);
     });
 }
 
