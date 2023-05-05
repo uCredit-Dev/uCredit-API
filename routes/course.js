@@ -108,18 +108,14 @@ router.post('/api/courses', auth, async (req, res) => {
   if (!course || Object.keys(course).length == 0) {
     return missingHandler(res, { course });
   }
-  if (body.user_id !== req.user._id) {
+  if (course.user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
   try {
-    // check that course distributions belong to plan
+    // check plan exists
     const plan = await Plans.findById(course.plan_id).exec();
-    course.distribution_ids.forEach((id) => {
-      if (!plan.distribution_ids.includes(id))
-        errorHandler(res, 500, {
-          message: 'Invalid combination of plan_id and distribution_ids.',
-        });
-    });
+    if (!plan) return missingHandler(res, { plan });
+    // check course does not already exist in plan
     const retrievedCourses = await Courses.findByPlanId(course.plan_id);
     for (const existingCourse of retrievedCourses) {
       if (

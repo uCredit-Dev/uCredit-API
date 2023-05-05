@@ -19,7 +19,7 @@ const TEST_USER_2 = {
 };
 const TEST_TOKEN_1 = createToken(TEST_USER_1);
 const TEST_TOKEN_2 = createToken(TEST_USER_2);
-const TEST_CS = 'B.S. Computer Science (NEW - 2021 & after)';
+const TEST_CS = 'B.S. Computer Science';
 const TEST_AMS = 'B.S. Applied Mathematics & Statistics';
 const TEST_COG = 'B.A. Cognitive Science';
 const TEST_DATE = new Date(1519129864400);
