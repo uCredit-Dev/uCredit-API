@@ -278,7 +278,6 @@ router.patch("/api/courses/:course_id", auth, async (req, res) => {
     } else if (req.user._id !== course.user_id) {
       return forbiddenHandler(res);
     }
-    // delete course and update distributions
     await Courses.findByIdAndDelete(c_id).exec();
     await Years
       .findByIdAndUpdate(
@@ -287,16 +286,6 @@ router.patch("/api/courses/:course_id", auth, async (req, res) => {
         { runValidators: true }
       )
       .exec();
-    for (let id of course.distribution_ids) {
-      const distribution = await Distributions
-        .findByIdAndUpdate(
-          id,
-          { $pull: { courses: c_id } },
-          { new: true, runValidators: true }
-        )
-        .exec();
-      await distributionCreditUpdate(distribution, course, false);
-    }
     returnData(course, res);
   } catch (err) {
     errorHandler(res, 500, err);
@@ -310,25 +299,8 @@ router.patch("/api/courses/:course_id", auth, async (req, res) => {
   if (course.user_id !== req.user._id) {
     return forbiddenHandler(res);
   }
-  try {
-    // check that course distributions belong to plan
-    const plan = await Plans.findById(course.plan_id).exec();
-    course.distribution_ids.forEach((id) => {
-      if (!plan.distribution_ids.includes(id))
-        errorHandler(res, 500, {
-          message: "Invalid combination of plan_id and distribution_ids.",
-        });
-    });
-    const retrievedCourses = await Courses.findByPlanId(course.plan_id); 
-    for (const existingCourse of retrievedCourses) {
-      if(existingCourse.number === course.number && existingCourse.term === course.term && existingCourse.year === course.year && existingCourse.title === course.title){
-        return errorHandler(res, 400, { 
-          message: "Cannot take same course multiple times in the same semester",
-        });
-      }
-    }
-    // create course and update distributiosn
-    const retrievedCourse = await Courses.create(course);
+
+  const retrievedCourse = await Courses.create(course);
     // update year with new course
     await Years
       .findByIdAndUpdate(retrievedCourse.year_id, {
@@ -336,9 +308,7 @@ router.patch("/api/courses/:course_id", auth, async (req, res) => {
       })
       .exec();
     returnData(retrievedCourse, res);
-  } catch (err) {
-    errorHandler(res, 500, err);
-  }
+
 });
 
 export default router;
