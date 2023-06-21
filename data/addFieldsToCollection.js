@@ -17,6 +17,7 @@ import years from '../model/Year.js';
 setLevelInCourses();
 // setVersionInCourses();
 
+
 async function addFieldsToCollection(model) {
   await db.connect();
   model
@@ -86,6 +87,24 @@ async function setLevelInCourses() {
     console.log('updated from SISCourseV: %d', updated);
     console.log('updated from course number: %d', res.length - updated);
   });
+}
+
+async function setPostReqsInCourses() {
+  await db.connect();
+  courses.find({ postReq: { $size: 0 } }).then(async (res) => {
+    for (let course of res) {
+      let matchedCourses=courses.find({ preReq: { $eleMatch: {$eq: course._id} } });
+      let postReqs=[]
+      for (let matchedCourse of matchedCourses) {
+        postReqs.push(matchedCourse._id);
+        //postReqs.push(matchedCourse);
+      }
+      course.postReq=postReqs;
+      await course.save();
+    }
+  });
+  //courses.find({ preReq: { $eleMatch: {$eq: {}} } }).then(async (res) => {
+
 }
 
 /* 
