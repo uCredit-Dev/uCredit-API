@@ -14,9 +14,9 @@ import years from '../model/Year.js';
 //addFieldsToCollection(users);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
-setLevelInCourses();
+//setLevelInCourses();
 // setVersionInCourses();
-
+setPostReqsInCourses();
 
 async function addFieldsToCollection(model) {
   await db.connect();
@@ -91,9 +91,9 @@ async function setLevelInCourses() {
 
 async function setPostReqsInCourses() {
   await db.connect();
-  courses.find({ postReq: { $size: 0 } }).then(async (res) => {
+  SISCV.find({ version: { $elemMatch: {postReq: {$size: 0}} } }).then(async (res) => {
     for (let course of res) {
-      let matchedCourses=courses.find({ preReq: { $eleMatch: {$eq: course._id} } });
+      let matchedCourses=courses.find({ version: { $elemMatch: { version: {$elemMatch : {preReq: {$elemMatch: {Expression: {$regex: "*"+ course.number +"*"}}}}} } }});
       let postReqs=[]
       for (let matchedCourse of matchedCourses) {
         postReqs.push(matchedCourse._id);
