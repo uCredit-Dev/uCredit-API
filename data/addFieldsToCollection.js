@@ -11,12 +11,13 @@ import courses from '../model/Course.js';
 import SISCV from '../model/SISCourseV.js';
 import years from '../model/Year.js';
 
-//addFieldsToCollection(users);
+addFieldsToCollection(courses);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
 //setLevelInCourses();
-// setVersionInCourses();
-setPostReqsInCourses();
+//setVersionInCourses();
+//setPostReqsInSISCourses();
+//setPostReqsInCourses();
 
 async function addFieldsToCollection(model) {
   await db.connect();
@@ -24,6 +25,26 @@ async function addFieldsToCollection(model) {
     .find()
     .then((collection) => {
       collection.forEach(async (doc) => {
+        await doc.save();
+      });
+      console.log(
+        'Done! Check DB to confirm the field has been added to all documents.',
+      );
+    })
+    .catch((err) => console.log(err));
+}
+
+async function addPostReqsToSISCourse(model) {
+  await db.connect();
+  model
+    .find()
+    .then((collection) => {
+      collection.forEach(async (doc) => {
+        doc.postReq=[];
+        for(let version of doc.versions)
+        {
+          version.postReq=[];
+        }
         await doc.save();
       });
       console.log(
@@ -89,22 +110,66 @@ async function setLevelInCourses() {
   });
 }
 
-async function setPostReqsInCourses() {
+/* 
+  Script to calculate the post reqs for each sis course.
+*/
+async function setPostReqsInSISCourses() {
   await db.connect();
+  var counter=0;
   SISCV.find({ version: { $elemMatch: {postReq: {$size: 0}} } }).then(async (res) => {
     for (let course of res) {
-      let matchedCourses=courses.find({ version: { $elemMatch: { version: {$elemMatch : {preReq: {$elemMatch: {Expression: {$regex: "*"+ course.number +"*"}}}}} } }});
-      let postReqs=[]
-      for (let matchedCourse of matchedCourses) {
-        postReqs.push(matchedCourse._id);
-        //postReqs.push(matchedCourse);
+      let postReqs = [];
+      await SISCV.find({ versions: { $elemMatch: {preReq: {$elemMatch: {Expression: {$regex: course.number}}}} }}).then(async (res2) => {
+          for (let matchedCourse of res2) {       
+            for(let preReq of matchedCourse.versions[0].preReq) {
+              if(preReq.IsNegative === "N") {
+                postReqs.push(
+                  {"courseId": matchedCourse.id,
+                  "number": matchedCourse.number,
+                  "title": matchedCourse.title,
+                  "credits": matchedCourse.versions[0].credits,
+                  "preReqs": preReq.Expression,
+                });
+                break;
+              }
+            }  
+            }
+          });
+      counter++;
+      for(let version of course.versions) {
+        version.postReq=postReqs;
       }
-      course.postReq=postReqs;
+      if(counter%10===0)
+      {
+        console.log(course.title);
+      }
       await course.save();
     }
   });
-  //courses.find({ preReq: { $eleMatch: {$eq: {}} } }).then(async (res) => {
+  console.log("done");
+}
 
+/* 
+  Script to set post req field of each current course by looking for corresponding sis course.
+*/
+async function setPostReqsInCourses() {
+  await db.connect();
+  courses.find().then(async (res) => {
+    for (let course of res) {
+      let postReqs = [];
+      await SISCV.find({title: course.title, number: course.number}).then(async (res2) => {
+          for (let matchedCourse of res2) {
+              for(let version of matchedCourse.versions) {
+                course.postReq = version.postReq;
+                continue;
+              }          
+            }
+          });
+      console.log(course.title);
+      await course.save();
+    }
+  });
+  console.log("done");
 }
 
 /* 

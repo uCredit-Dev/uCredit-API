@@ -26,6 +26,7 @@ const courseSchema = new Schema({
   wi: { type: Boolean, default: false },
   taken: { type: Boolean, default: false },
   preReq: { type: Array },
+  postReq: { type: Array, default: [] },
   isPlaceholder: { type: Boolean, default: false },
   isTransfer: { type: Boolean, default: false },
   ratings: Array,
