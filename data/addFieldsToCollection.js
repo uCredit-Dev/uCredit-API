@@ -40,10 +40,9 @@ async function addPostReqsToSISCourse(model) {
     .find()
     .then((collection) => {
       collection.forEach(async (doc) => {
-        doc.postReq=[];
-        for(let version of doc.versions)
-        {
-          version.postReq=[];
+        doc.postReq = [];
+        for (let version of doc.versions) {
+          version.postReq = [];
         }
         await doc.save();
       });
@@ -115,38 +114,45 @@ async function setLevelInCourses() {
 */
 async function setPostReqsInSISCourses() {
   await db.connect();
-  var counter=0;
-  SISCV.find({ version: { $elemMatch: {postReq: {$size: 0}} } }).then(async (res) => {
-    for (let course of res) {
-      let postReqs = [];
-      await SISCV.find({ versions: { $elemMatch: {preReq: {$elemMatch: {Expression: {$regex: course.number}}}} }}).then(async (res2) => {
-          for (let matchedCourse of res2) {       
-            for(let preReq of matchedCourse.versions[0].preReq) {
-              if(preReq.IsNegative === "N") {
-                postReqs.push(
-                  {"courseId": matchedCourse.id,
-                  "number": matchedCourse.number,
-                  "title": matchedCourse.title,
-                  "credits": matchedCourse.versions[0].credits,
-                  "preReqs": preReq.Expression,
+  var counter = 0;
+  SISCV.find({ version: { $elemMatch: { postReq: { $size: 0 } } } }).then(
+    async (res) => {
+      for (let course of res) {
+        let postReqs = [];
+        await SISCV.find({
+          versions: {
+            $elemMatch: {
+              preReq: { $elemMatch: { Expression: { $regex: course.number } } },
+            },
+          },
+        }).then(async (res2) => {
+          for (let matchedCourse of res2) {
+            for (let preReq of matchedCourse.versions[0].preReq) {
+              if (preReq.IsNegative === 'N') {
+                postReqs.push({
+                  courseId: matchedCourse.id,
+                  number: matchedCourse.number,
+                  title: matchedCourse.title,
+                  credits: matchedCourse.versions[0].credits,
+                  preReqs: preReq.Expression,
                 });
                 break;
               }
-            }  
             }
-          });
-      counter++;
-      for(let version of course.versions) {
-        version.postReq=postReqs;
+          }
+        });
+        counter++;
+        for (let version of course.versions) {
+          version.postReq = postReqs;
+        }
+        if (counter % 10 === 0) {
+          console.log(course.title);
+        }
+        await course.save();
       }
-      if(counter%10===0)
-      {
-        console.log(course.title);
-      }
-      await course.save();
-    }
-  });
-  console.log("done");
+    },
+  );
+  console.log('done');
 }
 
 /* 
@@ -157,19 +163,21 @@ async function setPostReqsInCourses() {
   courses.find().then(async (res) => {
     for (let course of res) {
       let postReqs = [];
-      await SISCV.find({title: course.title, number: course.number}).then(async (res2) => {
+      await SISCV.find({ title: course.title, number: course.number }).then(
+        async (res2) => {
           for (let matchedCourse of res2) {
-              for(let version of matchedCourse.versions) {
-                course.postReq = version.postReq;
-                continue;
-              }          
+            for (let version of matchedCourse.versions) {
+              course.postReq = version.postReq;
+              continue;
             }
-          });
+          }
+        },
+      );
       console.log(course.title);
       await course.save();
     }
   });
-  console.log("done");
+  console.log('done');
 }
 
 /* 
