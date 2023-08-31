@@ -17,8 +17,8 @@ import years from '../model/Year.js';
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
 //setLevelInCourses();
 //setVersionInCourses();
-setPostReqsInSISCourses();
-//setPostReqsInCourses();
+//setPostReqsInSISCourses();
+setPostReqsInCourses();
 
 
 async function addFieldsToCollection(model) {
@@ -114,7 +114,10 @@ async function setLevelInCourses() {
 }
 
 /* 
-  Script to calculate the post reqs for each sis course.
+  Script to calculate the post reqs for each sis course. 
+  Each post requisite version of a course is marked as post req to any
+  version that occurs before or during the same semester, if the pre req
+  is in the string.
 */
 async function setPostReqsInSISCourses() {
   await db.connect();
