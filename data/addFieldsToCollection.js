@@ -121,6 +121,7 @@ async function setLevelInCourses() {
 */
 async function setPostReqsInSISCourses() {
   await db.connect();
+  var counter=0;
   SISCV.find().then(
     async (res) => {
       for (let course of res) {
@@ -164,6 +165,12 @@ async function setPostReqsInSISCourses() {
             }
           }
         });
+        //ending console.log("done") doesn't work so use this to tell when script is done.
+        counter++;
+        if(counter%300===0)
+        {
+          console.log(course.title);
+        }
         await course.save();
       }
     },
@@ -195,6 +202,7 @@ function compareDates(version1, version2) {
 */
 async function setPostReqsInCourses() {
   await db.connect();
+  var counter = 0;
   courses.find().then(async (res) => {
     for (let course of res) {
       let postReqs = [];
@@ -211,7 +219,11 @@ async function setPostReqsInCourses() {
           }
         },
       );
-      console.log(course.title);
+      counter++;
+      //ending console.log("done") doesn't work so use this to tell when script is done.
+      if(counter % 500 === 0) {
+        console.log(course.title);
+      }
       await course.save();
     }
   });
