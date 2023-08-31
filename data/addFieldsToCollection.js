@@ -20,7 +20,6 @@ import years from '../model/Year.js';
 //setPostReqsInSISCourses();
 setPostReqsInCourses();
 
-
 async function addFieldsToCollection(model) {
   await db.connect();
   model
@@ -37,11 +36,9 @@ async function addFieldsToCollection(model) {
     .catch((err) => console.log(err));
 }
 
-
 async function addPostReqsToSISCourse() {
   await db.connect();
-  SISCV
-    .find()
+  SISCV.find()
     .then((collection) => {
       collection.forEach(async (doc) => {
         doc.postReq = [];
@@ -121,76 +118,65 @@ async function setLevelInCourses() {
 */
 async function setPostReqsInSISCourses() {
   await db.connect();
-  var counter=0;
-  SISCV.find().then(
-    async (res) => {
-      for (let course of res) {
-        await SISCV.find({
-          versions: {
-            $elemMatch: {
-              preReq: { $elemMatch: { Expression: { $regex: course.number } } },
-            },
-          },
-        }).then(async (res2) => {
-          for (let matchedCourse of res2) {
-            for(let preReqVersion of course.versions) {
-              let postReqs = {
-                  courseId: matchedCourse.id,
-                  number: matchedCourse.number,
-                  title: matchedCourse.title,
-                  versions: [],
-              };
-              let postReqVersionCounter=0;
-              for(let postReqVersion of matchedCourse.versions) {
-                if(!compareDates(preReqVersion.term, postReqVersion.term ))
-                {
-                  continue;
-                }
-                for(let preReq of postReqVersion.preReq)
-                {
-                  if(preReq.IsNegative === 'N' && preReq.Expression.indexOf(course.number)!== -1)
-                  {
-                    postReqs.versions.push({
-                      credits: postReqVersion.credits,
-                      preReqs: preReq.Expression,
-                      term: postReqVersion.term
-                    })
-                    postReqVersionCounter++;
-                  }
-                }
-              }
-              if(postReqVersionCounter > 0) {
-                preReqVersion.postReq.push(postReqs);
-              }
+  const sisCourses = await SISCV.find();
+  for (let course of sisCourses) {
+    const postReqCourses = await SISCV.find({
+      versions: {
+        $elemMatch: {
+          preReq: { $elemMatch: { Expression: { $regex: course.number } } },
+        },
+      },
+    });
+    for (let matchedCourse of postReqCourses) {
+      for (let preReqVersion of course.versions) {
+        let postReqs = {
+          courseId: matchedCourse.id,
+          number: matchedCourse.number,
+          title: matchedCourse.title,
+          versions: [],
+        };
+        let postReqVersionCounter = 0;
+        for (let postReqVersion of matchedCourse.versions) {
+          if (!compareDates(preReqVersion.term, postReqVersion.term)) {
+            continue;
+          }
+          for (let preReq of postReqVersion.preReq) {
+            if (
+              preReq.IsNegative === 'N' &&
+              preReq.Expression.indexOf(course.number) !== -1
+            ) {
+              postReqs.versions.push({
+                credits: postReqVersion.credits,
+                preReqs: preReq.Expression,
+                term: postReqVersion.term,
+              });
+              postReqVersionCounter++;
             }
           }
-        });
-        //ending console.log("done") doesn't work so use this to tell when script is done.
-        counter++;
-        if(counter%300===0)
-        {
-          console.log(course.title);
         }
-        await course.save();
+        if (postReqVersionCounter > 0) {
+          preReqVersion.postReq.push(postReqs);
+        }
       }
-    },
-  );
+    }
+    await course.save();
+  }
   console.log('done');
 }
 
 //returns true if version1(ex: Fall 2022) is before version2(ex: Intersession 2023)
 function compareDates(version1, version2) {
-  const v1=version1.split(" ");
-  const v2=version2.split(" ");
-  if(v1[0]==="Fall") {
-    v1[1]=parseInt(v1[1]) + 1;
+  const v1 = version1.split(' ');
+  const v2 = version2.split(' ');
+  if (v1[0] === 'Fall') {
+    v1[1] = parseInt(v1[1]) + 1;
   }
-  if(v2[0]==="Fall") {
-    v2[1]=parseInt(v2[1]) + 1;
+  if (v2[0] === 'Fall') {
+    v2[1] = parseInt(v2[1]) + 1;
   }
-  if(v1[1] < v2[1]) {
+  if (v1[1] < v2[1]) {
     return true;
-  } else if(v1[1] ===  v2[1]) {
+  } else if (v1[1] === v2[1]) {
     return v1[0].toLowerCase().localeCompare(v2[0].toLowerCase()) <= 0;
   } else {
     return false;
@@ -202,31 +188,21 @@ function compareDates(version1, version2) {
 */
 async function setPostReqsInCourses() {
   await db.connect();
-  var counter = 0;
-  courses.find().then(async (res) => {
-    for (let course of res) {
-      let postReqs = [];
-      await SISCV.find({ title: course.title, number: course.number }).then(
-        async (res2) => {
-          for (let matchedCourse of res2) {
-            for (let version of matchedCourse.versions) {
-              if(course.version === version.term)
-              {
-                course.postReq = version.postReq;
-                continue;
-              }
-            }
-          }
-        },
-      );
-      counter++;
-      //ending console.log("done") doesn't work so use this to tell when script is done.
-      if(counter % 500 === 0) {
-        console.log(course.title);
+  const userCourseList = await courses.find();
+  for (let course of userCourseList) {
+    const sisCourses = await SISCV.find({
+      title: course.title,
+      number: course.number,
+    });
+    for (let matchedCourse of sisCourses) {
+      for (let version of matchedCourse.versions) {
+        if (course.version === version.term) {
+          course.postReq = version.postReq;
+          continue;
+        }
       }
-      await course.save();
     }
-  });
+  }
   console.log('done');
 }
 
