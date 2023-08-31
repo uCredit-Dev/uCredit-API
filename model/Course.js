@@ -26,16 +26,20 @@ const courseSchema = new Schema({
   wi: { type: Boolean, default: false },
   taken: { type: Boolean, default: false },
   preReq: { type: Array },
-  postReq: [{
-    courseId: { type: String },
-    number: { type: String },
-    title: { type: String },
-    versions: [{
-      credits: { type: String },
-      preReqs: { type: String },
-      term: {type: String},
-    }]
-  }],
+  postReq: [
+    {
+      courseId: { type: String },
+      number: { type: String },
+      title: { type: String },
+      versions: [
+        {
+          credits: { type: String },
+          preReqs: { type: String },
+          term: { type: String },
+        },
+      ],
+    },
+  ],
   isPlaceholder: { type: Boolean, default: false },
   isTransfer: { type: Boolean, default: false },
   ratings: Array,
