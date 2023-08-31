@@ -11,13 +11,15 @@ import courses from '../model/Course.js';
 import SISCV from '../model/SISCourseV.js';
 import years from '../model/Year.js';
 
-addFieldsToCollection(courses);
+//addFieldsToCollection(courses);
+//addPostReqsToSISCourse();
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
 //setLevelInCourses();
 //setVersionInCourses();
-//setPostReqsInSISCourses();
+setPostReqsInSISCourses();
 //setPostReqsInCourses();
+
 
 async function addFieldsToCollection(model) {
   await db.connect();
@@ -25,6 +27,7 @@ async function addFieldsToCollection(model) {
     .find()
     .then((collection) => {
       collection.forEach(async (doc) => {
+        doc.postReq = [];
         await doc.save();
       });
       console.log(
@@ -34,9 +37,10 @@ async function addFieldsToCollection(model) {
     .catch((err) => console.log(err));
 }
 
-async function addPostReqsToSISCourse(model) {
+
+async function addPostReqsToSISCourse() {
   await db.connect();
-  model
+  SISCV
     .find()
     .then((collection) => {
       collection.forEach(async (doc) => {
@@ -114,11 +118,9 @@ async function setLevelInCourses() {
 */
 async function setPostReqsInSISCourses() {
   await db.connect();
-  var counter = 0;
-  SISCV.find({ version: { $elemMatch: { postReq: { $size: 0 } } } }).then(
+  SISCV.find().then(
     async (res) => {
       for (let course of res) {
-        let postReqs = [];
         await SISCV.find({
           versions: {
             $elemMatch: {
@@ -127,32 +129,62 @@ async function setPostReqsInSISCourses() {
           },
         }).then(async (res2) => {
           for (let matchedCourse of res2) {
-            for (let preReq of matchedCourse.versions[0].preReq) {
-              if (preReq.IsNegative === 'N') {
-                postReqs.push({
+            for(let preReqVersion of course.versions) {
+              let postReqs = {
                   courseId: matchedCourse.id,
                   number: matchedCourse.number,
                   title: matchedCourse.title,
-                  credits: matchedCourse.versions[0].credits,
-                  preReqs: preReq.Expression,
-                });
-                break;
+                  versions: [],
+              };
+              let postReqVersionCounter=0;
+              for(let postReqVersion of matchedCourse.versions) {
+                if(!compareDates(preReqVersion.term, postReqVersion.term ))
+                {
+                  continue;
+                }
+                for(let preReq of postReqVersion.preReq)
+                {
+                  if(preReq.IsNegative === 'N' && preReq.Expression.indexOf(course.number)!== -1)
+                  {
+                    postReqs.versions.push({
+                      credits: postReqVersion.credits,
+                      preReqs: preReq.Expression,
+                      term: postReqVersion.term
+                    })
+                    postReqVersionCounter++;
+                  }
+                }
+              }
+              if(postReqVersionCounter > 0) {
+                preReqVersion.postReq.push(postReqs);
               }
             }
           }
         });
-        counter++;
-        for (let version of course.versions) {
-          version.postReq = postReqs;
-        }
-        if (counter % 10 === 0) {
-          console.log(course.title);
-        }
         await course.save();
       }
     },
   );
   console.log('done');
+}
+
+//returns true if version1(ex: Fall 2022) is before version2(ex: Intersession 2023)
+function compareDates(version1, version2) {
+  const v1=version1.split(" ");
+  const v2=version2.split(" ");
+  if(v1[0]==="Fall") {
+    v1[1]=parseInt(v1[1]) + 1;
+  }
+  if(v2[0]==="Fall") {
+    v2[1]=parseInt(v2[1]) + 1;
+  }
+  if(v1[1] < v2[1]) {
+    return true;
+  } else if(v1[1] ===  v2[1]) {
+    return v1[0].toLowerCase().localeCompare(v2[0].toLowerCase()) <= 0;
+  } else {
+    return false;
+  }
 }
 
 /* 
@@ -167,8 +199,11 @@ async function setPostReqsInCourses() {
         async (res2) => {
           for (let matchedCourse of res2) {
             for (let version of matchedCourse.versions) {
-              course.postReq = version.postReq;
-              continue;
+              if(course.version === version.term)
+              {
+                course.postReq = version.postReq;
+                continue;
+              }
             }
           }
         },
