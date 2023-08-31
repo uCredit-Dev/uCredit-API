@@ -81,9 +81,8 @@ router.delete('/api/notifications/:notification_id', auth, async (req, res) => {
       return forbiddenHandler(res);
     }
     // delete notification
-    const result = await Notifications.findByIdAndDelete(
-      notification_id,
-    ).exec();
+    const result =
+      await Notifications.findByIdAndDelete(notification_id).exec();
     returnData(result, res);
   } catch (err) {
     errorHandler(res, 500, err);
