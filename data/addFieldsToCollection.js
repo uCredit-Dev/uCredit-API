@@ -37,7 +37,6 @@ async function addFieldsToCollection(model) {
     .catch((err) => console.log(err));
 }
 
-
 async function addPostReqsToSISCourse(model) {
   await db.connect();
   model
