@@ -12,14 +12,15 @@ import SISCV from '../model/SISCourseV.js';
 import years from '../model/Year.js';
 
 //addFieldsToCollection(courses);
-//addPostReqsToSISCourse();
+//addPostReqsToSISCourse(SISCV);
 //updateFieldsInCollection(plans, {}, { reviewers: [] });
 //updateFieldsInCollection(users, {}, { whitelisted_plan_ids: [] });
 //setLevelInCourses();
 //setVersionInCourses();
-//setPostReqsInSISCourses();
-setPostReqsInCourses();
-
+setPostReqsInSISCourses();
+// setPostReqsInCourses();
+//setPostReqsInSISCoursesVersioning();
+// setPostReqsInCoursesVersioning();
 async function addFieldsToCollection(model) {
   await db.connect();
   model
@@ -36,12 +37,13 @@ async function addFieldsToCollection(model) {
     .catch((err) => console.log(err));
 }
 
-async function addPostReqsToSISCourse() {
+
+async function addPostReqsToSISCourse(model) {
   await db.connect();
-  SISCV.find()
+  model
+    .find()
     .then((collection) => {
       collection.forEach(async (doc) => {
-        doc.postReq = [];
         for (let version of doc.versions) {
           version.postReq = [];
         }
@@ -116,7 +118,7 @@ async function setLevelInCourses() {
   version that occurs before or during the same semester, if the pre req
   is in the string.
 */
-async function setPostReqsInSISCourses() {
+async function setPostReqsInSISCoursesVersioning() {
   await db.connect();
   const sisCourses = await SISCV.find();
   for (let course of sisCourses) {
@@ -186,7 +188,7 @@ function compareDates(version1, version2) {
 /* 
   Script to set post req field of each current course by looking for corresponding sis course.
 */
-async function setPostReqsInCourses() {
+async function setPostReqsInCoursesVersioning() {
   await db.connect();
   const userCourseList = await courses.find();
   for (let course of userCourseList) {
@@ -203,6 +205,71 @@ async function setPostReqsInCourses() {
       }
     }
   }
+  console.log('done');
+}
+
+async function setPostReqsInSISCourses() {
+  await db.connect();
+  var counter = 0;
+  SISCV.find({ version: { $elemMatch: { postReq: { $size: 0 } } } }).then(
+    async (res) => {
+      for (let course of res) {
+        let postReqs = [];
+        await SISCV.find({
+          versions: {
+            $elemMatch: {
+              preReq: { $elemMatch: { Expression: { $regex: course.number } } },
+            },
+          },
+        }).then(async (res2) => {
+          for (let matchedCourse of res2) {
+            for (let preReq of matchedCourse.versions[0].preReq) {
+              if (preReq.IsNegative === 'N') {
+                postReqs.push({
+                  courseId: matchedCourse.id,
+                  number: matchedCourse.number,
+                  title: matchedCourse.title,
+                  credits: matchedCourse.versions[0].credits,
+                  preReqs: preReq.Expression,
+                });
+                break;
+              }
+            }
+          }
+        });
+        counter++;
+        for (let version of course.versions) {
+          version.postReq = postReqs;
+        }
+        if (counter % 10 === 0) {
+          console.log(course.title);
+        }
+        await course.save();
+      }
+    },
+  );
+  console.log('done');
+}
+
+async function setPostReqsInCourses() {
+  await db.connect();
+  courses.find().then(async (res) => {
+    for (let course of res) {
+      let postReqs = [];
+      await SISCV.find({ title: course.title, number: course.number }).then(
+        async (res2) => {
+          for (let matchedCourse of res2) {
+            for (let version of matchedCourse.versions) {
+              course.postReq = version.postReq;
+              continue;
+            }
+          }
+        },
+      );
+      console.log(course.title);
+      await course.save();
+    }
+  });
   console.log('done');
 }
 

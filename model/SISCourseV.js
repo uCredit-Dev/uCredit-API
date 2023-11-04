@@ -26,15 +26,9 @@ const courseSchema = new Schema({
           courseId: { type: String },
           number: { type: String },
           title: { type: String },
-          versions: [
-            {
-              credits: { type: String },
-              preReqs: { type: String },
-              term: { type: String },
-            },
-          ],
-        },
-      ],
+          preReqs: { type: String },
+          credits: { type: String },
+        }],
       coReq: { type: Array },
       restrictions: { type: Array },
     },
