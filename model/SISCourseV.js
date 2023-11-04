@@ -21,6 +21,15 @@ const courseSchema = new Schema({
       level: { type: String },
       tags: [{ type: String }],
       preReq: { type: Array },
+      postReq: [
+        {
+          courseId: { type: String },
+          number: { type: String },
+          title: { type: String },
+          preReqs: { type: String },
+          credits: { type: String },
+        },
+      ],
       coReq: { type: Array },
       restrictions: { type: Array },
     },
