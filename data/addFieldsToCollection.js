@@ -200,7 +200,7 @@ async function setPostReqsInCoursesVersioning() {
       title: course.title,
       number: course.number,
     });
-    if(sisCourses) {
+    if (sisCourses) {
       for (let matchedCourse of sisCourses) {
         for (let version of matchedCourse.versions) {
           if (course.version === version.term) {
@@ -211,7 +211,7 @@ async function setPostReqsInCoursesVersioning() {
       }
     }
     counter++;
-    if(counter % 100 == 0 ) {
+    if (counter % 100 == 0) {
       console.log(counter);
       console.log(course.title);
     }
@@ -238,7 +238,7 @@ async function setPostReqsInCourses() {
         },
       );
       counter++;
-      if(counter %100 ==0) {
+      if (counter % 100 == 0) {
         console.log(counter);
         console.log(course.title);
       }
@@ -247,7 +247,6 @@ async function setPostReqsInCourses() {
   });
   console.log('done');
 }
-
 
 async function setTagsInCoursesVersioning() {
   await db.connect();
@@ -267,7 +266,7 @@ async function setTagsInCoursesVersioning() {
           // console.log(course.tags)
           // course.tags = version.tags;
           // console.log(course.tags)
-          if(course.tags !== version.tags) {
+          if (course.tags !== version.tags) {
             console.log(course.title);
             course.tags = version.tags;
           }
@@ -277,7 +276,6 @@ async function setTagsInCoursesVersioning() {
       }
       break;
     }
-
   }
 
   // const userCourseList = await courses.find();
@@ -327,12 +325,17 @@ async function setPostReqsInNewSISCourses() {
         await SISCV.find({
           versions: {
             $elemMatch: {
-              preReq: { $elemMatch: { Expression: { $regex: course.number }, IsNegative: "N" } },
+              preReq: {
+                $elemMatch: {
+                  Expression: { $regex: course.number },
+                  IsNegative: 'N',
+                },
+              },
             },
           },
         }).then(async (res2) => {
           // for all courses that have this course as a pre-req, check the first version of the second course
-          // for all preReqs inside it, make sure the preReq is negative. If 
+          // for all preReqs inside it, make sure the preReq is negative. If
           for (let matchedCourse of res2) {
             for (let preReq of matchedCourse.versions[0].preReq) {
               if (preReq.IsNegative === 'N') {
@@ -366,53 +369,52 @@ async function setPostReqsInAllSISCourses() {
   await db.connect();
   var counter = 0;
   //finds all courses
-  SISCV.find().then(
-    async (res) => {
-      for (let course of res) {
-        let postReqs = [];
-        //finds all courses that have this course as a a prereq
-        await SISCV.find({
-          versions: {
-            $elemMatch: {
-              preReq: { $elemMatch: { Expression: { $regex: course.number }, IsNegative: "N" } },
+  SISCV.find().then(async (res) => {
+    for (let course of res) {
+      let postReqs = [];
+      //finds all courses that have this course as a a prereq
+      await SISCV.find({
+        versions: {
+          $elemMatch: {
+            preReq: {
+              $elemMatch: {
+                Expression: { $regex: course.number },
+                IsNegative: 'N',
+              },
             },
           },
-        }).then(async (res2) => {
-          // for all courses that have this course as a pre-req, check the first version of the second course
-          // for all preReqs inside it, make sure the preReq is negative. If 
-          for (let matchedCourse of res2) {
-            for (let preReq of matchedCourse.versions[0].preReq) {
-              if (preReq.IsNegative === 'N') {
-                postReqs.push({
-                  courseId: matchedCourse.id,
-                  number: matchedCourse.number,
-                  title: matchedCourse.title,
-                  credits: matchedCourse.versions[0].credits,
-                  preReqs: preReq.Expression,
-                });
-                break;
-              }
+        },
+      }).then(async (res2) => {
+        // for all courses that have this course as a pre-req, check the first version of the second course
+        // for all preReqs inside it, make sure the preReq is negative. If
+        for (let matchedCourse of res2) {
+          for (let preReq of matchedCourse.versions[0].preReq) {
+            if (preReq.IsNegative === 'N') {
+              postReqs.push({
+                courseId: matchedCourse.id,
+                number: matchedCourse.number,
+                title: matchedCourse.title,
+                credits: matchedCourse.versions[0].credits,
+                preReqs: preReq.Expression,
+              });
+              break;
             }
           }
-        });
-        counter++;
-        for (let version of course.versions) {
-          version.postReq = postReqs;
         }
-        if (counter % 100 === 0) {
-          console.log(course.title);
-        }
-        await course.save();
+      });
+      counter++;
+      for (let version of course.versions) {
+        version.postReq = postReqs;
       }
-    },
-  );
+      if (counter % 100 === 0) {
+        console.log(course.title);
+      }
+      await course.save();
+    }
+  });
   //doesn't print sometimes
   console.log('done');
 }
-
-
-
-
 
 /* 
   Script to add the 'version' field based on term and year fields 
