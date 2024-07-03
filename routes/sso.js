@@ -17,9 +17,10 @@ const router = express.Router();
 const secret = process.env.SESSION_SECRET;
 const PbK = process.env.PUBLIC_KEY;
 const PvK = process.env.PRIVATE_KEY;
+const Cert = process.env.CERT; // The IDP's public signing certificate.
 const DEBUG = process.env.DEBUG === 'True';
 
-const JHU_SSO_URL = 'https://idp.jh.edu/idp/profile/SAML2/Redirect/SSO';
+const JHU_SSO_URL = 'https://login.jh.edu/idp/profile/SAML2/Redirect/SSO';
 const SP_NAME = 'https://ucredit-api.onrender.com';
 const BASE_URL = 'https://ucredit-api.onrender.com';
 
@@ -39,6 +40,7 @@ const samlStrategy = new saml.Strategy(
     callbackUrl: `${BASE_URL}/api/login/callback`,
     decryptionPvk: PvK,
     privateKey: PvK,
+    cert: Cert, // To validate the signatures of the incoming SAML Responses.
     // sameSite: "none",
   },
   (profile, done) => {
