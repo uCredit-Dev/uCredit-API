@@ -296,4 +296,53 @@ router.delete('/api/courses/:course_id', auth, async (req, res) => {
   }
 });
 
+
+
+// delete and create a new course
+// need to provide new course as json object in request body
+// distribution field is also updated
+router.patch("/api/courses/:course_id", auth, async (req, res) => {
+  // delete the course
+  const c_id = req.params.course_id;
+  try {
+    // verify that course belongs to req user
+    const course = await Courses.findById(c_id).exec();
+    if (!course) {
+      return errorHandler(res, 404, "Course not found."); 
+    } else if (req.user._id !== course.user_id) {
+      return forbiddenHandler(res);
+    }
+    await Courses.findByIdAndDelete(c_id).exec();
+    await Years
+      .findByIdAndUpdate(
+        course.year_id,
+        { $pull: { courses: course._id }},
+        { runValidators: true }
+      )
+      .exec();
+    returnData(course, res);
+  } catch (err) {
+    errorHandler(res, 500, err);
+  }
+
+  // insert a new course
+  const course = req.body.new_course;
+  if (!course || Object.keys(course).length == 0) {
+    return missingHandler(res, { course });
+  }
+  if (course.user_id !== req.user._id) {
+    return forbiddenHandler(res);
+  }
+
+  const retrievedCourse = await Courses.create(course);
+    // update year with new course
+    await Years
+      .findByIdAndUpdate(retrievedCourse.year_id, {
+        $push: { courses: retrievedCourse._id },
+      })
+      .exec();
+    returnData(retrievedCourse, res);
+
+});
+
 export default router;
